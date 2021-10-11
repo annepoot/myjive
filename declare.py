@@ -1,0 +1,46 @@
+from   names import GlobNames as gn
+
+import model
+import module
+import shape
+
+import multimodel
+import barmodel
+import dirimodel
+import poissonmodel
+import elasticmodel
+
+import initmodule
+import solvermodule
+import outputmodule
+import vtkoutmodule
+
+import paramshapes
+
+def declare_models (globdat):
+  factory = model.ModelFactory()
+
+  multimodel.declare   (factory)
+  barmodel.declare     (factory)
+  dirimodel.declare    (factory)
+  poissonmodel.declare (factory)
+  elasticmodel.declare (factory)
+
+  globdat[gn.MODELFACTORY] = factory
+
+def declare_modules (globdat):
+  factory = module.ModuleFactory()
+
+  initmodule.declare   (factory)
+  solvermodule.declare (factory)
+  outputmodule.declare (factory)
+  vtkoutmodule.declare (factory)
+
+  globdat[gn.MODULEFACTORY] = factory
+
+def declare_shapes (globdat):
+  factory = shape.ShapeFactory()
+
+  paramshapes.declare (factory) 
+
+  globdat[gn.SHAPEFACTORY] = factory

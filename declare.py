@@ -7,6 +7,7 @@ import shape
 import multimodel
 import barmodel
 import dirimodel
+import neumannmodel
 import poissonmodel
 import elasticmodel
 
@@ -23,6 +24,7 @@ def declare_models (globdat):
   multimodel.declare   (factory)
   barmodel.declare     (factory)
   dirimodel.declare    (factory)
+  neumannmodel.declare (factory)
   poissonmodel.declare (factory)
   elasticmodel.declare (factory)
 

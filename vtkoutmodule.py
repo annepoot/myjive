@@ -47,10 +47,11 @@ class VTKOutModule (Module):
             out.write('</DataArray>\n')
             out.write('</Cells>\n')
             out.write('<PointData Vectors="U">\n')
-            out.write('<DataArray type="Float64" Name="U" NumberOfComponents="'+str(len(types)+1)+'" format="ascii">\n')
+            out.write('<DataArray type="Float64" Name="U" NumberOfComponents="3" format="ascii">\n')
             for inode in range(len(nodes)):
                 idofs = dofs.get_dofs([inode],types)
-                out.write(' '.join(map(str, disp[idofs]))+' 0.0 \n')
+                out.write(' '.join(map(str, disp[idofs])))
+                out.write((3-len(idofs))*' 0.0' + '\n')
             out.write('</DataArray>\n')
             out.write('</PointData>\n')
             out.write('</Piece>\n')

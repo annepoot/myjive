@@ -79,9 +79,9 @@ model =
   {
     type = Neumann;
 
-    groups = [ rt, rt ];
-    dofs = [ dx, dy ];
-    values = [ 0., -1.0 ];
+    groups = [ rt ];
+    dofs = [ dy ];
+    values = [ -1.0 ];
   };
 };
 

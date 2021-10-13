@@ -46,5 +46,8 @@ class Tri3Shape (Shape):
         
         return dN, wts
 
+    def get_shape_functions (self):
+        return self._N
+
 def declare (factory):
     factory.declare_shape ('Triangle3', Tri3Shape)

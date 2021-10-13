@@ -31,8 +31,12 @@ class InitModule (Module):
         globdat[gn.DOFSPACE] = DofSpace() 
 
         # Read mesh
-        print('InitModule: Reading mesh file',myprops[MESH],'...')
-        self._read_gmsh (myprops[MESH], globdat)
+        if type(myprops[MESH]) == str:
+            self._read_gmsh (myprops[MESH], globdat)
+        elif 'meshio' in str(type(myprops[MESH])): 
+            self._read_meshio (myprops[MESH], globdat)
+        else:
+            raise KeyError ('InitModule: Mesh not found')
 
         # Create node groups
         if gn.NGROUPS in myprops:
@@ -59,6 +63,8 @@ class InitModule (Module):
         pass
 
     def _read_gmsh (self, fname, globdat):
+        print('InitModule: Reading mesh file',fname,'...')
+
         if not fname.endswith('.msh'):
             raise RuntimeError ('Unexpected mesh file extension')
 
@@ -118,6 +124,29 @@ class InitModule (Module):
                     if len(inodes) != nnodes:
                         raise SyntaxError ('InitModule: Could not read element with incorrect number of nodes')
                     elems.append (Element (inodes))
+
+        globdat[gn.NSET] = nodes
+        globdat[gn.ESET] = elems
+
+        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
+        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+
+    def _read_meshio (self, mesh, globdat):
+        print('Reading mesh from a Meshio object...')
+
+        nodes = []
+        elems = []
+
+        for point in mesh.points:
+            nodes.append(Node(point))
+
+        if 'triangle' in mesh.cells_dict:
+            globdat[gn.MESHSHAPE] = 'Triangle3'
+            globdat[gn.MESHRANK]  = 2
+            for elem in mesh.cells_dict['triangle']:
+                elems.append(Element(elem))    
+        else:
+            raise SyntaxError ('InitModule: Unsupported Meshio element type')
 
         globdat[gn.NSET] = nodes
         globdat[gn.ESET] = elems

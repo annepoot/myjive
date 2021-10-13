@@ -79,7 +79,7 @@ model =
   {
     type = Neumann;
 
-    groups = [ rt ];
+    groups = [ rb ];
     dofs = [ dy ];
     values = [ -1.0 ];
   };
@@ -92,6 +92,5 @@ solver =
 
 vtkout =
 {
-  file = results;
   tables = [ stress ];
 };

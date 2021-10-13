@@ -12,6 +12,7 @@ class GlobNames:
     SHAPEFACTORY    = 'shapeFactory'
     TIMESTEP        = 'timeStep'
     STATE0          = 'state0'
+    TABLES          = 'tables'
 
 class PropNames:
     TYPE            = 'type'
@@ -21,9 +22,13 @@ class Actions:
     GETINTFORCE     = 'getIntForce'
     GETEXTFORCE     = 'getExtForce'
     GETCONSTRAINTS  = 'getConstraints'
+    GETTABLE        = 'getTable'
 
 class ParamNames:
     MATRIX0         = 'matrix0'
     INTFORCE        = 'intForce'
     EXTFORCE        = 'extForce'
     CONSTRAINTS     = 'constraints'
+    TABLE           = 'table'
+    TABLENAME       = 'tableName'
+    TABLEWEIGHTS    = 'tableWeights'

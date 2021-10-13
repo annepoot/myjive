@@ -21,6 +21,9 @@ class ElasticModel (Model):
         print('ElasticModel taking action',action)
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
+        elif action == act.GETTABLE:
+            if 'stress' in params[pn.TABLENAME]:
+                self._get_stresses(params, globdat) 
 
     def configure (self, props, globdat):
         self._young   = float(props[YOUNG])
@@ -64,6 +67,58 @@ class ElasticModel (Model):
                 elmat += weights[ip] * np.matmul(np.transpose(B),np.matmul(D,B))
             
             params[pn.MATRIX0][np.ix_(idofs,idofs)] += elmat
+
+    def _get_stresses (self, params, globdat):
+        D = self._get_D_matrix()
+        table = params[pn.TABLE]
+        tbwts = params[pn.TABLEWEIGHTS]
+
+        if 'stress_xx' not in table:
+            table['stress_xx'] = np.zeros(len(globdat[gn.NSET]))
+        if self._rank > 1:
+            if 'stress_yy' not in table:
+                table['stress_yy'] = np.zeros(len(globdat[gn.NSET]))
+            if 'stress_xy' not in table:
+                table['stress_xy'] = np.zeros(len(globdat[gn.NSET]))
+        elif self._rank > 2:
+            if 'stress_zz' not in table:
+                table['stress_zz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'stress_yz' not in table:
+                table['stress_yz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'stress_xz' not in table:
+                table['stress_zx'] = np.zeros(len(globdat[gn.NSET]))
+
+        for elem in self._elems:
+            inodes = elem.get_nodes()
+            idofs  = globdat[gn.DOFSPACE].get_dofs(inodes,DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes],axis=1)[0:self._rank,:]
+            grads, weights = self._shape.get_shape_gradients(coords)
+
+            eldisp = globdat[gn.STATE0][idofs]
+            sfuncs = self._shape.get_shape_functions()
+
+            elsig = np.zeros((self._shape.node_count(),self._strcount))
+            elwts = np.zeros(self._shape.node_count())
+
+            for ip in range(self._ipcount):
+                B = self._get_B_matrix ( grads[:,:,ip] )
+                ptsig  = np.matmul (D,np.matmul(B,eldisp))
+                elsig += np.outer  (sfuncs[:,ip],ptsig)
+                elwts += sfuncs[:,ip].flatten()
+            
+            tbwts[inodes] += elwts 
+
+            table['stress_xx'][inodes] += elsig[:,0]
+            
+            if self._rank == 2:
+                table['stress_yy'][inodes] += elsig[:,1]
+                table['stress_xy'][inodes] += elsig[:,2]
+            elif self._rank == 3:
+                table['stress_yy'][inodes] += elsig[:,1]
+                table['stress_zz'][inodes] += elsig[:,2]
+                table['stress_xy'][inodes] += elsig[:,3]
+                table['stress_yz'][inodes] += elsig[:,4]
+                table['stress_zx'][inodes] += elsig[:,5]
 
     def _get_B_matrix ( self, grads ):
         B = np.zeros((self._strcount,self._dofcount))

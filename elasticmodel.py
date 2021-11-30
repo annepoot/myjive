@@ -27,7 +27,8 @@ class ElasticModel (Model):
 
     def configure (self, props, globdat):
         self._young   = float(props[YOUNG])
-        self._poisson = float(props[POISSON])
+        if globdat[gn.MESHRANK] > 1:
+            self._poisson = float(props[POISSON])
         self._shape   = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup        = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems   = [globdat[gn.ESET][e] for e in egroup]
@@ -123,7 +124,7 @@ class ElasticModel (Model):
     def _get_B_matrix ( self, grads ):
         B = np.zeros((self._strcount,self._dofcount))
         if self._rank == 1:
-            B = grads
+            B = grads.transpose()
         elif self._rank == 2:
             for inode in range(self._shape.node_count()):
                 i = 2*inode
@@ -151,11 +152,12 @@ class ElasticModel (Model):
     def _get_D_matrix ( self ):
         D = np.zeros((self._strcount,self._strcount))
         E = self._young
+        if self._rank == 1:
+            D[[0]] = self._young
+            return D
         nu = self._poisson
         g = 0.5*E / (1.+nu)
-        if self._rank == 1:
-            D = self._young
-        elif self._rank == 3:
+        if self._rank == 3:
             a = E*(1.-nu) / ((1.+nu)*(1.-2.*nu))
             b = E*nu / ((1.+nu)*(1.-2.*nu))
             D = [

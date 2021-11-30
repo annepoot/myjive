@@ -19,7 +19,7 @@ model =
 {
   type = Multi;
 
-  models = [ bar, diri ];
+  models = [ bar, diri, neum ];
 
   bar =
   {
@@ -27,7 +27,7 @@ model =
 
     elements = all;
 
-    E = 1.0;
+    young = 1.0;
 
     shape =
     {
@@ -42,6 +42,15 @@ model =
 
     groups = [ left ];
     dofs   = [ dx ];
+    values = [ 0.0 ];
+  };
+
+  neum = 
+  {
+    type = Neumann;
+
+    groups = [ right ];
+    dofs = [ dx ];
     values = [ 1.0 ];
   };
 };

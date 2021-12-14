@@ -13,6 +13,6 @@ props = fp.parse (sys.argv[1])
 
 # Run Jive
 
-main.jive (props)
+globdat = main.jive (props)
 
 

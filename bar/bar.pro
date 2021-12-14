@@ -23,7 +23,7 @@ model =
 
   bar =
   {
-    type = Elastic;
+    type = Bar;
 
     elements = all;
 

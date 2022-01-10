@@ -48,7 +48,11 @@ class TimoshenkoModel (Model):
 
             elmat = np.zeros((4, 4))
             for ip in range(self._ipcount):
-                B_theta = N_theta = B_v = N_v = np.zeros((1,4))
+                B_theta = np.zeros((1,4))
+                N_theta = np.zeros((1,4))
+                B_v     = np.zeros((1,4))
+                N_v     = np.zeros((1,4))
+
                 B_theta[:,0::2] = grads[:,:,ip].transpose()
                 B_v[:,1::2] = grads[:,:,ip].transpose()
                 N_theta[:,0::2] = sfuncs[:,:,ip].transpose()

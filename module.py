@@ -1,30 +1,30 @@
 class ModuleFactory:
-    def __init__ (self):
+    def __init__(self):
         self._creators = {}
 
-    def declare_module (self, typ, creator):
+    def declare_module(self, typ, creator):
         self._creators[typ] = creator
 
-    def get_module (self, typ, name):
-        creator = self._creators.get (typ)
+    def get_module(self, typ, name):
+        creator = self._creators.get(typ)
         if not creator:
-            raise ValueError (typ)
+            raise ValueError(typ)
         return creator(name)
 
+
 class Module:
-    def __init__ (self, name):
+    def __init__(self, name):
         self._name = name
 
-    def init (self, props, globdat):
-        print ('Empty module init')
+    def init(self, props, globdat):
+        print('Empty module init')
 
-    def init (self, globdat):
-        print ('Empty module init')
+    def init(self, globdat):
+        print('Empty module init')
 
-    def run (self, globdat):
-        print ('Empty module run')
-        return('exit')
+    def run(self, globdat):
+        print('Empty module run')
+        return 'exit'
 
-    def shutdown (self, globdat):
-        print ('Empty module shutdown')
-
+    def shutdown(self, globdat):
+        print('Empty module shutdown')

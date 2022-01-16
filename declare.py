@@ -1,4 +1,4 @@
-from   names import GlobNames as gn
+from names import GlobNames as gn
 
 import model
 import module
@@ -19,32 +19,35 @@ import vtkoutmodule
 
 import paramshapes
 
-def declare_models (globdat):
-  factory = model.ModelFactory()
 
-  multimodel.declare   (factory)
-  barmodel.declare     (factory)
-  dirimodel.declare    (factory)
-  neumannmodel.declare (factory)
-  poissonmodel.declare (factory)
-  elasticmodel.declare (factory)
-  timoshenkomodel.declare (factory)
+def declare_models(globdat):
+    factory = model.ModelFactory()
 
-  globdat[gn.MODELFACTORY] = factory
+    multimodel.declare(factory)
+    barmodel.declare(factory)
+    dirimodel.declare(factory)
+    neumannmodel.declare(factory)
+    poissonmodel.declare(factory)
+    elasticmodel.declare(factory)
+    timoshenkomodel.declare(factory)
 
-def declare_modules (globdat):
-  factory = module.ModuleFactory()
+    globdat[gn.MODELFACTORY] = factory
 
-  initmodule.declare   (factory)
-  solvermodule.declare (factory)
-  outputmodule.declare (factory)
-  vtkoutmodule.declare (factory)
 
-  globdat[gn.MODULEFACTORY] = factory
+def declare_modules(globdat):
+    factory = module.ModuleFactory()
 
-def declare_shapes (globdat):
-  factory = shape.ShapeFactory()
+    initmodule.declare(factory)
+    solvermodule.declare(factory)
+    outputmodule.declare(factory)
+    vtkoutmodule.declare(factory)
 
-  paramshapes.declare (factory) 
+    globdat[gn.MODULEFACTORY] = factory
 
-  globdat[gn.SHAPEFACTORY] = factory
+
+def declare_shapes(globdat):
+    factory = shape.ShapeFactory()
+
+    paramshapes.declare(factory)
+
+    globdat[gn.SHAPEFACTORY] = factory

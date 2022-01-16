@@ -1,31 +1,32 @@
 import numpy as np
 
-from names import Actions    as act
+from names import Actions as act
 from names import ParamNames as pn
-from names import GlobNames  as gn
+from names import GlobNames as gn
 from model import *
 
 GROUPS = 'groups'
-DOFS   = 'dofs'
-VALS   = 'values'
+DOFS = 'dofs'
+VALS = 'values'
 
-class NeumannModel (Model):
-    def take_action (self, action, params, globdat):
+
+class NeumannModel(Model):
+    def take_action(self, action, params, globdat):
         if action == act.GETEXTFORCE:
             self._get_ext_force(params, globdat)
 
-    def configure (self, props, globdat):
+    def configure(self, props, globdat):
         self._groups = props[GROUPS].strip('[').strip(']').split(',')
-        self._dofs   = props[DOFS].strip('[').strip(']').split(',')
-        self._vals   = props[VALS].strip('[').strip(']').split(',')
+        self._dofs = props[DOFS].strip('[').strip(']').split(',')
+        self._vals = props[VALS].strip('[').strip(']').split(',')
 
-    def _get_ext_force (self, params, globdat):
+    def _get_ext_force(self, params, globdat):
         ds = globdat[gn.DOFSPACE]
-        for group,dof,val in zip(self._groups,self._dofs,self._vals):
-            for node in globdat[gn.NGROUPS][group]: 
-                idof = ds.get_dof (node,dof)    
+        for group, dof, val in zip(self._groups, self._dofs, self._vals):
+            for node in globdat[gn.NGROUPS][group]:
+                idof = ds.get_dof(node, dof)
                 params[pn.EXTFORCE][idof] += float(val)
 
-def declare (factory):
-    factory.declare_model ('Neumann', NeumannModel)
 
+def declare(factory):
+    factory.declare_model('Neumann', NeumannModel)

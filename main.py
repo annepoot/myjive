@@ -1,14 +1,15 @@
 import declare
 from names import GlobNames as gn
 
-def jive (props):
+
+def jive(props):
     # Initialize global database, declare models and modules
 
     globdat = {}
 
-    declare.declare_models (globdat)
+    declare.declare_models(globdat)
     declare.declare_modules(globdat)
-    declare.declare_shapes (globdat)
+    declare.declare_shapes(globdat)
 
     # Build main Module chain
 
@@ -18,14 +19,14 @@ def jive (props):
 
     chain = []
 
-    chain.append (modulefac.get_module ('Init',   'init'  ))
-    chain.append (modulefac.get_module ('Solver', 'solver'))
-    chain.append (modulefac.get_module ('VTKOut', 'vtkout'))
+    chain.append(modulefac.get_module('Init', 'init'))
+    chain.append(modulefac.get_module('Solver', 'solver'))
+    chain.append(modulefac.get_module('VTKOut', 'vtkout'))
 
     # Initialize chain
 
     for module in chain:
-        module.init (props, globdat)
+        module.init(props, globdat)
 
     # Run chain until one of the modules ends the computation
 
@@ -35,7 +36,7 @@ def jive (props):
 
     while keep_going:
         for module in chain:
-            if 'exit' in module.run (globdat):
+            if 'exit' in module.run(globdat):
                 keep_going = False
 
     # Run postprocessing routines
@@ -43,7 +44,7 @@ def jive (props):
     for module in chain:
         module.shutdown(globdat)
 
-    print ('End of execution')
+    print('End of execution')
 
     return globdat
 

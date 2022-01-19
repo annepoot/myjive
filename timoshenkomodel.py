@@ -53,8 +53,8 @@ class TimoshenkoModel(Model):
                 N_v = np.zeros((1, 4))
                 B_theta[:, 0::2] = grads[:, :, ip].transpose()
                 B_v[:, 1::2] = grads[:, :, ip].transpose()
-                N_theta[:, 0::2] = sfuncs[:, :, ip].transpose()
-                N_v[:, 1::2] = sfuncs[:, :, ip].transpose()
+                N_theta[:, 0::2] = sfuncs[:, ip].transpose()
+                N_v[:, 1::2] = sfuncs[:, ip].transpose()
 
                 elmat += weights[ip] * (np.matmul(B_theta.transpose() * self._EI, B_theta) + \
                                         np.matmul(N_theta.transpose() * self._GAs, N_theta) - \

@@ -22,14 +22,12 @@ class Tri3Shape(Shape):
         else:
             raise SyntaxError('Unsupported integration scheme for Triangle3 shape')
 
-        # TODO: remove middle index from N?
+        self._N = np.zeros((self._ncount, self._ipcount))
+        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
 
-        self._N = np.zeros((ncount, 1, self._ipcount))
-        self._dN = np.zeros((ncount, rank, self._ipcount))
-
-        self._N[0, :, :] = 1.0 - self._ips[0, :] - self._ips[1, :]
-        self._N[1, :, :] = self._ips[0, :]
-        self._N[2, :, :] = self._ips[1, :]
+        self._N[0, :] = 1.0 - self._ips[0, :] - self._ips[1, :]
+        self._N[1, :] = self._ips[0, :]
+        self._N[2, :] = self._ips[1, :]
 
         self._dN[0, 0, :] = -1.0
         self._dN[0, 1, :] = -1.0
@@ -82,11 +80,11 @@ class Line2Shape(Shape):
         else:
             raise SyntaxError('Unsupported integration scheme for Line2 shape')
 
-        self._N = np.zeros((2, 1, self._ipcount))
-        self._dN = np.zeros((2, 1, self._ipcount))
+        self._N = np.zeros((self._ncount, self._ipcount))
+        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
 
-        self._N[0, :, :] = 0.5 - 0.5 * self._ips[0, :]
-        self._N[1, :, :] = 0.5 + 0.5 * self._ips[0, :]
+        self._N[0, :] = 0.5 - 0.5 * self._ips[0, :]
+        self._N[1, :] = 0.5 + 0.5 * self._ips[0, :]
 
         self._dN[0, 0, :] = -0.5
         self._dN[1, 0, :] = 0.5
@@ -127,12 +125,12 @@ class Line3Shape(Shape):
         else:
             raise SyntaxError('Unsupported integration scheme for Line3 shape')
 
-        self._N = np.zeros((3, 1, self._ipcount))
-        self._dN = np.zeros((3, 1, self._ipcount))
+        self._N = np.zeros((self._ncount, self._ipcount))
+        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
 
-        self._N[0, :, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] - 1)
-        self._N[1, :, :] = 1 - self._ips[0, :] ** 2
-        self._N[2, :, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] + 1)
+        self._N[0, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] - 1)
+        self._N[1, :] = 1 - self._ips[0, :] ** 2
+        self._N[2, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] + 1)
 
         self._dN[0, 0, :] = self._ips[0, :] - 0.5
         self._dN[1, 0, :] = -2 * self._ips[0, :]

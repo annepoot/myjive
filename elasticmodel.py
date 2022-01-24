@@ -101,7 +101,7 @@ class ElasticModel(Model):
                     N[1, 1:: 2] = sfuncs[:, ip].transpose()
                     elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b).reshape(self._dofcount)
 
-                params[pn.INTFORCE][idofs] += elfor
+                params[pn.EXTFORCE][idofs] += elfor
         else:
             pass
 

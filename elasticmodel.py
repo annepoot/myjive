@@ -8,6 +8,8 @@ from model import *
 
 ELEMENTS = 'elements'
 YOUNG = 'young'
+RHO = 'rho'
+THICKNESS = 'thickness'
 POISSON = 'poisson'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
@@ -22,12 +24,23 @@ class ElasticModel(Model):
         print('ElasticModel taking action', action)
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
+        elif action == act.GETEXTFORCE:
+            self._get_body_force(params, globdat)
         elif action == act.GETTABLE:
             if 'stress' in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
 
     def configure(self, props, globdat):
         self._young = float(props[YOUNG])
+        if props[RHO]:
+            self._rho = float(props[RHO])
+        else:
+            self._rho = 0
+        if globdat[gn.MESHRANK] == 2:
+            if props[THICKNESS]:
+                self._thickness = float(props[THICKNESS])
+            else:
+                self._thickness = 1.
         if globdat[gn.MESHRANK] > 1:
             self._poisson = float(props[POISSON])
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
@@ -66,9 +79,32 @@ class ElasticModel(Model):
             elmat = np.zeros((self._dofcount, self._dofcount))
             for ip in range(self._ipcount):
                 B = self._get_B_matrix(grads[:, :, ip])
-                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
+                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B)) * self._thickness
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+
+    def _get_body_force(self, params, globdat):
+        if self._rank == 2:
+            gravity = np.array([[0], [-1]])
+            b = self._rho * gravity
+            for elem in self._elems:
+                inodes = elem.get_nodes()
+                idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+                coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+                sfuncs = self._shape.get_shape_functions()
+                grads, weights = self._shape.get_shape_gradients(coords)
+
+                elfor = np.zeros(self._dofcount)
+                for ip in range(self._ipcount):
+                    N = np.zeros((2, 6))
+                    N[0, 0:: 2] = sfuncs[:, ip].transpose()
+                    N[1, 1:: 2] = sfuncs[:, ip].transpose()
+                    elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b).reshape(self._dofcount)
+
+                params[pn.INTFORCE][idofs] += elfor
+        else:
+            pass
+
 
     def _get_stresses(self, params, globdat):
         D = self._get_D_matrix()
@@ -154,7 +190,7 @@ class ElasticModel(Model):
         D = np.zeros((self._strcount, self._strcount))
         E = self._young
         if self._rank == 1:
-            D[[0]] = self._young
+            D[[0]] = E
             return D
         nu = self._poisson
         g = 0.5 * E / (1. + nu)
@@ -192,4 +228,3 @@ class ElasticModel(Model):
 
 def declare(factory):
     factory.declare_model('Elastic', ElasticModel)
-

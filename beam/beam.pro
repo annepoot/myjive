@@ -47,7 +47,7 @@ model =
 {
   type = Multi;
 
-  models = [ elastic, diri ];
+  models = [ elastic, diri, neum ];
 
   elastic =
   {
@@ -55,9 +55,11 @@ model =
 
     elements = all;
 
-    young = 1.;
-    poisson = 0.3;
+    young = 10000.;
+    thickness = 0.2;
+    poisson = 0.2;
     state = plane_stress;
+    rho = 1;
 
     shape =
     {
@@ -70,9 +72,18 @@ model =
   {
     type = Dirichlet; 
 
-    groups = [ lb, lb, rb, tm ];
-    dofs   = [ dx, dy, dy, dy ];
-    values = [ 0., 0., 0., -1. ];
+    groups = [ lb, lb, rb ];
+    dofs   = [ dx, dy, dy ];
+    values = [ 0., 0., 0. ];
+  };
+  
+  neum =
+  {
+    type = Neumann; 
+
+    groups = [ tm ];
+    dofs   = [ dy ];
+    values = [ -1. ];
   };
 };
 

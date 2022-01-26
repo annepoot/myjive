@@ -27,7 +27,9 @@ model =
 
     elements = all;
 
-    young = 1.0;
+    EA = 1.0;
+
+    k = 1.0;
 
     shape =
     {
@@ -40,7 +42,7 @@ model =
   {
     type = Dirichlet; 
 
-    groups = [ left ];
+    groups = [ right ];
     dofs   = [ dx ];
     values = [ 0.0 ];
   };
@@ -49,9 +51,9 @@ model =
   {
     type = Neumann;
 
-    groups = [ right ];
+    groups = [ left ];
     dofs = [ dx ];
-    values = [ 1.0 ];
+    values = [ -1.0 ];
   };
 };
 

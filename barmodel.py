@@ -7,7 +7,8 @@ from names import PropNames as prn
 from model import *
 
 ELEMENTS = 'elements'
-YOUNG = 'young'
+EA = 'EA'
+k = 'k'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx']
@@ -21,14 +22,16 @@ class BarModel(Model):
             self.__stiffness(params, globdat)
 
     def configure(self, props, globdat):
-        self._young = float(props[YOUNG])
+        self._EA = float(props[EA])
+        self._k = float(props[k])
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
 
         self._rank = self._shape.global_rank()
         self._ipcount = self._shape.ipoint_count()
-        self._dofcount = self._rank * self._shape.node_count()
+        self._nodecount = self._shape.node_count()
+        self._dofcount = self._rank * self._nodecount
         self._strcount = self._rank * (self._rank + 1) // 2
 
         nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
@@ -38,21 +41,26 @@ class BarModel(Model):
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def __stiffness(self, params, globdat):
-        D = np.array([[self._young]])
+        D = np.array([[self._EA]])
+        K = np.array([[self._k]])
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
 
             elmat = np.zeros((self._dofcount, self._dofcount))
             for ip in range(self._ipcount):
+                B = np.zeros((1, self._nodecount))
+                N = np.zeros((1, self._nodecount))
                 B = grads[:, :, ip].transpose()
-                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
+                N[0, :] = sfuncs[:, ip].transpose()
+                elmat += weights[ip] * (
+                            np.matmul(np.transpose(B), np.matmul(D, B)) + np.matmul(np.transpose(N), np.matmul(K, N)))
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
 
 def declare(factory):
     factory.declare_model('Bar', BarModel)
-

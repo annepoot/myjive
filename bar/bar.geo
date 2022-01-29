@@ -9,8 +9,8 @@ L = 10.;
 Point(1) = {0,0,0,cl};
 Point(2) = {L,0,0,cl};
 
-// A Line is basically a connection between two Points. A good practice is to connect the
-// Points in a counter-clockwise fashion.
+// A Line is basically a connection between two Points. 
 Line(1) = {1,2};
-//+
 Physical Curve(1) = {1};
+
+Mesh.ElementOrder = 2;

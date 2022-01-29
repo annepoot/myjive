@@ -1,8 +1,12 @@
 init =
 {
-  mesh = beam.msh;
-
   nodeGroups = [ lb, rb, bottom, top, left, right, tm ];
+
+  mesh =
+  {
+    type = gmsh;
+    file = beam.msh;
+  };
 
   bottom =
   {

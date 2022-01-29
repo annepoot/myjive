@@ -1,8 +1,12 @@
 init =
 {
-  mesh = timoshenko.msh;
-
   nodeGroups = [ left, right ];
+
+  mesh =
+  {
+    type = manual;
+    file = timoshenko.mesh;
+  };
 
   left =
   {

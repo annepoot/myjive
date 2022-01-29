@@ -1,8 +1,12 @@
 init =
 {
-  mesh = bar.msh;
-
   nodeGroups = [ left, right ];
+
+  mesh = 
+  {
+    type = manual;
+    file = bar.mesh;
+  };
 
   left =
   {

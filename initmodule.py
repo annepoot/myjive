@@ -10,7 +10,8 @@ from names import GlobNames as gn
 from names import PropNames as pn
 
 MESH = 'mesh'
-
+TYPE = 'type'
+FILE = 'file'
 
 class InitModule(Module):
     def init(self, props, globdat):
@@ -32,12 +33,15 @@ class InitModule(Module):
         globdat[gn.DOFSPACE] = DofSpace()
 
         # Read mesh
-        if type(myprops[MESH]) == str:
-            self._read_gmsh(myprops[MESH], globdat)
-        elif 'meshio' in str(type(myprops[MESH])):
-            self._read_meshio(myprops[MESH], globdat)
+        meshprops = myprops[MESH]
+        if 'gmsh' in meshprops[TYPE]:
+            self._read_gmsh(meshprops[FILE], globdat)
+        elif 'manual' in meshprops[TYPE]:
+            self._read_mesh(meshprops[FILE], globdat)
+        elif 'meshio' in meshprops[TYPE]:
+            self._read_meshio(myprops[FILE], globdat)
         else:
-            raise KeyError('InitModule: Mesh not found')
+            raise KeyError('InitModule: Mesh input type unknown')
 
         # Create node groups
         if gn.NGROUPS in myprops:
@@ -117,6 +121,10 @@ class InitModule(Module):
                             globdat[gn.MESHSHAPE] = 'Brick8'
                             globdat[gn.MESHRANK] = 3
                             nnodes = 8
+                        elif eltype == 8:
+                            globdat[gn.MESHSHAPE] = 'Line3'
+                            globdat[gn.MESHRANK] = 1
+                            nnodes = 3
                         else:
                             raise SyntaxError('InitModule: Unsupported element type')
                     elif eltype != int(sp[1]):
@@ -132,6 +140,40 @@ class InitModule(Module):
         globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
         globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
 
+    def _read_mesh(self, fname, globdat):
+        print('InitModule: Reading manual mesh file', fname, '...')
+
+        nodes = []
+        elems = []
+        parse_nodes = False
+        parse_elems = False
+        
+        with open(fname) as msh:
+            for line in msh:
+                sp = line.split()
+
+                if 'nodes' in line:
+                    parse_nodes = True
+                    parse_elems = False
+
+                elif 'elements' in line or 'elems' in line:
+                    parse_nodes = False
+                    parse_elems = True
+
+                elif parse_nodes and len(sp) > 1:
+                    coords = np.array(sp[1:], dtype=np.float64)
+                    nodes.append(Node(coords))
+                    
+                elif parse_elems and len(sp) > 0:
+                    connectivity = np.array(sp, dtype=np.int16)
+                    elems.append(Element(connectivity))
+
+        globdat[gn.NSET] = nodes
+        globdat[gn.ESET] = elems
+
+        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
+        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+                 
     def _read_meshio(self, mesh, globdat):
         print('Reading mesh from a Meshio object...')
 

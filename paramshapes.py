@@ -141,9 +141,6 @@ class Line3Shape(Shape):
         dN = self._dN
 
         for ip in range(self._ipcount):
-            print(np.shape(coords))
-            print(coords)
-            print(np.shape(dN[:, :, ip]))
             J = np.matmul(coords, dN[:, :, ip]).item()
             wts[ip] *= J
             dN[:, :, ip] = dN[:, :, ip] / J

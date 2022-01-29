@@ -12,6 +12,7 @@ class GlobNames:
     SHAPEFACTORY = 'shapeFactory'
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
+    MATRIX0 = 'matrix0'
     TABLES = 'tables'
 
 

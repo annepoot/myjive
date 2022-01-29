@@ -64,4 +64,5 @@ model =
 solver =
 {
   nsteps = 1;
+  storeMatrix = True;
 };

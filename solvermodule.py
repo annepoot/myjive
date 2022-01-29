@@ -10,15 +10,15 @@ from module import *
 from constrainer import Constrainer
 
 NSTEPS = 'nsteps'
-
+STOREMATRIX = 'storeMatrix'
 
 class SolverModule(Module):
 
     def init(self, props, globdat):
-        myprops = props[self._name]
-
-        self._nsteps = int(myprops[NSTEPS])
         self._step = 0
+        myprops = props[self._name]
+        self._nsteps = int(myprops.get(NSTEPS,1))
+        self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
@@ -55,6 +55,10 @@ class SolverModule(Module):
 
         # Store solution in Globdat
         globdat[gn.STATE0] = u
+
+        # Optionally store stiffness matrix in Globdat
+        if ( self._store_matrix ):
+          globdat[gn.MATRIX0] = K
 
         if self._step >= self._nsteps:
             return 'exit'

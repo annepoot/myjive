@@ -32,15 +32,9 @@ class ElasticModel(Model):
 
     def configure(self, props, globdat):
         self._young = float(props[YOUNG])
-        if props[RHO]:
-            self._rho = float(props[RHO])
-        else:
-            self._rho = 0
+        self._rho = float(props.get(RHO,0))
         if globdat[gn.MESHRANK] == 2:
-            if props[THICKNESS]:
-                self._thickness = float(props[THICKNESS])
-            else:
-                self._thickness = 1.
+            self._thickness = float(props.get(THICKNESS,1))
         if globdat[gn.MESHRANK] > 1:
             self._poisson = float(props[POISSON])
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])

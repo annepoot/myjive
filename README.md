@@ -14,26 +14,36 @@ Modules and models interact through the `take_action` function.
 Problem-specific input is defined in a properties file (with .pro extension). The repository contains sample input files. 
 
 ## Examples
-- `beam`: two-dimensional elastic analysis of a three-point bending problem 
+- `beam`: two-dimensional elastic analysis of a three-point bending problem
+- `bar`: one-dimensional elastic analysis of an axially loaded bar problem
+- `timoshenko`: one-dimensional elastic analysis of a timoshenko beam problem
 
 ## Important classes
 - `dofspace`: degree of freedom management to provide mapping between dof index and node number and dof type 
-- `shape`: abstract base clase that defines the element type 
-- 
+- `shape`: abstract base class that defines the element type 
+- `constrainer`: class that handles the application of constrains to the as-assembled stiffness matrix and force vector, and returns constrained versions of them ready for solving 
+
+## Implemented shapes
+Generates shape functions, gradients and weights. The following classes are implemented in `paramshapes.py`:
+- `Tri3Shape`: 3-node linear triangular shape for 1-point Gauss integration
+- `Line2Shape`: 2-node linear line shape for 1-point and 2-point Gauss integration
+- `Line3Shape`: 3-node quadratic line shape for 2-point Gauss integration
 
 ## Utility functions
 - `declare.py`: this is where the available models and modules are defined (this is needed to be able to construct a problem dependent module-model scheme)
-- `miniJive.py`: simple master script that parses an input file and calls `main.py`
+- `miniJive.py`: simple master script that parses an input .pro file through `fileparser.py` and calls `main.py`
 - `main.py`: defines chain of modules
 
 ## Modules
-- `initmodule`: initializes `globdat` object with global data including mesh and nodegroups
-- `solvermodule`: assembles and solves system of equations
+- `initmodule`: initializes `globdat` object with global data including mesh and nodegroups. Accepts mesh files from `gmsh` and `meshio` as well as manually generated mesh files (see syntaxis on `initmodule.py`)
+- `solvermodule`: assembles and solves system of equations on a given number of steps
 - `vtkoutmodule`: writes output to vtk file (compatible with paraview)
 
 ## Models
 - `multimodel`: provides a fork from a single model into a list of models
 - `elasticmodel`: assembles matrix for elasticity problem
+- `barmodel`: assembles matrix for a 1D bar problem
+- `timoshenkomodel`: assembles matrix for a Timoshenko beam problem
 - `poissonmodel`: assembles matrix for Poisson equation
 - `dirimodel`: implements Dirichlet boundary conditions
 - `neumannmodel`: implements Neumann boundary conditions

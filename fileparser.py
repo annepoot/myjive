@@ -11,42 +11,44 @@ def parse(fname):
     sp = filestr.split(';')
 
     while i < len(sp):
-        line = sp[i]
+        line = sp[i].replace(' ','')
+        if '{' in line:
+            key = line.split('={')[0]
+            newline = '={'.join(line.split('={')[1:])
+            data[key] = readLevel(newline)
+        elif '=' in line:
+            [key, value] = line.split('=')
+            subdata[key] = value
+        elif line != '':
+            raise RuntimeError ('Unable to parse: %s' % line)
+
         i = i + 1
-        if '{' in line.replace(' ', ''):
-            [key, value] = line.replace(' ', '').split('={')
-            data[key] = readLevel()
-        elif 'include' in line:
-            data[line] = None
 
     return data
 
 
-def readLevel():
+def readLevel(line):
     global i
     global sp
     subdata = {}
 
-    if 'include' in sp[i - 1]:
-        subdata[sp[i - 1].split('{')[1]] = None
-    elif len(sp[i - 1].split('=')) == 2:
-        [key, value] = sp[i - 1].replace(' ', '').split('={')
-        subdata[key] = value
-    else:
-        [key, value] = sp[i - 1].replace(' ', '').split('{')[1].split('=')
-        subdata[key.replace(' ', '')] = value
-
     while True:
-        line = sp[i]
-        i = i + 1
-        if '{' in line.replace(' ', ''):
-            [key, value] = line.replace(' ', '').split('={')
-            subdata[key] = readLevel()
+        if '{' in line: 
+            key = line.split('={')[0]
+            newline = '={'.join(line.split('={')[1:])
+            subdata[key] = readLevel(newline)
         elif '}' in line:
             return subdata
-        elif 'include' in line:
-            subdata[line] = None
-        else:
-            [key, value] = line.replace(' ', '').split('=')
-            subdata[key.replace(' ', '')] = value
+        elif '=' in line:
+            [key, value] = line.split('=')
+            subdata[key] = value
+        elif line != '':
+            raise RuntimeError ('Unable to parse: %s' % line)
+
+        i = i + 1
+
+        if i == len(sp):
+            raise RuntimeError('EOF reached while parsing an input block. Did you forget to close a bracket?')
+
+        line = sp[i].replace(' ','')
 

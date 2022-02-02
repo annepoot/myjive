@@ -32,13 +32,12 @@ model =
     elements = all;
 
     EA = 1.0;
-
     k = 1.0;
 
     shape =
     {
       type = Line2;
-      intScheme = Gauss1;
+      intScheme = Gauss2;
     };
   };
 

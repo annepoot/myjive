@@ -19,6 +19,17 @@ class Tri3Shape(Shape):
             self._ips[0, 0] = 1.0 / 3.0
             self._ips[1, 0] = 1.0 / 3.0
             self._wts[0] = 0.5
+
+        elif self._int == 'Gauss2':
+            self._ipcount = 2
+            self._ips = np.zeros((1, 2))
+            self._wts = np.zeros(2)
+
+            self._ips[0, 0] = -1 / np.sqrt(3)
+            self._ips[0, 1] = 1 / np.sqrt(3)
+            self._wts[0] = 1
+            self._wts[1] = 1
+
         else:
             raise SyntaxError('Unsupported integration scheme for Triangle3 shape')
 
@@ -112,7 +123,15 @@ class Line3Shape(Shape):
         self._rank = 1
         self._int = intscheme
 
-        if self._int == 'Gauss2':
+        if self._int == 'Gauss1':
+            self._ipcount = 1
+            self._ips = np.zeros((1, 1))
+            self._wts = np.zeros(1)
+
+            self._ips[0, 0] = 0
+            self._wts[0] = 2
+
+        elif self._int == 'Gauss2':
             self._ipcount = 2
             self._ips = np.zeros((1, 2))
             self._wts = np.zeros(2)
@@ -121,6 +140,18 @@ class Line3Shape(Shape):
             self._ips[0, 1] = 1 / np.sqrt(3)
             self._wts[0] = 1
             self._wts[1] = 1
+
+        elif self._int == 'Gauss3':
+            self._ipcount = 3
+            self._ips = np.zeros((1,3))
+            self._wts = np.zeros(3)
+
+            self._ips[0, 0] = -np.sqrt(3/5)
+            self._ips[0, 1] = 0
+            self._ips[0, 2] = np.sqrt(3/5)
+            self._wts[0] = 5/9
+            self._wts[1] = 8/9
+            self._wts[2] = 5/9
 
         else:
             raise SyntaxError('Unsupported integration scheme for Line3 shape')

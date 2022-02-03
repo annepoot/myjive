@@ -19,7 +19,7 @@ class BarModel(Model):
         print('BarModel taking action', action)
 
         if action == act.GETMATRIX0:
-            self.__stiffness(params, globdat)
+            self._get_matrix(params, globdat)
 
     def configure(self, props, globdat):
         self._EA = float(props[EA])
@@ -40,7 +40,7 @@ class BarModel(Model):
             for node in nodes:
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
-    def __stiffness(self, params, globdat):
+    def _get_matrix(self, params, globdat):
         D = np.array([[self._EA]])
         K = np.array([[self._k]])
         for elem in self._elems:

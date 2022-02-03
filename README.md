@@ -4,6 +4,7 @@ A python Finite Element library inspired by jive
 ## Contributors
 Iuri Rocha (i.rocha@tudelft.nl)
 Frans van der Meer (f.p.vandermeer@tudelft.nl)
+Andres Martinez Colan
 
 ## Philosophy
 The library works with *modules* and *models*. Modules define the flow of the program, e.g. the `solvermodule` defines that a matrix and RHS vector need to be assembled after which a linear system of equation is solved. Models define how the main task are implemented, e.g. the `elasticmodel` that assembles the stiffness matrix for an elasticity problem.
@@ -38,6 +39,7 @@ Generates shape functions, gradients and weights. The following classes are impl
 - `initmodule`: initializes `globdat` object with global data including mesh and nodegroups. Accepts mesh files from `gmsh` and `meshio` as well as manually generated mesh files (see syntaxis on `initmodule.py`)
 - `solvermodule`: assembles and solves system of equations on a given number of steps
 - `vtkoutmodule`: writes output to vtk file (compatible with paraview)
+- `viewmodule`: visualization of full field data
 
 ## Models
 - `multimodel`: provides a fork from a single model into a list of models

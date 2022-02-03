@@ -20,16 +20,6 @@ class Tri3Shape(Shape):
             self._ips[1, 0] = 1.0 / 3.0
             self._wts[0] = 0.5
 
-        elif self._int == 'Gauss2':
-            self._ipcount = 2
-            self._ips = np.zeros((1, 2))
-            self._wts = np.zeros(2)
-
-            self._ips[0, 0] = -1 / np.sqrt(3)
-            self._ips[0, 1] = 1 / np.sqrt(3)
-            self._wts[0] = 1
-            self._wts[1] = 1
-
         else:
             raise SyntaxError('Unsupported integration scheme for Triangle3 shape')
 

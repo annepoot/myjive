@@ -1,8 +1,12 @@
+import sys
+
+sys.path.append('../')
+
 import numpy as np
 import main
-import fileparser as fp
+import proputils as pu
 
-props = fp.parse('beam.pro')
+props = pu.parse_file('beam.pro')
 
 H = 2
 L = 10

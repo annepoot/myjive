@@ -1,6 +1,6 @@
 import sys
 
-import fileparser as fp
+import proputils as pu
 import main
 
 if len(sys.argv) != 2:
@@ -9,7 +9,7 @@ if len(sys.argv) != 2:
 # Read input file
 
 print('Reading model input...')
-props = fp.parse(sys.argv[1])
+props = pu.parse_file(sys.argv[1])
 
 # Run Jive
 

@@ -9,6 +9,8 @@ from dofspace import DofSpace
 from names import GlobNames as gn
 from names import PropNames as pn
 
+import proputils as pu
+
 MESH = 'mesh'
 TYPE = 'type'
 FILE = 'file'
@@ -46,13 +48,13 @@ class InitModule(Module):
         # Create node groups
         if gn.NGROUPS in myprops:
             print('InitModule: Creating node groups...')
-            groups = myprops[gn.NGROUPS].strip('[').strip(']').split(',')
+            groups = pu.parse_list(myprops[gn.NGROUPS])
             self._create_ngroups(groups, myprops, globdat)
 
         # Create element groups
         if gn.EGROUPS in myprops:
             print('InitModule: Creating element groups...')
-            groups = myprops[gn.EGROUPS].strip('[').strip(']').split(',')
+            groups = pu.parse_list(myprops[gn.EGROUPS])
             self._create_egroups(groups, globdat)
 
         # Initialize model

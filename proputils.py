@@ -1,7 +1,4 @@
-def parse(fname):
-    global i
-    global sp
-
+def parse_file(fname):
     with open(fname, 'r') as input:
         filestr = input.read().replace('\n', '').replace('\t', '')
 
@@ -15,7 +12,7 @@ def parse(fname):
         if '{' in line:
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
-            data[key] = readLevel(newline)
+            data[key], i, sp = read_level(newline,i,sp)
         elif '=' in line:
             [key, value] = line.split('=')
             subdata[key] = value
@@ -27,18 +24,16 @@ def parse(fname):
     return data
 
 
-def readLevel(line):
-    global i
-    global sp
+def read_level(line,i,sp):
     subdata = {}
 
     while True:
         if '{' in line: 
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
-            subdata[key] = readLevel(newline)
+            subdata[key], i, sp = read_level(newline,i,sp)
         elif '}' in line:
-            return subdata
+            return subdata, i, sp
         elif '=' in line:
             [key, value] = line.split('=')
             subdata[key] = value
@@ -52,3 +47,6 @@ def readLevel(line):
 
         line = sp[i].replace(' ','')
 
+def parse_list(lst):
+   return lst.strip('[').strip(']').replace(' ','').split(',')
+ 

@@ -2,6 +2,8 @@ import numpy as np
 
 from model import *
 
+import proputils as pu
+
 MODELS = 'models'
 TYPE = 'type'
 
@@ -12,7 +14,7 @@ class MultiModel(Model):
             model.take_action(action, params, globdat)
 
     def configure(self, props, globdat):
-        models = props[MODELS].strip('[').strip(']').split(',')
+        models = pu.parse_list(props[MODELS])
 
         mfac = globdat['modelFactory']
 

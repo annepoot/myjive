@@ -5,7 +5,7 @@ from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 import main
-import fileparser as fp
+import proputils as pu
 
 def mesher_lin(L, n):
     dx = L / n
@@ -29,7 +29,7 @@ def mesher_quad(L, n):
             fmesh.write('%d %d %d\n' % (2 * i, 2 * i + 1, 2 * i + 2))
 
 
-props = fp.parse('bar.pro')
+props = pu.parse_file('bar.pro')
 
 P = 1
 L = 10

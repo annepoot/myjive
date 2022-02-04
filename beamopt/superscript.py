@@ -6,7 +6,7 @@ from scipy.optimize import differential_evolution, Bounds
 
 sys.path.append('../')
 
-import fileparser as fp
+import proputils as pu
 import main
 from   names import GlobNames as gn
 
@@ -61,7 +61,7 @@ def objective_function (vars):
         mesh = geom.generate_mesh()
 
     # Read input file and set mesh
-    props = fp.parse ('beam.pro')
+    props = pu.parse_file ('beam.pro')
     props['init']['mesh'] = mesh
 
     # Run Jive
@@ -101,7 +101,7 @@ def run_final_design (vars):
         mesh = geom.generate_mesh()
 
     # Run Jive
-    props = fp.parse ('beam.pro')
+    props = pu.parse_file ('beam.pro')
 
     props['init']['mesh'] = mesh
     props['vtkout']['file'] = 'results'

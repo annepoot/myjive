@@ -1,7 +1,10 @@
+import sys
+sys.path.append('../')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import main
-import fileparser as fp
+import proputils as pu
 
 def mesher(L,n):
     dx = L/n
@@ -14,7 +17,7 @@ def mesher(L,n):
             fmesh.write('%d %d\n' %(i,i+1))
 
 
-props = fp.parse('timoshenko.pro')
+props = pu.parse_file('timoshenko.pro')
 
 P = 1
 L = 10

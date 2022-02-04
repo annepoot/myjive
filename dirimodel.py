@@ -5,6 +5,8 @@ from names import ParamNames as pn
 from names import GlobNames as gn
 from model import *
 
+import proputils as pu
+
 GROUPS = 'groups'
 DOFS = 'dofs'
 VALS = 'values'
@@ -16,9 +18,9 @@ class DirichletModel(Model):
             self._get_constraints(params, globdat)
 
     def configure(self, props, globdat):
-        self._groups = props[GROUPS].strip('[').strip(']').split(',')
-        self._dofs = props[DOFS].strip('[').strip(']').split(',')
-        self._vals = props[VALS].strip('[').strip(']').split(',')
+        self._groups = pu.parse_list(props[GROUPS])
+        self._dofs = pu.parse_list(props[DOFS])
+        self._vals = pu.parse_list(props[VALS])
 
     def _get_constraints(self, params, globdat):
         ds = globdat[gn.DOFSPACE]

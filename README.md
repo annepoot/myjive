@@ -32,7 +32,7 @@ Generates shape functions, gradients and weights. The following classes are impl
 
 ## Utility functions
 - `declare.py`: this is where the available models and modules are defined (this is needed to be able to construct a problem dependent module-model scheme)
-- `miniJive.py`: simple master script that parses an input .pro file through `fileparser.py` and calls `main.py`
+- `miniJive.py`: simple master script that parses an input .pro file through `proputils.py` and calls `main.py`
 - `main.py`: defines chain of modules
 
 ## Modules

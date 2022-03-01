@@ -38,8 +38,8 @@ class Tri3Shape(Shape):
         self._dN[2, 1, :] = 1.0
 
     def get_shape_gradients(self, coords):
-        wts = self._wts
-        dN = self._dN
+        wts = np.copy(self._wts)
+        dN = np.copy(self._dN)
 
         for ip in range(self._ipcount):
             J = np.matmul(coords, dN[:, :, ip])
@@ -91,8 +91,8 @@ class Line2Shape(Shape):
         self._dN[1, 0, :] = 0.5
 
     def get_shape_gradients(self, coords):
-        wts = self._wts
-        dN = self._dN
+        wts = np.copy(self._wts)
+        dN = np.copy(self._dN)
 
         for ip in range(self._ipcount):
             J = np.matmul(coords, dN[:, :, ip]).item()
@@ -158,8 +158,8 @@ class Line3Shape(Shape):
         self._dN[2, 0, :] = self._ips[0, :] + 0.5
 
     def get_shape_gradients(self, coords):
-        wts = self._wts
-        dN = self._dN
+        wts = np.copy(self._wts)
+        dN = np.copy(self._dN)
 
         for ip in range(self._ipcount):
             J = np.matmul(coords, dN[:, :, ip]).item()

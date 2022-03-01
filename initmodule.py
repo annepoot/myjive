@@ -270,25 +270,26 @@ class InitModule(Module):
         for g in groups:
             group = np.array(globdat[gn.NGROUPS]['all'])
             gprops = props[g]
-            if 'nodenumber' in gprops:
-                node = int(gprops['nodenumber'])
-                group = [group[node]]
-            for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
-                if axis in gprops:
-                    if gprops[axis] == 'min':
-                        ubnd = np.min(coords[i, :]) + self._ctol
-                        group = group[coords[i, group] < ubnd]
-                    elif gprops[axis] == 'max':
-                        lbnd = np.max(coords[i, :]) - self._ctol
-                        group = group[coords[i, group] > lbnd]
-                    elif gprops[axis] == 'mid':
-                        mid = 0.5 * (np.max(coords[i, :]) - np.min(coords[i, :]))
-                        lbnd = mid - self._ctol
-                        ubnd = mid + self._ctol
-                        group = group[coords[i, group] > lbnd]
-                        group = group[coords[i, group] < ubnd]
-                    else:
-                        pass
+            if isinstance(gprops,dict):
+                for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
+                    if axis in gprops:
+                        if gprops[axis] == 'min':
+                            ubnd = np.min(coords[i, :]) + self._ctol
+                            group = group[coords[i, group] < ubnd]
+                        elif gprops[axis] == 'max':
+                            lbnd = np.max(coords[i, :]) - self._ctol
+                            group = group[coords[i, group] > lbnd]
+                        elif gprops[axis] == 'mid':
+                            mid = 0.5 * (np.max(coords[i, :]) - np.min(coords[i, :]))
+                            lbnd = mid - self._ctol
+                            ubnd = mid + self._ctol
+                            group = group[coords[i, group] > lbnd]
+                            group = group[coords[i, group] < ubnd]
+                        else:
+                            pass
+            else:
+                group = pu.parse_list(gprops,int)
+                print(gprops, group)
 
             globdat[gn.NGROUPS][g] = group
             print('InitModule: Created group', g, 'with nodes', group)

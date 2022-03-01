@@ -15,6 +15,7 @@ MESH = 'mesh'
 TYPE = 'type'
 FILE = 'file'
 
+
 class InitModule(Module):
     def init(self, props, globdat):
         myprops = props.get(self._name)
@@ -36,12 +37,15 @@ class InitModule(Module):
 
         # Read mesh
         meshprops = myprops[MESH]
+
         if 'gmsh' in meshprops[TYPE]:
             self._read_gmsh(meshprops[FILE], globdat)
         elif 'manual' in meshprops[TYPE]:
             self._read_mesh(meshprops[FILE], globdat)
         elif 'meshio' in meshprops[TYPE]:
-            self._read_meshio(myprops[FILE], globdat)
+            self._read_meshio(meshprops[FILE], globdat)
+        elif 'geo' in meshprops[TYPE]:
+            self._read_geo(meshprops[FILE], globdat)
         else:
             raise KeyError('InitModule: Mesh input type unknown')
 
@@ -149,7 +153,7 @@ class InitModule(Module):
         elems = []
         parse_nodes = False
         parse_elems = False
-        
+
         with open(fname) as msh:
             for line in msh:
                 sp = line.split()
@@ -165,7 +169,7 @@ class InitModule(Module):
                 elif parse_nodes and len(sp) > 1:
                     coords = np.array(sp[1:], dtype=np.float64)
                     nodes.append(Node(coords))
-                    
+
                 elif parse_elems and len(sp) > 0:
                     connectivity = np.array(sp, dtype=np.int16)
                     elems.append(Element(connectivity))
@@ -175,7 +179,69 @@ class InitModule(Module):
 
         globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
         globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
-                 
+
+    def _read_geo(self, fname, globdat):
+        print('InitModule: Reading geo mesh file', fname, '...')
+
+        nodes = []
+        members = []
+        nelem = []
+        elems = []
+        parse_nodes = False
+        parse_elems = False
+
+        with open(fname) as msh:
+            for line in msh:
+                sp = line.split()
+                if 'node' in line or 'nodes' in line:
+                    parse_nodes = True
+                    parse_elems = False
+
+                elif 'member' in line or 'members' in line:
+                    parse_nodes = False
+                    parse_elems = True
+
+                elif parse_nodes and len(sp) > 1:
+                    coords = np.array(sp[1:], dtype=np.float64)
+                    nodes.append(Node(coords))
+
+                elif parse_elems and len(sp) > 0:
+                    members.append([int(sp[0]), int(sp[1])])
+                    nelem.append(int(sp[2]))
+
+        nN = len(nodes)
+        inode = nN
+
+        for mem, nel in zip(members, nelem):
+
+            if nel == 1:
+                pass
+
+            elif nel > 1:
+                x0 = nodes[mem[0]].get_coords()
+                x1 = nodes[mem[1]].get_coords()
+                dx = (x1 - x0) / nel
+                nodes.append(Node(x0 + dx))
+                connectivity = np.array([mem[0], inode])
+                elems.append(Element(connectivity))  # first element on member
+
+                if nel > 2:
+                    for i in range(nel - 2):
+                        coords = np.array(x0 + (i + 2) * dx, dtype=np.float64)
+                        nodes.append(Node(coords))
+                        connectivity = np.array([inode, inode + 1])
+                        elems.append(Element(connectivity))  # intermediate elements on member
+                        inode += 1
+
+                connectivity = np.array([inode, mem[1]])
+                elems.append(Element(connectivity))  # last element on member
+                inode += 1
+
+        globdat[gn.NSET] = nodes
+        globdat[gn.ESET] = elems
+        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
+        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+
     def _read_meshio(self, mesh, globdat):
         print('Reading mesh from a Meshio object...')
 
@@ -203,24 +269,28 @@ class InitModule(Module):
         coords = np.stack([node.get_coords() for node in globdat[gn.NSET]], axis=1)
         for g in groups:
             group = np.array(globdat[gn.NGROUPS]['all'])
+            meshprops = props[MESH]
             gprops = props[g]
-
-            for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
-                if axis in gprops:
-                    if gprops[axis] == 'min':
-                        ubnd = np.min(coords[i, :]) + self._ctol
-                        group = group[coords[i, group] < ubnd]
-                    elif gprops[axis] == 'max':
-                        lbnd = np.max(coords[i, :]) - self._ctol
-                        group = group[coords[i, group] > lbnd]
-                    elif gprops[axis] == 'mid':
-                        mid = 0.5 * (np.max(coords[i, :]) - np.min(coords[i, :]))
-                        lbnd = mid - self._ctol
-                        ubnd = mid + self._ctol
-                        group = group[coords[i, group] > lbnd]
-                        group = group[coords[i, group] < ubnd]
-                    else:
-                        pass
+            if 'geo' in meshprops[TYPE]:
+                node = int(gprops['nodenumber'])
+                group = [group[node]]
+            else:
+                for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
+                    if axis in gprops:
+                        if gprops[axis] == 'min':
+                            ubnd = np.min(coords[i, :]) + self._ctol
+                            group = group[coords[i, group] < ubnd]
+                        elif gprops[axis] == 'max':
+                            lbnd = np.max(coords[i, :]) - self._ctol
+                            group = group[coords[i, group] > lbnd]
+                        elif gprops[axis] == 'mid':
+                            mid = 0.5 * (np.max(coords[i, :]) - np.min(coords[i, :]))
+                            lbnd = mid - self._ctol
+                            ubnd = mid + self._ctol
+                            group = group[coords[i, group] > lbnd]
+                            group = group[coords[i, group] < ubnd]
+                        else:
+                            pass
 
             globdat[gn.NGROUPS][g] = group
             print('InitModule: Created group', g, 'with nodes', group)

@@ -8,15 +8,8 @@ init =
     file = bar.geom;
   };
 
-  left =
-  {
-    nodenumber = 0;
-  };
-
-  right =
-  {
-    nodenumber = 1;
-  };
+  left = 0;
+  right = [1];
 };
 
 model =

@@ -47,6 +47,7 @@ def read_level(line,i,sp):
 
         line = sp[i].replace(' ','')
 
-def parse_list(lst):
-   return lst.strip('[').strip(']').replace(' ','').split(',')
+def parse_list(lst,typ=str):
+   stringlist = lst.strip('[').strip(']').replace(' ','').split(',')
+   return list(map(typ, stringlist))
  

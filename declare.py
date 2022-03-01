@@ -11,6 +11,7 @@ import neumannmodel
 import poissonmodel
 import elasticmodel
 import timoshenkomodel
+import framemodel
 
 import initmodule
 import solvermodule
@@ -31,6 +32,7 @@ def declare_models(globdat):
     poissonmodel.declare(factory)
     elasticmodel.declare(factory)
     timoshenkomodel.declare(factory)
+    framemodel.declare(factory)
 
     globdat[gn.MODELFACTORY] = factory
 

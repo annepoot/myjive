@@ -289,7 +289,6 @@ class InitModule(Module):
                             pass
             else:
                 group = pu.parse_list(gprops,int)
-                print(gprops, group)
 
             globdat[gn.NGROUPS][g] = group
             print('InitModule: Created group', g, 'with nodes', group)

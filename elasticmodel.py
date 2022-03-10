@@ -79,7 +79,7 @@ class ElasticModel(Model):
 
     def _get_body_force(self, params, globdat):
         if self._rank == 2:
-            gravity = np.array([[0], [-1]])
+            gravity = np.array([0, -1])
             b = self._rho * gravity
             for elem in self._elems:
                 inodes = elem.get_nodes()
@@ -93,7 +93,7 @@ class ElasticModel(Model):
                     N = np.zeros((2, 6))
                     N[0, 0:: 2] = sfuncs[:, ip].transpose()
                     N[1, 1:: 2] = sfuncs[:, ip].transpose()
-                    elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b).reshape(self._dofcount)
+                    elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b)
 
                 params[pn.EXTFORCE][idofs] += elfor
         else:

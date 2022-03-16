@@ -56,7 +56,7 @@ model =
 
     groups = [ tl, tl, tr ];
     dofs = [ dx, dy, dy ];
-    values = [ 1000, -5000, -5000 ];
+    values = [ 1., -5., -5. ];
   };
 };
 
@@ -64,4 +64,9 @@ solver =
 {
   nsteps = 1;
   storeMatrix = False;
+};
+
+frameview = 
+{
+  deform = 10.;
 };

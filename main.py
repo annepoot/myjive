@@ -17,11 +17,10 @@ def jive(props):
 
     modulefac = globdat[gn.MODULEFACTORY]
 
-    chain = []
-
-    chain.append(modulefac.get_module('Init', 'init'))
-    chain.append(modulefac.get_module('Solver', 'solver'))
-    chain.append(modulefac.get_module('VTKOut', 'vtkout'))
+    chain = [modulefac.get_module('Init', 'init'),
+             modulefac.get_module('Solver', 'solver'),
+             modulefac.get_module('VTKOut', 'vtkout'),
+             modulefac.get_module('FrameView', 'frameview')]
 
     # Initialize chain
 
@@ -47,4 +46,3 @@ def jive(props):
     print('End of execution')
 
     return globdat
-

@@ -55,7 +55,7 @@ class LinBuckModule(Module):
 
         cdofs,cvals = c.get_constraints()
         fdofs = [i for i in range(len(K)) if i not in cdofs]
-        assert(max(max(cvals),-min(cvals))>1.e-10,'LinBuckModule does not work with nonzero Dirichlet BCs')
+        assert max(max(cvals),-min(cvals))>1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
 
         lambdas,vs = eigh(KM[np._ix(cdofs,cdofs)],KG[np._ix(cdofs,cdofs)])
 

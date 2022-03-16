@@ -26,7 +26,7 @@ class Constrainer:
 
         return kc, fc
 
-    def get_constraints(self)
+    def get_constraints(self):
         return self._dofs, self._vals
         
         

@@ -17,7 +17,7 @@ import initmodule
 import solvermodule
 import outputmodule
 import vtkoutmodule
-import viewmodule
+import frameviewmodule
 
 import paramshapes
 
@@ -44,7 +44,7 @@ def declare_modules(globdat):
     solvermodule.declare(factory)
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)
-    viewmodule.declare(factory)
+    frameviewmodule.declare(factory)
 
     globdat[gn.MODULEFACTORY] = factory
 
@@ -55,3 +55,4 @@ def declare_shapes(globdat):
     paramshapes.declare(factory)
 
     globdat[gn.SHAPEFACTORY] = factory
+

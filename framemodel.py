@@ -25,6 +25,9 @@ class FrameModel(Model):
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
 
+        elif action == act.GETMATRIXLB:
+            self._get_matrix_lb(params, globdat)
+            
         elif action == act.GETINTFORCE:
             self._get_int_force(params, globdat)
 
@@ -77,7 +80,7 @@ class FrameModel(Model):
                     raise ImplementationError('nonlinear strain only implemented for 2-node element')
 
                 # TODO: use shape functions for evaluating psi and l_ locally
-                ue = [globdat[STATE0][i] for i in idofs]
+                ue = [globdat[gn.STATE0][i] for i in idofs]
                 d = d0 + ue[3:4] - ue[0:1]
                 l_ = np.linalg.norm(d)
                 psi = np.arccos((d0[0] * d[0] + d0[1] * d[1]) / l_0 / l_)
@@ -99,10 +102,46 @@ class FrameModel(Model):
                     WN = self._get_WN_matrix(N=N, dN=dN, omega=omega, eps=eps)
                     WV = self._get_WV_matrix(N=N, dN=dN, omega=omega, gamma=gamma)
                     Kmat = weights[ip] * np.matmul(B.transpose(), np.matmul(D, B))
-                    Kgeo = weights[ip] * (svec[0] * WN + svec[1] * WV)
+                    Kgeo = svec[0] * WN + svec[1] * WV  # *l0/l0
                     elmat += Kmat + Kgeo
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            
+    def _get_matrix_lb(self, params, globdat):
+        D = self._get_D_matrix()
+        for elem in self._elems:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=0)[:, :]
+
+            d0 = coords[1, :] - coords[0, :]
+            phi = np.arctan2(d0[1], d0[0])
+            l_0 = np.linalg.norm(d0)
+            coords1d = np.array([0, l_0])
+
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords1d)
+            elmatM = np.zeros((6, 6))
+            elmatG = np.zeros((6, 6))
+
+            for ip in range(self._ipcount):
+                N = sfuncs[:, ip]
+                dN = grads[:, 0, ip]
+
+                B = self._get_B_matrix(N=N, dN=dN, omega=phi)
+
+                ue = [globdat[gn.STATE0][i] for i in idofs]
+                evec = np.matmul(B, ue)
+                svec = np.matmul(D, evec)
+
+                WN = self._get_WN_matrix(N=N, dN=dN, omega=phi, eps=0)
+                WV = self._get_WV_matrix(N=N, dN=dN, omega=phi, gamma=0)
+
+                elmatM += weights[ip] * np.matmul(B.transpose(), np.matmul(D, B))
+                elmatG += svec[0] * WN + svec[1] * WV  # *l0/l0
+
+            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmatM
+            params[pn.MATRIX1][np.ix_(idofs, idofs)] += elmatG
 
     def _get_int_force(self, params, globdat):
         D = self._get_D_matrix()
@@ -121,7 +160,7 @@ class FrameModel(Model):
             elfor = np.zeros(6)
 
             if self._subtype == LINEAR:
-                ue = [globdat[STATE0][i] for i in idofs]
+                ue = [globdat[gn.STATE0][i] for i in idofs]
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
                     dN = grads[:, 0, ip]
@@ -131,7 +170,7 @@ class FrameModel(Model):
                     elfor += np.matmul(elmat, ue)
 
             if self._subtype == NONLIN:
-                ue = [globdat[STATE0][i] for i in idofs]
+                ue = [globdat[gn.STATE0][i] for i in idofs]
                 d = d0 + ue[3:4] - ue[0:1]
                 l_ = np.linalg.norm(d)
                 psi = np.arccos((d0[0] * d[0] + d0[1] * d[1]) / l_0 / l_)
@@ -164,57 +203,51 @@ class FrameModel(Model):
                                      [ 0, 0, dN[inode]]])
         return B
 
-    def _get_WN_matrix(self, N, dN, omega=None, eps=None):
+    def _get_WN_matrix(self, N, dN, omega, eps=0):
         WN = np.zeros((6, 6))
 
-        if self._subtype == LINEAR:
-            return WN
+        dn = dN[1]
+        l0 = 1/dn
+        c = np.cos(omega) 
+        s = np.sin(omega)
+        n1 = N[0]
+        n2 = N[1]
+        WN[0, 2] = n1 * s
+        WN[0, 5] = n2 * s
+        WN[1, 2] = -n1 * c
+        WN[1, 5] = -n2 * c
+        WN[2, 2] = -n1 ** 2 * l0 * (1 + eps)
+        WN[2, 3] = -n1 * s
+        WN[2, 4] = n1 * c
+        WN[2, 5] = -n1 * n2 * l0 * (1 + eps)
+        WN[3, 5] = -n2 * s
+        WN[4, 5] = n2 * c
+        WN[5, 5] = -n2 ** 2 * l0 * (1 + eps)
+        WN = WN + WN.transpose() - np.diag(np.diag(WN))  # Add symmetric values in lower triangle
+        return WN
 
-        elif self._subtype == NONLIN:
-            dn = dN[1]
-            c = np.cos(omega) * dn
-            s = np.sin(omega) * dn
-            n1 = N[0]
-            n2 = N[1]
-            WN[0, 2] = n1 * s
-            WN[0, 5] = n2 * s
-            WN[1, 2] = -n1 * c
-            WN[1, 5] = -n2 * c
-            WN[2, 2] = -n1 ** 2 + (1 + eps)
-            WN[2, 3] = -n1 * s
-            WN[2, 4] = n1 * c
-            WN[2, 5] = -n1 * n2 * (1 + eps)
-            WN[3, 5] = -n2 * s
-            WN[4, 5] = n2 * c
-            WN[5, 5] = -n2 ** 2 * (1 + eps)
-            WN = WN + WN.transpose() - np.diag(WN)  # Add symmetric values in lower triangle
-            return WN
-
-    def _get_WV_matrix(self, N, dN, omega=None, gamma=None):
+    def _get_WV_matrix(self, N, dN, omega, gamma=0):
         WV = np.zeros((6, 6))
 
-        if self._subtype == LINEAR:
-            return WV
-
-        elif self._subtype == NONLIN:
-            dn = dN[1]
-            c = np.cos(omega) * dn
-            s = np.sin(omega) * dn
-            n1 = N[0]
-            n2 = N[1]
-            WV[0, 2] = n1 * c
-            WV[0, 5] = n2 * c
-            WV[1, 2] = n1 * s
-            WV[1, 5] = n2 * s
-            WV[2, 2] = -n1 ** 2 + gamma
-            WV[2, 3] = -n1 * c
-            WV[2, 4] = n1 * s
-            WV[2, 5] = -n1 * n2 * gamma
-            WV[3, 5] = -n2 * c
-            WV[4, 5] = n2 * s
-            WV[5, 5] = -n2 ** 2 * gamma
-            WV = WV + WV.transpose() - np.diag(WV)  # Add symmetric values in lower triangle
-            return WV
+        dn = dN[1]
+        l0 = 1/dn
+        c = np.cos(omega)
+        s = np.sin(omega)
+        n1 = N[0]
+        n2 = N[1]
+        WV[0, 2] = n1 * c
+        WV[0, 5] = n2 * c
+        WV[1, 2] = n1 * s
+        WV[1, 5] = n2 * s
+        WV[2, 2] = -n1 ** 2 * l0 * gamma
+        WV[2, 3] = -n1 * c
+        WV[2, 4] = n1 * s
+        WV[2, 5] = -n1 * n2 * l0 * gamma
+        WV[3, 5] = -n2 * c
+        WV[4, 5] = n2 * s
+        WV[5, 5] = -n2 ** 2 * l0 * gamma
+        WV = WV + WV.transpose() - np.diag(np.diag(WV))  # Add symmetric values in lower triangle
+        return WV
 
     def _get_D_matrix(self):
         D = np.diag([self._EA, self._GAs, self._EI])

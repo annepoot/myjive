@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as linalg
+import scipy
 
 from names import GlobNames as gn
 from names import ParamNames as pn
@@ -26,8 +27,8 @@ class LinBuckModule(Module):
 
         params = {}
         params[pn.MATRIX0] = K
-
         params[pn.CONSTRAINTS] = c
+        params[pn.EXTFORCE] = f
 
         model.take_action(act.GETMATRIX0, params, globdat)
 
@@ -43,8 +44,7 @@ class LinBuckModule(Module):
         globdat[gn.STATE0] = u
 
         print('LinBuckModule: running eigenvalue problem...')
-
-
+              
         KM = np.zeros((dc, dc))
         KG = np.zeros((dc, dc))
 
@@ -54,10 +54,10 @@ class LinBuckModule(Module):
         model.take_action(act.GETMATRIXLB, params, globdat)
 
         cdofs,cvals = c.get_constraints()
-        fdofs = [i for i in range(len(K)) if i not in cdofs]
-        assert max(max(cvals),-min(cvals))>1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
+        fdofs = [i for i in range(dc) if i not in cdofs]
+        assert max(max(cvals),-min(cvals))<1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
 
-        lambdas,vs = eigh(KM[np._ix(cdofs,cdofs)],KG[np._ix(cdofs,cdofs)])
+        lambdas,vs = scipy.linalg.eigh(KM[np.ix_(fdofs,fdofs)],KG[np.ix_(fdofs,fdofs)])
 
         for idx in np.argsort(cdofs):
             vs = np.insert(vs, cdofs[idx], cvals[idx], axis=1)
@@ -72,4 +72,4 @@ class LinBuckModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Solver', SolverModule)
+    factory.declare_module('LinBuck', LinBuckModule)

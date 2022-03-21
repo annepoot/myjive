@@ -1,17 +1,15 @@
 init =
 {
-  nodeGroups = [ bl, tl, tr, br ];
+  nodeGroups = [ bot, top ];
 
   mesh = 
   {
     type = geo;
-    file = frame.geom;
+    file = column.geom;
   };
 
-  bl = [0];
-  tl = [1];
-  tr = [2];
-  br = [3];
+  bot = [0];
+  top = [1];
 };
 
 model =
@@ -28,11 +26,11 @@ model =
 
     subtype = linear;
 
-    EA = 20000;
+    EA = 1.e6;
 
-    GAs = 10000;
+    GAs = 20.e3;
 
-    EI = 10;
+    EI = 3.e3;
 
     shape =
     {
@@ -45,18 +43,18 @@ model =
   {
     type = Dirichlet; 
 
-    groups = [ bl, bl, br, br ];
-    dofs   = [ dx, dy, dx, dy ];
-    values = [ 0.0, 0.0, 0.0, 0.0 ];
+    groups = [ bot, bot, top ];
+    dofs   = [ dx, dy, dx ];
+    values = [ 0.0, 0.0, 0.0 ];
   };
 
   neum = 
   {
     type = Neumann;
 
-    groups = [ tl, tl, tr ];
-    dofs = [ dx, dy, dy ];
-    values = [ 1., -5., -5. ];
+    groups = [ top ];
+    dofs = [ dy ];
+    values = [ -1. ];
   };
 };
 

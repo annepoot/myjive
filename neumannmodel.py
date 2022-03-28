@@ -17,7 +17,7 @@ class NeumannModel(Model):
     def take_action(self, action, params, globdat):
         if action == act.GETEXTFORCE:
             self._get_ext_force(params, globdat)
-        if action == act.ADVANCEFORCE:
+        if action == act.ADVANCE:
             self._advance_step_force(params, globdat)
 
     def configure(self, props, globdat):
@@ -27,6 +27,8 @@ class NeumannModel(Model):
         self._initLoad = self._vals
         if INCR in props:
             self._loadIncr = pu.parse_list(props[INCR], float)
+        else: 
+            self._loadIncr = np.zeros(len(self._vals))
 
     def _get_ext_force(self, params, globdat):
         ds = globdat[gn.DOFSPACE]
@@ -36,7 +38,7 @@ class NeumannModel(Model):
                 params[pn.EXTFORCE][idof] += val
 
     def _advance_step_force(self, params, globdat):
-        self._vals = np.array(self._initLoad) + np.array(globdat[gn.TIMESTEP] * self._loadIncr)
+        self._vals = np.array(self._initLoad) + globdat[gn.TIMESTEP] * np.array(self._loadIncr)
 
 
 def declare(factory):

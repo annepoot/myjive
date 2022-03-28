@@ -20,14 +20,13 @@ DOFTYPES = ['dx', 'dy', 'phi']
 
 class FrameModel(Model):
     def take_action(self, action, params, globdat):
-        print('Model taking action', action)
 
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
 
         elif action == act.GETMATRIXLB:
             self._get_matrix_lb(params, globdat)
-            
+
         elif action == act.GETINTFORCE:
             self._get_int_force(params, globdat)
 
@@ -75,17 +74,17 @@ class FrameModel(Model):
                     elmat += weights[ip] * np.matmul(B.transpose(), np.matmul(D, B))
 
             elif self._subtype == NONLIN:
-
                 if self._shape.node_count() > 2:
-                    raise ImplementationError('nonlinear strain only implemented for 2-node element')
+                    raise NotImplementedError('nonlinear strain only implemented for 2-node element')
 
                 # TODO: use shape functions for evaluating psi and l_ locally
                 ue = [globdat[gn.STATE0][i] for i in idofs]
-                d = d0 + ue[3:4] - ue[0:1]
-                l_ = np.linalg.norm(d)
-                psi = np.arccos((d0[0] * d[0] + d0[1] * d[1]) / l_0 / l_)
 
-                  
+                d = d0 + ue[3:5] - ue[0:2]
+                l_ = np.linalg.norm(d)
+                lcps = (d0[0]*d[0]+d0[1]*d[1]) / l_0
+                lsps = (d0[0]*d[1]-d0[1]*d[0]) / l_0
+
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
                     dN = grads[:, 0, ip]
@@ -93,8 +92,8 @@ class FrameModel(Model):
                     theta = np.matmul(N, ue[2::3])
                     kappa = np.matmul(dN, ue[2::3])
                     omega = phi + theta
-                    gamma = (l_ * (np.cos(theta) * np.sin(psi) + np.sin(theta) * np.cos(psi))) / l_0
-                    eps = (l_ * (np.cos(theta) * np.cos(psi) + np.sin(theta) * np.sin(psi))) / l_0 - 1
+                    gamma = (np.cos(theta) * lsps - np.sin(theta) * lcps) / l_0
+                    eps = (np.cos(theta) * lcps + np.sin(theta) * lsps) / l_0 - 1
                     evec = [eps, gamma, kappa]
                     svec = np.matmul(D, evec)
 
@@ -106,7 +105,7 @@ class FrameModel(Model):
                     elmat += Kmat + Kgeo
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
-            
+
     def _get_matrix_lb(self, params, globdat):
         D = self._get_D_matrix()
         for elem in self._elems:
@@ -159,8 +158,9 @@ class FrameModel(Model):
             grads, weights = self._shape.get_shape_gradients(coords1d)
             elfor = np.zeros(6)
 
+            ue = [globdat[gn.STATE0][i] for i in idofs]
+
             if self._subtype == LINEAR:
-                ue = [globdat[gn.STATE0][i] for i in idofs]
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
                     dN = grads[:, 0, ip]
@@ -170,10 +170,10 @@ class FrameModel(Model):
                     elfor += np.matmul(elmat, ue)
 
             if self._subtype == NONLIN:
-                ue = [globdat[gn.STATE0][i] for i in idofs]
-                d = d0 + ue[3:4] - ue[0:1]
+                d = d0 + ue[3:5] - ue[0:2]
                 l_ = np.linalg.norm(d)
-                psi = np.arccos((d0[0] * d[0] + d0[1] * d[1]) / l_0 / l_)
+                lcps = (d0[0]*d[0]+d0[1]*d[1]) / l_0
+                lsps = (d0[0]*d[1]-d0[1]*d[0]) / l_0
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
                     dN = grads[:, 0, ip]
@@ -181,34 +181,34 @@ class FrameModel(Model):
                     theta = np.matmul(N, [ue[2], ue[5]])
                     kappa = np.matmul(dN, [ue[2], ue[5]])
                     omega = phi + theta
-                    gamma = (l_ * (np.cos(theta) * np.sin(psi) + np.sin(theta) * np.cos(psi))) / l_0
-                    eps = (l_ * (np.cos(theta) * np.cos(psi) + np.sin(theta) * np.sin(psi))) / l_0 - 1
+                    gamma = (np.cos(theta) * lsps - np.sin(theta) * lcps) / l_0
+                    eps = (np.cos(theta) * lcps + np.sin(theta) * lsps) / l_0 - 1
                     evec = [eps, gamma, kappa]
                     svec = np.matmul(D, evec)
 
                     B = self._get_B_matrix(N=N, dN=dN, omega=omega, gamma=gamma, eps=eps)
                     elfor += weights[ip] * np.matmul(B.transpose(), svec)
 
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elfor
+            params[pn.INTFORCE][np.ix_(idofs)] += elfor
 
     def _get_B_matrix(self, N, dN, omega, gamma=0, eps=0):
 
-        B = np.zeros((self._strcount,self._dofcount))
+        B = np.zeros((self._strcount, self._dofcount))
         for inode in range(self._shape.node_count()):
             i = 3 * inode
             c = np.cos(omega) * dN[inode]
             s = np.sin(omega) * dN[inode]
-            B[:,i:(i+3)] = np.array([[ c, s, N[inode]*gamma],
-                                     [-s, c, -N[inode]*(1+eps)],
-                                     [ 0, 0, dN[inode]]])
+            B[:, i:(i + 3)] = np.array([[c, s, N[inode] * gamma],
+                                        [-s, c, -N[inode] * (1 + eps)],
+                                        [0, 0, dN[inode]]])
         return B
 
     def _get_WN_matrix(self, N, dN, omega, eps=0):
         WN = np.zeros((6, 6))
 
         dn = dN[1]
-        l0 = 1/dn
-        c = np.cos(omega) 
+        l0 = 1 / dn
+        c = np.cos(omega)
         s = np.sin(omega)
         n1 = N[0]
         n2 = N[1]
@@ -230,7 +230,7 @@ class FrameModel(Model):
         WV = np.zeros((6, 6))
 
         dn = dN[1]
-        l0 = 1/dn
+        l0 = 1 / dn
         c = np.cos(omega)
         s = np.sin(omega)
         n1 = N[0]

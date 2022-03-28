@@ -10,6 +10,7 @@ from names import Actions as act
 from module import *
 from constrainer import Constrainer
 
+
 class LinBuckModule(Module):
 
     def init(self, props, globdat):
@@ -23,12 +24,10 @@ class LinBuckModule(Module):
 
         K = np.zeros((dc, dc))
         f = np.zeros(dc)
+        globdat[gn.STATE0] = np.zeros(dc)
         c = Constrainer()
 
-        params = {}
-        params[pn.MATRIX0] = K
-        params[pn.CONSTRAINTS] = c
-        params[pn.EXTFORCE] = f
+        params = {pn.MATRIX0: K, pn.CONSTRAINTS: c, pn.EXTFORCE: f}
 
         model.take_action(act.GETMATRIX0, params, globdat)
 
@@ -44,7 +43,7 @@ class LinBuckModule(Module):
         globdat[gn.STATE0] = u
 
         print('LinBuckModule: running eigenvalue problem...')
-              
+
         KM = np.zeros((dc, dc))
         KG = np.zeros((dc, dc))
 
@@ -53,11 +52,11 @@ class LinBuckModule(Module):
 
         model.take_action(act.GETMATRIXLB, params, globdat)
 
-        cdofs,cvals = c.get_constraints()
+        cdofs, cvals = c.get_constraints()
         fdofs = [i for i in range(dc) if i not in cdofs]
-        assert max(max(cvals),-min(cvals))<1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
+        assert max(max(cvals), -min(cvals)) < 1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
 
-        lambdas,vs = scipy.linalg.eigh(KM[np.ix_(fdofs,fdofs)],KG[np.ix_(fdofs,fdofs)])
+        lambdas, vs = scipy.linalg.eigh(KM[np.ix_(fdofs, fdofs)], KG[np.ix_(fdofs, fdofs)])
 
         for idx in np.argsort(cdofs):
             vs = np.insert(vs, cdofs[idx], cvals[idx], axis=1)

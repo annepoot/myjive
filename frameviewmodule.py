@@ -7,6 +7,7 @@ from names import GlobNames as gn
 LINEWIDTH = 'linewidth'
 DEFORM = 'deform'
 
+
 class FrameViewModule(Module):
 
     def init(self, props, globdat):
@@ -21,6 +22,9 @@ class FrameViewModule(Module):
                 self._scale = float(myprops[DEFORM])
 
     def run(self, globdat):
+        return 'ok'
+
+    def shutdown(self, globdat):
         nodes = globdat[gn.NSET]
         elems = globdat[gn.ESET]
         disp = globdat[gn.STATE0]
@@ -33,8 +37,8 @@ class FrameViewModule(Module):
         for n, node in enumerate(nodes):
             coords = node.get_coords()
 
-            dx[n] = coords[0] + self._scale * disp[dofs.get_dof(n,'dx')]
-            dy[n] = coords[1] + self._scale * disp[dofs.get_dof(n,'dy')]
+            dx[n] = coords[0] + self._scale * disp[dofs.get_dof(n, 'dx')]
+            dy[n] = coords[1] + self._scale * disp[dofs.get_dof(n, 'dy')]
 
         plt.figure()
         plt.ion()
@@ -49,11 +53,6 @@ class FrameViewModule(Module):
             plt.plot(x, y, 'k-o', linewidth=self._linewidth)
 
         plt.show(block=False)
-
-        return 'ok'
-
-    def shutdown(self, globdat):
-        pass
 
 
 def declare(factory):

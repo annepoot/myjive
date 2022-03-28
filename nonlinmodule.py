@@ -33,7 +33,6 @@ class NonlinModule(Module):
         if self._step == 0:
             globdat[gn.STATE0] = np.zeros(dc)
 
-        self._step += 1
         globdat[gn.TIMESTEP] = self._step
         print('Running time step', self._step)
 
@@ -47,11 +46,8 @@ class NonlinModule(Module):
         # Initialize first iteration
         iteration = 0
 
-        # Advance force step
-        model.take_action(act.ADVANCEFORCE, params, globdat)
-
-        # Advance constraints step
-        model.take_action(act.ADVANCECONST, params, globdat)
+        # Advance to next time step
+        model.take_action(act.ADVANCE, params, globdat)
 
         # Assemble K
         model.take_action(act.GETMATRIX0, params, globdat)
@@ -64,6 +60,8 @@ class NonlinModule(Module):
 
         # Get constraints
         model.take_action(act.GETCONSTRAINTS, params, globdat)
+        cdofs, cvals = c.get_constraints()
+        fdofs = [i for i in range(dc) if i not in cdofs]
 
         # Calculate residual
         r = fext - fint
@@ -85,17 +83,17 @@ class NonlinModule(Module):
         # Initialize iteration loop
         while rel > self._tolerance and iteration < self._itermax:
             iteration += 1
-            params[pn.MATRIX0] = np.zeros((dc, dc))  # TODO: fix framemodel so K start from zero
+            params[pn.MATRIX0] = np.zeros((dc, dc))
             model.take_action(act.GETMATRIX0, params, globdat)
-            params[pn.INTFORCE] = np.zeros(dc)  # TODO: fix framemodel so fint start from zero
+            params[pn.INTFORCE] = np.zeros(dc)
             model.take_action(act.GETINTFORCE, params, globdat)
             r = fext - params[pn.INTFORCE]
             Kc, rc = c.constrain(params[pn.MATRIX0], r)
             smat = sparse.csr_matrix(Kc)
             du = linalg.spsolve(smat, rc)
             globdat[gn.STATE0] += du
-            rel = np.linalg.norm(r) / ref
-            print('Iteration %i, relative residual norm: %.3f' % (iteration, rel))
+            rel = np.linalg.norm(r[np.ix_(fdofs)]) / ref
+            print('Iteration %i, relative residual norm: %.4e' % (iteration, rel))
 
         # Alert if not convergence
         if rel > self._tolerance:
@@ -103,6 +101,8 @@ class NonlinModule(Module):
                 raise RuntimeError('Divergence in time step %i' % self._step)
             else:
                 warnings.warn('No convergence in time step %i' % self._step)
+
+        self._step += 1
 
         if self._step >= self._nsteps:
             return 'exit'

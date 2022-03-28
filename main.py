@@ -4,7 +4,6 @@ from names import GlobNames as gn
 
 def jive(props):
     # Initialize global database, declare models and modules
-
     globdat = {}
 
     declare.declare_models(globdat)
@@ -12,23 +11,21 @@ def jive(props):
     declare.declare_shapes(globdat)
 
     # Build main Module chain
-
     print('Initializing module chain...')
-
     modulefac = globdat[gn.MODULEFACTORY]
+    allmodules = ['Init', 'Solver', 'Nonlin', 'VTKout', 'FrameView', 'LinBuck', 'Output']
 
-    chain = [modulefac.get_module('Init', 'init'),
-             modulefac.get_module('Solver', 'solver'),
-             modulefac.get_module('VTKOut', 'vtkout'),
-             modulefac.get_module('FrameView', 'frameview')]
+    # Only select modules defined in the .pro file
+    modules = [i for i in allmodules if i.lower() in props]
+    chain = []
+    for module in modules:
+        chain.append(modulefac.get_module(module, module.lower()))
 
     # Initialize chain
-
     for module in chain:
         module.init(props, globdat)
 
     # Run chain until one of the modules ends the computation
-
     print('Running chain...')
 
     keep_going = True
@@ -39,7 +36,6 @@ def jive(props):
                 keep_going = False
 
     # Run postprocessing routines
-
     for module in chain:
         module.shutdown(globdat)
 

@@ -15,6 +15,7 @@ import framemodel
 
 import initmodule
 import solvermodule
+import nonlinmodule
 import outputmodule
 import vtkoutmodule
 import linbuckmodule
@@ -43,6 +44,7 @@ def declare_modules(globdat):
 
     initmodule.declare(factory)
     solvermodule.declare(factory)
+    nonlinmodule.declare(factory)
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)
     linbuckmodule.declare(factory)
@@ -57,4 +59,3 @@ def declare_shapes(globdat):
     paramshapes.declare(factory)
 
     globdat[gn.SHAPEFACTORY] = factory
-

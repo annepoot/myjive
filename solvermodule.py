@@ -12,15 +12,18 @@ from constrainer import Constrainer
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
 
+
 class SolverModule(Module):
 
     def init(self, props, globdat):
-        self._step = 0
+
         myprops = props[self._name]
-        self._nsteps = int(myprops.get(NSTEPS,1))
-        self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
+        self._step = 0
+        self._nsteps = int(myprops.get(NSTEPS, 1))
+        self._store_matrix = bool(eval(myprops.get(STOREMATRIX, 'False')))
 
     def run(self, globdat):
+
         dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[gn.MODEL]
 
@@ -32,10 +35,7 @@ class SolverModule(Module):
         f = np.zeros(dc)
         c = Constrainer()
 
-        params = {}
-        params[pn.MATRIX0] = K
-        params[pn.EXTFORCE] = f
-        params[pn.CONSTRAINTS] = c
+        params = {pn.MATRIX0: K, pn.EXTFORCE: f, pn.CONSTRAINTS: c}
 
         # Assemble K
         model.take_action(act.GETMATRIX0, params, globdat)
@@ -57,8 +57,8 @@ class SolverModule(Module):
         globdat[gn.STATE0] = u
 
         # Optionally store stiffness matrix in Globdat
-        if ( self._store_matrix ):
-          globdat[gn.MATRIX0] = K
+        if self._store_matrix:
+            globdat[gn.MATRIX0] = K
 
         if self._step >= self._nsteps:
             return 'exit'

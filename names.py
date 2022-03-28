@@ -27,6 +27,8 @@ class Actions:
     GETEXTFORCE = 'getExtForce'
     GETCONSTRAINTS = 'getConstraints'
     GETTABLE = 'getTable'
+    ADVANCECONST = 'advanceConst'
+    ADVANCEFORCE = 'advanceForce'
 
 
 class ParamNames:

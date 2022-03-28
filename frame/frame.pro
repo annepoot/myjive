@@ -26,7 +26,7 @@ model =
 
     elements = all;
 
-    subtype = linear;
+    subtype = nonlin;
 
     EA = 20000;
 
@@ -45,32 +45,31 @@ model =
   {
     type = Dirichlet; 
 
-    groups = [ bl, bl, br, br ];
-    dofs   = [ dx, dy, dx, dy ];
-    values = [ 0.0, 0.0, 0.0, 0.0 ];
+    groups = [ bl, bl, br, br, tr ];
+    dofs   = [ dx, dy, dx, dy, dy ];
+    values = [ 0.0, 0.0, 0.0, 0.0, 0.0 ];
+    dispIncr = [ 0.0, 0.0, 0.0, 0.0, -0.0002 ];
   };
 
   neum = 
   {
     type = Neumann;
 
-    groups = [ tl, tl, tr ];
-    dofs = [ dx, dy, dy ];
-    values = [ 1., -5., -5. ];
+    groups = [ tl ];
+    dofs = [ dx ];
+    values = [ -0.2 ];
+    loadIncr = [ 0. ];
   };
 };
 
-solver =
+nonlin =
 {
-  nsteps = 1;
-  storeMatrix = False;
+  nsteps = 10;
+  itermax = 10;
+  tolerance = 1e-6;
 };
 
-linbuck = 
-{
-};
-
-frameview = 
+frameview =
 {
   deform = 10.;
 };

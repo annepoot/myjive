@@ -12,8 +12,10 @@ class GlobNames:
     SHAPEFACTORY = 'shapeFactory'
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
+    OLDSTATE0 = 'oldstate0'
     MATRIX0 = 'matrix0'
     TABLES = 'tables'
+    LAMBDA = 'lambda'
 
 
 class PropNames:
@@ -25,6 +27,7 @@ class Actions:
     GETMATRIXLB = 'getMatrixLB'
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
+    GETUNITFORCE = 'getUnitForce'
     GETCONSTRAINTS = 'getConstraints'
     GETTABLE = 'getTable'
     ADVANCE = 'advance'
@@ -35,6 +38,7 @@ class ParamNames:
     MATRIX1 = 'matrix1'
     INTFORCE = 'intForce'
     EXTFORCE = 'extForce'
+    UNITFORCE = 'unitForce'
     CONSTRAINTS = 'constraints'
     TABLE = 'table'
     TABLENAME = 'tableName'

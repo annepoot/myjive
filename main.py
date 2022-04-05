@@ -13,7 +13,7 @@ def jive(props):
     # Build main Module chain
     print('Initializing module chain...')
     modulefac = globdat[gn.MODULEFACTORY]
-    allmodules = ['Init', 'Solver', 'Nonlin', 'Arclen', 'VTKout', 'FrameView', 'LinBuck', 'Output']
+    allmodules = ['Init', 'Solver', 'Nonlin', 'Arclen', 'VTKout', 'FrameView', 'LinBuck', 'Output', 'LoadDisp', 'Graph']
 
     # Only select modules defined in the .pro file
     modules = [i for i in allmodules if i.lower() in props]

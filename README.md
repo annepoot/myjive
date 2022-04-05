@@ -40,6 +40,8 @@ Generates shape functions, gradients and weights. The following classes are impl
 - `solvermodule`: assembles and solves system of equations on a given number of steps
 - `vtkoutmodule`: writes output to vtk file (compatible with paraview)
 - `viewmodule`: visualization of full field data
+- `loaddispmodule`: stores load displacement data for specified nodegroups in globdat
+- `graphmodule`: plots data for instance data stored by loaddispmodule
 
 ## Models
 - `multimodel`: provides a fork from a single model into a list of models

@@ -65,7 +65,18 @@ nonlin =
   tolerance = 1e-6;
 };
 
+loaddisp = 
+{
+  groups = [ left, mid, right ];
+};
+
 frameview =
 {
   deform = 10.;
+};
+
+graph = 
+{
+  xData = [loaddisp.right.disp.dx,loaddisp.mid.disp.dy];
+  yData = [loaddisp.right.load.dx,loaddisp.right.load.dx];
 };

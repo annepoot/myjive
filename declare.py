@@ -21,6 +21,8 @@ import outputmodule
 import vtkoutmodule
 import linbuckmodule
 import frameviewmodule
+import loaddispmodule
+import graphmodule
 
 import paramshapes
 
@@ -51,6 +53,8 @@ def declare_modules(globdat):
     vtkoutmodule.declare(factory)
     linbuckmodule.declare(factory)
     frameviewmodule.declare(factory)
+    loaddispmodule.declare(factory)
+    graphmodule.declare(factory)
 
     globdat[gn.MODULEFACTORY] = factory
 

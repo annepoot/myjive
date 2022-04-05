@@ -16,6 +16,7 @@ class GlobNames:
     MATRIX0 = 'matrix0'
     TABLES = 'tables'
     LAMBDA = 'lambda'
+    MODULEDATA = 'module'
 
 
 class PropNames:

@@ -23,8 +23,11 @@ class DofSpace:
     def get_types(self):
         return self._dofs.keys()
 
+    def find_dof(self, inode, typ):
+        return self._dofs[typ].get(inode)
+
     def get_dof(self, inode, typ):
-        idof = self._dofs[typ].get(inode)
+        idof = self.find_dof(inode, typ)
         if idof is None:
             raise RuntimeError('DofSpace: Non-existent DOF')
         return idof

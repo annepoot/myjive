@@ -14,6 +14,7 @@ import timoshenkomodel
 
 import initmodule
 import solvermodule
+import gaussianmodule
 import outputmodule
 import vtkoutmodule
 import viewmodule
@@ -40,6 +41,7 @@ def declare_modules(globdat):
 
     initmodule.declare(factory)
     solvermodule.declare(factory)
+    gaussianmodule.declare(factory)
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)
     viewmodule.declare(factory)

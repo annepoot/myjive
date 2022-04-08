@@ -1,37 +1,26 @@
 import sys
-
 sys.path.append('../')
 
+from math import exp
+import matplotlib.pyplot as plt
 import numpy as np
 import main
 import proputils as pu
 import testutils as tu
-from names import GlobNames as gn
 
-props = pu.parse_file('beam.pro')
+props = pu.parse_file('bar.pro')
 
-H = 2
+P = 1
 L = 10
-t = float(props['model']['elastic']['thickness'])
-E = float(props['model']['elastic']['young'])
-EI = E*H**3*t/12
-F = 1
-uexact = F*L**3/48/EI
+EA = float(props['model']['bar']['EA'])
+k = float(props['model']['bar']['k'])
+alpha = np.sqrt(k / EA)
+N_L = P*exp(-alpha*L)
+energy = alpha*P*P/2/k
+energyCorrected = alpha*P*P/2/k - alpha*N_L*N_L/2/k
+u_L = -N_L/EA/alpha
 
 globdat = main.jive(props)
 K = globdat['matrix0']
+M = globdat['matrix1']
 u = globdat['state0']
-f = np.matmul(K, u)
-bodyforces_y = f[715:]
-reactions_y = f[713:715]
-
-globdat = main.jive(props)
-view = globdat[gn.MODULEFACTORY].get_module('View','view')
-
-props['view'] = {}
-props['view']['plot'] = 'stresses[stress_xy]'
-props['view']['deform'] = 0
-props['view']['ncolors'] = 100
-
-view.init(props, globdat)
-status = view.run(globdat)

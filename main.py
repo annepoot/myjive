@@ -20,8 +20,9 @@ def jive(props):
     chain = []
 
     chain.append(modulefac.get_module('Init', 'init'))
-    chain.append(modulefac.get_module('Solver', 'solver'))
-    chain.append(modulefac.get_module('VTKOut', 'vtkout'))
+    chain.append(modulefac.get_module('Gaussian', 'gaussian'))
+    # chain.append(modulefac.get_module('Solver', 'solver'))
+    # chain.append(modulefac.get_module('VTKOut', 'vtkout'))
 
     # Initialize chain
 

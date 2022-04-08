@@ -24,6 +24,8 @@ class ElasticModel(Model):
         print('ElasticModel taking action', action)
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
+        elif action == act.GETMATRIX1:
+            self._get_mass_matrix(params, globdat)
         elif action == act.GETEXTFORCE:
             self._get_body_force(params, globdat)
         elif action == act.GETTABLE:

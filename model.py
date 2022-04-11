@@ -11,6 +11,9 @@ class ModelFactory:
             raise ValueError(typ)
         return creator(name)
 
+    def is_model(self, typ):
+        return typ in self._creators
+
 
 class Model:
     def __init__(self, name):

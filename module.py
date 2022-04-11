@@ -11,6 +11,9 @@ class ModuleFactory:
             raise ValueError(typ)
         return creator(name)
 
+    def is_module(self, typ):
+        return typ in self._creators
+
 
 class Module:
     def __init__(self, name):

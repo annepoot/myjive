@@ -36,7 +36,7 @@ class GaussianModule(Module):
 
         params = {}
         params[pn.MATRIX0] = K
-        params[pn.MATRIX1] = M
+        params[pn.MATRIX2] = M
         params[pn.EXTFORCE] = f
         params[pn.CONSTRAINTS] = c
 
@@ -44,8 +44,7 @@ class GaussianModule(Module):
         model.take_action(act.GETMATRIX0, params, globdat)
 
         # Assmemble M
-        # !!! Need to deal with m, so we don't need to store it in the property file.
-        model.take_action(act.GETMATRIX1, params, globdat)
+        model.take_action(act.GETMATRIX2, params, globdat)
 
         # Assemble f
         model.take_action(act.GETEXTFORCE, params, globdat)
@@ -66,7 +65,7 @@ class GaussianModule(Module):
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
           globdat[gn.MATRIX0] = K
-          globdat[gn.MATRIX1] = M
+          globdat[gn.MATRIX2] = M
 
         if self._step >= self._nsteps:
             return 'exit'

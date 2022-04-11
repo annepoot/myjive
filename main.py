@@ -16,13 +16,22 @@ def jive(props):
     print('Initializing module chain...')
 
     modulefac = globdat[gn.MODULEFACTORY]
+    modelfac = globdat[gn.MODELFACTORY]
 
     chain = []
 
-    chain.append(modulefac.get_module('Init', 'init'))
-    chain.append(modulefac.get_module('Gaussian', 'gaussian'))
-    # chain.append(modulefac.get_module('Solver', 'solver'))
-    # chain.append(modulefac.get_module('VTKOut', 'vtkout'))
+    for name in props:
+        # Get the name of each item in the property file
+        if 'type' in props[name]:
+            typ = props[name]['type']
+        else:
+            typ = name.title()
+
+        # If it refers to a module (and not to a model), add it to the chain
+        if modulefac.is_module(typ):
+            chain.append(modulefac.get_module(typ, name))
+        elif not modelfac.is_model(typ):
+            raise ValueError('%s is neither a module nor a model' % typ)
 
     # Initialize chain
 

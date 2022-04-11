@@ -13,7 +13,7 @@ class GlobNames:
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
     MATRIX0 = 'matrix0'
-    MATRIX1 = 'matrix1'
+    MATRIX2 = 'matrix2'
     TABLES = 'tables'
 
 
@@ -23,7 +23,7 @@ class PropNames:
 
 class Actions:
     GETMATRIX0 = 'getMatrix0'
-    GETMATRIX1 = 'getMatrix1'
+    GETMATRIX2 = 'getMatrix2'
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
     GETCONSTRAINTS = 'getConstraints'
@@ -32,7 +32,7 @@ class Actions:
 
 class ParamNames:
     MATRIX0 = 'matrix0'
-    MATRIX1 = 'matrix1'
+    MATRIX2 = 'matrix2'
     INTFORCE = 'intForce'
     EXTFORCE = 'extForce'
     CONSTRAINTS = 'constraints'

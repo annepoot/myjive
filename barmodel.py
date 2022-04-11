@@ -9,7 +9,7 @@ from model import *
 ELEMENTS = 'elements'
 EA = 'EA'
 k = 'k'
-m = 'm'
+rho = 'rho'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx']
@@ -21,13 +21,13 @@ class BarModel(Model):
 
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
-        elif action == act.GETMATRIX1:
+        elif action == act.GETMATRIX2:
             self._get_mass_matrix(params, globdat)
 
     def configure(self, props, globdat):
         self._EA = float(props[EA])
         self._k = float(props[k])
-        self._m = float(props[m])
+        self._m = float(props.get(rho,1))
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
@@ -63,7 +63,7 @@ class BarModel(Model):
                 elmat += weights[ip] * (
                             np.matmul(np.transpose(B), np.matmul(D, B)) + np.matmul(np.transpose(N), np.matmul(K, N)))
 
-            params[pn.MATRIX1][np.ix_(idofs, idofs)] += elmat
+            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
         m = np.array([[self._m]])

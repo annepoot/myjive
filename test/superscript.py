@@ -22,5 +22,5 @@ u_L = -N_L/EA/alpha
 
 globdat = main.jive(props)
 K = globdat['matrix0']
-M = globdat['matrix1']
+M = globdat['matrix2']
 u = globdat['state0']

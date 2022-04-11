@@ -37,8 +37,13 @@ def jive(props):
 
     # Run postprocessing routines
     for module in chain:
-        module.shutdown(globdat)
+        if module._name == 'frameview':
+            if module._interactive:  # Atribute of frameview module only
+                slider = module.shutdown(globdat)
+        else:
+            module.shutdown(globdat)
+            slider = []
 
     print('End of execution')
 
-    return globdat
+    return globdat, slider

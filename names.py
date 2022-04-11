@@ -13,6 +13,7 @@ class GlobNames:
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
     OLDSTATE0 = 'oldstate0'
+    HISTORY = 'history'
     MATRIX0 = 'matrix0'
     TABLES = 'tables'
     LAMBDA = 'lambda'

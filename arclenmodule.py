@@ -33,16 +33,13 @@ class ArclenModule(Module):
         dc = globdat[gn.DOFSPACE].dof_count()
         self._fext0 = np.zeros(dc)
         self._fhat = np.zeros(dc)
-        params = {}
-        params[pn.EXTFORCE] = self._fext0
-        params[pn.UNITFORCE] = self._fhat
+        params = {pn.EXTFORCE: self._fext0, pn.UNITFORCE: self._fhat}
         model.take_action(act.GETEXTFORCE, params, globdat)
         model.take_action(act.GETUNITFORCE, params, globdat)
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[gn.MODEL]
-
 
         globdat[gn.TIMESTEP] = self._step
         print('Running time step', self._step)
@@ -54,7 +51,6 @@ class ArclenModule(Module):
         else:
             duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
 
-
         globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
         K = np.zeros((dc, dc))
         fint = np.zeros(dc)
@@ -62,10 +58,10 @@ class ArclenModule(Module):
         c = Constrainer()
 
         params = {
-            pn.MATRIX0: K, 
-            pn.INTFORCE: fint, 
+            pn.MATRIX0: K,
+            pn.INTFORCE: fint,
             pn.CONSTRAINTS: c,
-            }
+        }
 
         # Initialize first iteration
         iteration = 0

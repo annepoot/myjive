@@ -60,14 +60,26 @@ model =
 
 arclen =
 {
-  nsteps = 10;
+  nsteps = 20;
   itermax = 10;
   tolerance = 1e-6;
   beta = 0.1;
   dl = 0.02;
 };
 
+loaddisp = 
+{
+  groups = [ left, mid, right ];
+};
+
 frameview =
 {
   deform = 10.;
+  interactive = True;
+};
+
+graph = 
+{
+  xData = [loaddisp.right.disp.dx,loaddisp.mid.disp.dy];
+  yData = [loaddisp.right.load.dx,loaddisp.right.load.dx];
 };

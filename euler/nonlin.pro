@@ -73,6 +73,7 @@ loaddisp =
 frameview =
 {
   deform = 10.;
+  interactive = True;
 };
 
 graph = 

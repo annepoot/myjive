@@ -18,6 +18,7 @@ class GlobNames:
     TABLES = 'tables'
     LAMBDA = 'lambda'
     MODULEDATA = 'module'
+    SLIDERS = 'sliders'
 
 
 class PropNames:

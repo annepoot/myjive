@@ -21,3 +21,13 @@ M = globdat['matrix2']
 u = globdat['state0']
 phi = globdat['phi']
 phi_sub = globdat['phi_sub']
+u_post = globdat['u_post']
+var_u_post = np.sqrt(globdat['sigma_u_post'])
+
+x = range(len(u_post))
+
+fix, ax = plt.subplots()
+ax.plot(x, u_post)
+ax.fill_between(x, u_post + 2*var_u_post, u_post - 2*var_u_post, alpha=0.3)
+ax.plot(x, u)
+plt.show()

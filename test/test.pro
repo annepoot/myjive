@@ -71,5 +71,7 @@ gaussian =
   nsteps = 1;
   storeMatrix = True;
 
-  nobs = 33;
+  nobs = 21;
+  obsNoise = 1e-5;
+  alpha = 1;
 };

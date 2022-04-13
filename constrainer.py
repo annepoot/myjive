@@ -25,3 +25,8 @@ class Constrainer:
             kc[dof, dof] = 1.0
 
         return kc, fc
+
+    def get_constraints(self):
+        return self._dofs, self._vals
+        
+        

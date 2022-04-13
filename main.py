@@ -4,7 +4,6 @@ from names import GlobNames as gn
 
 def jive(props):
     # Initialize global database, declare models and modules
-
     globdat = {}
 
     declare.declare_models(globdat)
@@ -12,24 +11,21 @@ def jive(props):
     declare.declare_shapes(globdat)
 
     # Build main Module chain
-
     print('Initializing module chain...')
-
     modulefac = globdat[gn.MODULEFACTORY]
+    allmodules = ['Init', 'Solver', 'Nonlin', 'Arclen', 'VTKout', 'FrameView', 'LinBuck', 'Output', 'LoadDisp', 'Graph']
 
+    # Only select modules defined in the .pro file
+    modules = [i for i in allmodules if i.lower() in props]
     chain = []
-
-    chain.append(modulefac.get_module('Init', 'init'))
-    chain.append(modulefac.get_module('Solver', 'solver'))
-    chain.append(modulefac.get_module('VTKOut', 'vtkout'))
+    for module in modules:
+        chain.append(modulefac.get_module(module, module.lower()))
 
     # Initialize chain
-
     for module in chain:
         module.init(props, globdat)
 
     # Run chain until one of the modules ends the computation
-
     print('Running chain...')
 
     keep_going = True
@@ -40,11 +36,14 @@ def jive(props):
                 keep_going = False
 
     # Run postprocessing routines
-
     for module in chain:
-        module.shutdown(globdat)
+        if module._name == 'frameview':
+            if module._interactive:  # Atribute of frameview module only
+                slider = module.shutdown(globdat)
+        else:
+            module.shutdown(globdat)
+            slider = []
 
     print('End of execution')
 
-    return globdat
-
+    return globdat, slider

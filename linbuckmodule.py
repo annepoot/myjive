@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as linalg
+import scipy
 
 from names import GlobNames as gn
 from names import ParamNames as pn
@@ -9,61 +10,58 @@ from names import Actions as act
 from module import *
 from constrainer import Constrainer
 
-NSTEPS = 'nsteps'
-STOREMATRIX = 'storeMatrix'
 
-
-class SolverModule(Module):
+class LinBuckModule(Module):
 
     def init(self, props, globdat):
-
         myprops = props[self._name]
-        self._step = 0
-        self._nsteps = int(myprops.get(NSTEPS, 1))
-        self._store_matrix = bool(eval(myprops.get(STOREMATRIX, 'False')))
 
     def run(self, globdat):
-
         dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[gn.MODEL]
 
-        self._step += 1
-        print('Running time step', self._step)
-        globdat[gn.TIMESTEP] = self._step
+        print('LinBuckModule: running unit load analysis...')
 
         K = np.zeros((dc, dc))
         f = np.zeros(dc)
+        globdat[gn.STATE0] = np.zeros(dc)
         c = Constrainer()
 
-        params = {pn.MATRIX0: K, pn.EXTFORCE: f, pn.CONSTRAINTS: c}
+        params = {pn.MATRIX0: K, pn.CONSTRAINTS: c, pn.EXTFORCE: f}
 
-        # Assemble K
         model.take_action(act.GETMATRIX0, params, globdat)
 
-        # Assemble f
         model.take_action(act.GETEXTFORCE, params, globdat)
 
-        # Get constraints
         model.take_action(act.GETCONSTRAINTS, params, globdat)
 
-        # Constrain K and f
         Kc, fc = c.constrain(K, f)
 
-        # Sparsify and solve
         smat = sparse.csr_matrix(Kc)
         u = linalg.spsolve(smat, fc)
 
-        # Store solution in Globdat
         globdat[gn.STATE0] = u
 
-        # Optionally store stiffness matrix in Globdat
-        if self._store_matrix:
-            globdat[gn.MATRIX0] = K
+        print('LinBuckModule: running eigenvalue problem...')
 
-        if self._step >= self._nsteps:
-            return 'exit'
-        else:
-            return 'ok'
+        KM = np.zeros((dc, dc))
+        KG = np.zeros((dc, dc))
+
+        params[pn.MATRIX0] = KM
+        params[pn.MATRIX1] = KG
+
+        model.take_action(act.GETMATRIXLB, params, globdat)
+
+        cdofs, cvals = c.get_constraints()
+        fdofs = [i for i in range(dc) if i not in cdofs]
+        assert max(max(cvals), -min(cvals)) < 1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
+
+        lambdas, vs = scipy.linalg.eigh(KM[np.ix_(fdofs, fdofs)], KG[np.ix_(fdofs, fdofs)])
+
+        for idx in np.argsort(cdofs):
+            vs = np.insert(vs, cdofs[idx], cvals[idx], axis=1)
+
+        return 'exit'
 
     def shutdown(self, globdat):
         pass
@@ -73,4 +71,4 @@ class SolverModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Solver', SolverModule)
+    factory.declare_module('LinBuck', LinBuckModule)

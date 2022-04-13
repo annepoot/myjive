@@ -9,8 +9,10 @@ from names import Actions as act
 # from module import *
 from module import Module
 from constrainer import Constrainer
+import gaussianhelper as gh
 
 NSTEPS = 'nsteps'
+NOBS = 'nobs'
 STOREMATRIX = 'storeMatrix'
 
 class GaussianModule(Module):
@@ -20,6 +22,8 @@ class GaussianModule(Module):
         myprops = props[self._name]
         self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
+        
+        self._nobs = int(myprops.get(NOBS,globdat[gn.DOFSPACE].dof_count()))
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()

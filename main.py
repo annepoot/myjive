@@ -13,7 +13,7 @@ def jive(props):
     # Build main Module chain
     print('Initializing module chain...')
     modulefac = globdat[gn.MODULEFACTORY]
-    allmodules = ['Init', 'Solver', 'Nonlin', 'Arclen', 'VTKout', 'FrameView', 'LinBuck', 'Output', 'LoadDisp', 'Graph']
+    allmodules = ['Init', 'Solver', 'Nonlin', 'Arclen', 'VTKout', 'LinBuck', 'Output', 'LoadDisp', 'FrameView', 'Graph']
 
     # Only select modules defined in the .pro file
     modules = [i for i in allmodules if i.lower() in props]
@@ -37,13 +37,8 @@ def jive(props):
 
     # Run postprocessing routines
     for module in chain:
-        if module._name == 'frameview':
-            if module._interactive:  # Atribute of frameview module only
-                slider = module.shutdown(globdat)
-        else:
-            module.shutdown(globdat)
-            slider = []
+        module.shutdown(globdat)
 
     print('End of execution')
 
-    return globdat, slider
+    return globdat

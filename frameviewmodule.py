@@ -66,7 +66,7 @@ class FrameViewModule(Module):
 
         elif self._interactive:
             if gn.HISTORY not in globdat:
-                raise RuntimeError('set storeHistory as True for arclenmodule or nonlinmodule')
+                raise RuntimeError(gn.HISTORY, 'has not been defined')
 
             # Initial plot
             nodes = globdat[gn.NSET]
@@ -133,8 +133,10 @@ class FrameViewModule(Module):
             s_step.on_changed(update)
             plt.show()
 
-            return s_step
+            if not gn.SLIDERS in globdat:
+                gn.SLIDERS = []
 
+            gn.SLIDERS.append(s_step)
 
 def declare(factory):
     factory.declare_module('FrameView', FrameViewModule)

@@ -27,7 +27,7 @@ class BarModel(Model):
     def configure(self, props, globdat):
         self._EA = float(props[EA])
         self._k = float(props[k])
-        self._m = float(props.get(rho,1))
+        self._rho = float(props.get(rho,1))
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
@@ -63,10 +63,10 @@ class BarModel(Model):
                 elmat += weights[ip] * (
                             np.matmul(np.transpose(B), np.matmul(D, B)) + np.matmul(np.transpose(N), np.matmul(K, N)))
 
-            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
-        m = np.array([[self._m]])
+        M = np.array([[self._rho]])
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
@@ -78,9 +78,9 @@ class BarModel(Model):
             for ip in range(self._ipcount):
                 N = np.zeros((1, self._nodecount))
                 N[0, :] = sfuncs[:, ip].transpose()
-                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(m, N))
+                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
 
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
 def declare(factory):
     factory.declare_model('Bar', BarModel)

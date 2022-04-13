@@ -1,6 +1,6 @@
 init =
 {
-  nodeGroups = [ left, right ];
+  nodeGroups = [ left, right, mid ];
 
   mesh =
   {
@@ -16,6 +16,11 @@ init =
   right =
   {
     xtype = max;
+  };
+
+  mid =
+  {
+    xtype = mid;
   };
 };
 
@@ -45,23 +50,26 @@ model =
   {
     type = Dirichlet;
 
-    groups = [ right ];
-    dofs   = [ dx ];
-    values = [ 0.0 ];
+    groups = [ left, right ];
+    dofs   = [ dx, dx ];
+    values = [ 0.0, 0.0 ];
   };
 
   neum =
   {
     type = Neumann;
 
-    groups = [ left ];
+    groups = [ mid ];
     dofs = [ dx ];
-    values = [ -1.0 ];
+    values = [ 1.0 ];
   };
 };
 
 gaussian =
 {
+  type = Gaussian;
   nsteps = 1;
   storeMatrix = True;
+
+  nobs = 33;
 };

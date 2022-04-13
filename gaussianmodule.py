@@ -14,6 +14,7 @@ import gaussianhelper as gh
 NSTEPS = 'nsteps'
 NOBS = 'nobs'
 STOREMATRIX = 'storeMatrix'
+RANDOMOBS = 'randomObs'
 
 class GaussianModule(Module):
 
@@ -22,7 +23,7 @@ class GaussianModule(Module):
         myprops = props[self._name]
         self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
-        
+
         self._nobs = int(myprops.get(NOBS,globdat[gn.DOFSPACE].dof_count()))
 
     def run(self, globdat):
@@ -37,6 +38,7 @@ class GaussianModule(Module):
         M = np.zeros((dc, dc))
         f = np.zeros(dc)
         c = Constrainer()
+        phi, phi_sub = gh.get_phis(N_obs=self._nobs, N_mesh=dc)
 
         params = {}
         params[pn.MATRIX0] = K
@@ -66,10 +68,13 @@ class GaussianModule(Module):
         # Store solution in Globdat
         globdat[gn.STATE0] = u
 
+
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
           globdat[gn.MATRIX0] = K
           globdat[gn.MATRIX2] = M
+          globdat['phi'] = phi
+          globdat['phi_sub'] = phi_sub
 
         if self._step >= self._nsteps:
             return 'exit'

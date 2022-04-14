@@ -156,10 +156,11 @@ class GaussianModule(Module):
 
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
-            globdat[gn.MATRIX0] = K
+            globdat[gn.MATRIX0] = Kc
             globdat[gn.MATRIX2] = M
             globdat['phi'] = phi
             globdat['phi_sub'] = phi_sub
+            globdat['f_post'] = f_post
             globdat['u_post'] = u_post
             globdat['sigma_f_prior'] = sigma_f_prior
             globdat['sigma_f_post'] = sigma_f_post

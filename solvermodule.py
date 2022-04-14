@@ -58,7 +58,7 @@ class SolverModule(Module):
 
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
-          globdat[gn.MATRIX0] = K
+          globdat[gn.MATRIX0] = Kc
 
         if self._step >= self._nsteps:
             return 'exit'

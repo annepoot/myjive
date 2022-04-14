@@ -10,6 +10,8 @@ from names import Actions as act
 from module import Module
 from constrainer import Constrainer
 import gaussianhelper as gh
+import testutils as tu
+import matplotlib.pyplot as plt
 
 NSTEPS = 'nsteps'
 NOBS = 'nobs'
@@ -25,10 +27,20 @@ class GaussianModule(Module):
         myprops = props[self._name]
         self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
+        self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        self._nobs = int(myprops.get(NOBS,globdat[gn.DOFSPACE].dof_count()))
+        # Get the number of observations either as a ratio or as a fixed integer
+        self._nobs = float(myprops.get(NOBS,self._dc))
+        if self._nobs < 1:
+            self._nobs = self._dc * self._nobs
+        self._nobs = int(np.round(self._nobs))
+
         self._noise2 = float(myprops.get(OBSNOISE))**2
-        self._alpha2 = float(myprops.get(ALPHA))**2
+
+        # Get the alpha parameter, or use the optimal alpha
+        self._alpha2 = myprops.get(ALPHA, 'opt')
+        if self._alpha2.isnumeric():
+            self._alpha2 = float(self._alpha2)**2
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
@@ -75,6 +87,20 @@ class GaussianModule(Module):
         # Get the observed nodal forces
         f_obs = phi.T @ fc
 
+        #################
+        # OPTIMAL ALPHA #
+        #################
+
+        # Check if alpha should be optimized
+        if self._alpha2 == 'opt':
+
+            # If so, determine the optimal value of alpha
+            L = np.linalg.cholesky(phi.T @ M @ phi)
+            v = np.linalg.solve(L, f_obs)
+            self._alpha2 = v.T @ v / f_obs.shape[0]
+
+            print('Setting alpha to optimal value: {:.4f}'.format(self._alpha2))
+
         #############################
         # POSTERIOR MEAN ON u AND f #
         #############################
@@ -113,7 +139,7 @@ class GaussianModule(Module):
 
         # Sigma = alpha2 * inv(K) * M * inv(K)
         L2 = np.linalg.cholesky(M)
-        V2 = linalg.spsolve(smat, L2)
+        V2 = np.linalg.solve(Kc, L2)
         sigma_u_prior = np.zeros_like(sigma_f_prior)
         for i in range(dc):
             sigma_u_prior[i] = self._alpha2 * V2[i,:] @ V2[i,:].T
@@ -123,20 +149,22 @@ class GaussianModule(Module):
         #############################
 
         # Sigma = alpha2 * inv(K) * M * inv(K) - alpha4 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * phi.T * M * inv(K)
-        V3 = linalg.spsolve(smat, V1.T)
+        V3 = np.linalg.solve(Kc, V1.T)
         sigma_u_post = sigma_u_prior.copy()
         for i in range(dc):
             sigma_u_post[i] -= self._alpha2**2 * V3[i,:] @ V3[i,:].T
 
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
-          globdat[gn.MATRIX0] = K
-          globdat[gn.MATRIX2] = M
-          globdat['phi'] = phi
-          globdat['phi_sub'] = phi_sub
-          globdat['u_post'] = u_post
-          globdat['sigma_u_prior'] = sigma_u_prior
-          globdat['sigma_u_post'] = sigma_u_post
+            globdat[gn.MATRIX0] = K
+            globdat[gn.MATRIX2] = M
+            globdat['phi'] = phi
+            globdat['phi_sub'] = phi_sub
+            globdat['u_post'] = u_post
+            globdat['sigma_f_prior'] = sigma_f_prior
+            globdat['sigma_f_post'] = sigma_f_post
+            globdat['sigma_u_prior'] = sigma_u_prior
+            globdat['sigma_u_post'] = sigma_u_post
 
         if self._step >= self._nsteps:
             return 'exit'

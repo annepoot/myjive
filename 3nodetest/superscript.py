@@ -8,7 +8,17 @@ import main
 import proputils as pu
 import testutils as tu
 
-props = pu.parse_file('test.pro')
+def mesher_quad(L, n):
+    dx = L / n / 2
+    with open('3nodebar.mesh', 'w') as fmesh:
+        fmesh.write('nodes (ID, x, [y], [z])\n')
+        for i in range(2 * n + 1):
+            fmesh.write('%d %f\n' % (i, i * dx))
+        fmesh.write('elements (node#1, node#2, [node#3, ...])\n')
+        for i in range(n):
+            fmesh.write('%d %d %d\n' % (2 * i, 2 * i + 1, 2 * i + 2))
+
+props = pu.parse_file('3nodebar.pro')
 
 P = 1
 L = 10

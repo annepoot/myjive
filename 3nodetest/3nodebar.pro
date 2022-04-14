@@ -5,7 +5,7 @@ init =
   mesh =
   {
     type = manual;
-    file = bar.mesh;
+    file = 3nodebar.mesh;
   };
 
   left =
@@ -37,7 +37,8 @@ model =
     elements = all;
 
     EA = 1.0;
-    k = 1.0;
+    k = 0.0;
+    q = 1.0;
 
     shape =
     {
@@ -72,6 +73,6 @@ gaussian =
   storeMatrix = True;
 
   nobs = 21;
-  obsNoise = 1e-5;
-  alpha = 1;
+  obsNoise = 1e-2;
+  alpha = 10;
 };

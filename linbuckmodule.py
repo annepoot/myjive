@@ -56,10 +56,16 @@ class LinBuckModule(Module):
         fdofs = [i for i in range(dc) if i not in cdofs]
         assert max(max(cvals), -min(cvals)) < 1.e-10, 'LinBuckModule does not work with nonzero Dirichlet BCs'
 
-        lambdas, vs = scipy.linalg.eigh(KM[np.ix_(fdofs, fdofs)], KG[np.ix_(fdofs, fdofs)])
+        ls, vs = scipy.linalg.eig(KM[np.ix_(fdofs, fdofs)], -KG[np.ix_(fdofs, fdofs)])
 
         for idx in np.argsort(cdofs):
-            vs = np.insert(vs, cdofs[idx], cvals[idx], axis=1)
+            vs = np.insert(vs, cdofs[idx], cvals[idx], axis=0)
+
+        z = list(zip(ls,vs.transpose()))
+        zs = sorted(z, key=lambda f: abs(f[0]))
+        lss, vss = list(zip(*zs))
+ 
+        globdat[gn.HISTORY] = np.asarray(vss)
 
         return 'exit'
 

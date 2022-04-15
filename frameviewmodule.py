@@ -27,7 +27,7 @@ class FrameViewModule(Module):
                 if gn.HISTORY in globdat:
                     self._storeHistory = False
                 else:
-                    globdat[gn.HISTORY] = globdat[gn.STATE0]
+                    globdat[gn.HISTORY] = np.array([globdat[gn.STATE0]])
             else:
                 globdat[gn.HISTORY] = np.vstack((globdat[gn.HISTORY], globdat[gn.STATE0]))
 
@@ -133,7 +133,7 @@ class FrameViewModule(Module):
             s_step.on_changed(update)
             plt.show()
 
-            if not gn.SLIDERS in globdat:
+            if gn.SLIDERS not in globdat:
                 gn.SLIDERS = []
 
             gn.SLIDERS.append(s_step)

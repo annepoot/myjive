@@ -23,6 +23,8 @@ class VTKOutModule(Module):
             if TABLES in myprops:
                 self._tnames = myprops[TABLES].strip('[').strip(']').split(',')
 
+        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
+
     def run(self, globdat):
 
         nodes = globdat[gn.NSET]
@@ -90,7 +92,7 @@ class VTKOutModule(Module):
 
     def _write_tables(self, table_names, globdat):
         nodes = globdat[gn.NSET]
-        model = globdat[gn.MODEL]
+        model = globdat[self._modelname]
 
         globdat[gn.TABLES] = {}
 

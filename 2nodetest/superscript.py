@@ -22,8 +22,8 @@ props = pu.parse_file('2nodebar.pro')
 
 P = 1
 L = 10
-EA = float(props['model']['bar']['EA'])
-k = float(props['model']['bar']['k'])
+EA = float(props['femodel']['bar']['EA'])
+k = float(props['femodel']['bar']['k'])
 
 globdat = main.jive(props)
 K = globdat['matrix0']

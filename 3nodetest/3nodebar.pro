@@ -1,5 +1,7 @@
 init =
 {
+  model = femodel;
+
   nodeGroups = [ left, right, mid ];
 
   mesh =
@@ -24,7 +26,15 @@ init =
   };
 };
 
-model =
+solver =
+{
+  model = femodel;
+  nsteps = 1;
+  storeMatrix = True;
+  getMassMatrix = True;
+};
+
+femodel =
 {
   type = Multi;
 
@@ -69,9 +79,25 @@ model =
 gaussian =
 {
   type = Gaussian;
-  storeMatrix = True;
 
-  nobs = 21;
-  obsNoise = 1e-2;
-  alpha = 10;
+  model = gpmodel;
+
+  storeMatrix = True;
+  getMassMatrix = True;
+
+  nobs = 9;
+  obsNoise = 1e-5;
+  alpha = opt;
 };
+
+gpmodel =
+{
+  type = Multi;
+
+  models = [ sampler ];
+
+  sampler =
+  {
+    type = Sample;
+  };
+}

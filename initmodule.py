@@ -1,13 +1,13 @@
 import numpy as np
 
-from model import *
-from module import *
+from model import Model, ModelFactory
+from module import Module, ModuleFactory
 from node import Node
 from element import Element
 from dofspace import DofSpace
 
 from names import GlobNames as gn
-from names import PropNames as pn
+from names import PropNames as prn
 
 import proputils as pu
 
@@ -29,7 +29,10 @@ class InitModule(Module):
         globdat[gn.NGROUPS] = {}
         globdat[gn.EGROUPS] = {}
         modelfac = globdat[gn.MODELFACTORY]
-        modelprops = props[gn.MODEL]
+
+        # Get the appropriate model for this module
+        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
+        modelprops = props[self._modelname]
 
         # Initialize DofSpace
         print('InitModule: Creating DofSpace...')
@@ -63,9 +66,9 @@ class InitModule(Module):
 
         # Initialize model
         print('InitModule: Creating model...')
-        m = modelfac.get_model(modelprops[pn.TYPE], gn.MODEL)
+        m = modelfac.get_model(modelprops[prn.TYPE], self._modelname)
         m.configure(modelprops, globdat)
-        globdat[gn.MODEL] = m
+        globdat[self._modelname] = m
 
     def run(self, globdat):
         return ('ok')

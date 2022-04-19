@@ -4,9 +4,9 @@ import scipy.sparse.linalg as linalg
 
 from names import GlobNames as gn
 from names import ParamNames as pn
+from names import PropNames as prn
 from names import Actions as act
 
-# from module import *
 from module import Module
 from constrainer import Constrainer
 import gaussianhelper as gh
@@ -27,6 +27,11 @@ class GaussianModule(Module):
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
+        # Get the appropriate model for this module
+        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
+        modelprops = props[self._modelname]
+        modelfac = globdat[gn.MODELFACTORY]
+
         # Get the number of observations either as a ratio or as a fixed integer
         self._nobs = float(myprops.get(NOBS,self._dc))
         if self._nobs < 1:
@@ -40,47 +45,35 @@ class GaussianModule(Module):
         if self._alpha2.isnumeric():
             self._alpha2 = float(self._alpha2)**2
 
+        # Initialize model
+        print('GaussianModule: Creating model...')
+        m = modelfac.get_model(modelprops[prn.TYPE], self._modelname)
+        m.configure(modelprops, globdat)
+        globdat[self._modelname] = m
+
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
-        model = globdat[gn.MODEL]
+        model = globdat[self._modelname]
 
         self._step += 1
         print('Running time step', self._step)
         globdat[gn.TIMESTEP] = self._step
 
-        K = np.zeros((dc, dc))
-        M = np.zeros((dc, dc))
-        f = np.zeros(dc)
-        c = Constrainer()
+        # Get the observation operators
         phi, phi_sub = gh.get_phis(N_obs=self._nobs, N_mesh=dc)
 
-        params = {}
-        params[pn.MATRIX0] = K
-        params[pn.MATRIX2] = M
-        params[pn.EXTFORCE] = f
-        params[pn.CONSTRAINTS] = c
-
-        # Assemble K
-        model.take_action(act.GETMATRIX0, params, globdat)
-
-        # Assmemble M
-        model.take_action(act.GETMATRIX2, params, globdat)
-
-        # Assemble f
-        model.take_action(act.GETEXTFORCE, params, globdat)
-
-        # Get constraints
-        model.take_action(act.GETCONSTRAINTS, params, globdat)
+        # Get the relevant FEM results from Globdat
+        K = globdat[gn.MATRIX0]
+        M = globdat[gn.MATRIX2]
+        u = globdat[gn.STATE0]
+        f = globdat[gn.EXTFORCE]
 
         # Constrain K and f
+        c = Constrainer()
         Kc, fc = c.constrain(K, f)
 
-        # Sparsify and solve
+        # Sparsify the stiffness matrix
         smat = sparse.csr_matrix(Kc)
-        u = linalg.spsolve(smat, fc)
-
-        # Store solution in Globdat
-        globdat[gn.STATE0] = u
 
         # Get the observed nodal forces
         f_obs = phi.T @ fc
@@ -154,8 +147,6 @@ class GaussianModule(Module):
 
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
-            globdat[gn.MATRIX0] = Kc
-            globdat[gn.MATRIX2] = M
             globdat['phi'] = phi
             globdat['phi_sub'] = phi_sub
             globdat['f_post'] = f_post

@@ -29,8 +29,8 @@ class BarModel(Model):
 
     def configure(self, props, globdat):
         self._EA = float(props[EA])
-        self._k = float(props[k])
-        self._q = float(props[q])
+        self._k = float(props.get(k, 0))
+        self._q = float(props.get(q, 0))
         self._rho = float(props.get(rho,1))
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
@@ -87,7 +87,7 @@ class BarModel(Model):
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_body_force(self, params, globdat):
-        q = np.array([self._q])
+        Q = np.array([self._q])
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
@@ -99,10 +99,7 @@ class BarModel(Model):
             for ip in range(self._ipcount):
                 N = np.zeros((1, self._dofcount * self._rank))
                 N[0, :] = sfuncs[:, ip].transpose()
-                elfor += weights[ip] * np.matmul(np.transpose(N), q)
-
-            if not np.isclose(sum(elfor), 0.15625):
-                print(elfor)
+                elfor += weights[ip] * np.matmul(np.transpose(N), Q)
 
             params[pn.EXTFORCE][idofs] += elfor
 

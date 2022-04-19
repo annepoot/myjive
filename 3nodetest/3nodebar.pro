@@ -69,7 +69,6 @@ model =
 gaussian =
 {
   type = Gaussian;
-  nsteps = 1;
   storeMatrix = True;
 
   nobs = 21;

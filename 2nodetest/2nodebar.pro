@@ -69,10 +69,9 @@ model =
 gaussian =
 {
   type = Gaussian;
-  nsteps = 1;
   storeMatrix = True;
 
-  nobs = 17;
+  nobs = 9;
   obsNoise = 1e-5;
   alpha = opt;
 };

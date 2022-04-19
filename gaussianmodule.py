@@ -13,7 +13,6 @@ import gaussianhelper as gh
 import testutils as tu
 import matplotlib.pyplot as plt
 
-NSTEPS = 'nsteps'
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
 ALPHA = 'alpha'
@@ -25,7 +24,6 @@ class GaussianModule(Module):
     def init(self, props, globdat):
         self._step = 0
         myprops = props[self._name]
-        self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
@@ -167,10 +165,7 @@ class GaussianModule(Module):
             globdat['sigma_u_prior'] = sigma_u_prior
             globdat['sigma_u_post'] = sigma_u_post
 
-        if self._step >= self._nsteps:
-            return 'exit'
-        else:
-            return 'ok'
+        return 'exit'
 
     def shutdown(self, globdat):
         pass

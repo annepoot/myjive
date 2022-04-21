@@ -40,3 +40,19 @@ class ParamNames:
     TABLE = 'table'
     TABLENAME = 'tableName'
     TABLEWEIGHTS = 'tableWeights'
+
+
+class GPActions:
+    GETPRIORMEAN = 'getPriorMean'
+    GETPRIORCOVARIANCE = 'getPriorCovariance'
+    GETPOSTERIORMEAN = 'getPosteriorMean'
+    GETPOSTERIORCOVARIANCE = 'getPosteriorCovariance'
+
+
+class GPParamNames:
+    PRIORMEAN = 'priorMean'
+    PRIORCOVARIANCE = 'priorCovariance'
+    POSTERIORMEAN = 'posteriorMean'
+    POSTERIORCOVARIANCE = 'posteriorCovariance'
+    FIELD = 'field'
+    FULLCOVARIANCE = 'fullCovariance'

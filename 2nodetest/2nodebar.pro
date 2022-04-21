@@ -1,5 +1,6 @@
 init =
 {
+  type = Init;
   model = femodel;
 
   nodeGroups = [ left, right, mid ];
@@ -28,7 +29,9 @@ init =
 
 solver =
 {
+  type = Solver;
   model = femodel;
+
   nsteps = 1;
   storeMatrix = True;
   getMassMatrix = True;
@@ -37,7 +40,6 @@ solver =
 femodel =
 {
   type = Multi;
-
   models = [ bar, diri, neum ];
 
   bar =
@@ -79,7 +81,6 @@ femodel =
 gaussian =
 {
   type = Gaussian;
-
   model = gpmodel;
 
   storeMatrix = True;
@@ -87,17 +88,14 @@ gaussian =
 
   nobs = 9;
   obsNoise = 1e-5;
-  alpha = opt;
+  alpha = 1;
 };
 
 gpmodel =
 {
-  type = Multi;
+  type = GP;
 
-  models = [ sampler ];
-
-  sampler =
-  {
-    type = Sample;
-  };
+  obsNoise = 1e-5;
+  alpha = opt;
+  nobs = 9;
 }

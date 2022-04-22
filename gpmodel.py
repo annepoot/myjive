@@ -93,6 +93,10 @@ class GPModel(Model):
         if not '_v0' in vars(self):
             self._v0 = np.linalg.solve(self._sqrtObs, self._y)
 
+        # Get the posterior of the force field
+        if not '_f_post' in vars(self):
+            self._f_post = self._alpha2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+
         # Check if the prior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
 
@@ -102,11 +106,9 @@ class GPModel(Model):
             # POSTERIOR MEAN ON u #
             #######################
 
-            if not '_u_post' in vars(self):
+            # u_bar = alpha2 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
 
-                # Get the posterior of the force field
-                if not '_f_post' in vars(self):
-                    self._f_post = self._alpha2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            if not '_u_post' in vars(self):
 
                 # Solve to get the posterior of the displacement field
                 self._u_post = np.linalg.solve(self._Kc, self._f_post)
@@ -120,9 +122,7 @@ class GPModel(Model):
             # POSTERIOR MEAN ON f #
             #######################
 
-            # Get the posterior of the force field
-            if not '_f_post' in vars(self):
-                self._f_post = self._alpha2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            # f_bar = alpha2 * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
 
             # Return the posterior of the force field
             params[gppn.POSTERIORMEAN] = self._f_post

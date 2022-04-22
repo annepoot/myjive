@@ -34,6 +34,7 @@ solver =
 
   nsteps = 1;
   storeMatrix = True;
+  storeConstraints = True;
   getMassMatrix = True;
 };
 

@@ -29,8 +29,10 @@ globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
-phi = globdat['phi']
-phi_sub = globdat['phi_sub']
+# phi = globdat['phi']
+# phi_sub = globdat['phi_sub']
+f_prior = globdat['f_prior']
+u_prior = globdat['u_prior']
 f_post = globdat['f_post']
 u_post = globdat['u_post']
 var_f_prior = np.sqrt(globdat['sigma_f_prior'])
@@ -41,8 +43,10 @@ var_u_post = np.sqrt(globdat['sigma_u_post'])
 x = range(len(u_post))
 
 fix, [[ax1,ax2],[ax3,ax4]] = plt.subplots(2,2)
-ax1.fill_between(x, -2*var_f_prior, 2*var_f_prior, alpha=0.3)
-ax2.fill_between(x, -2*var_u_prior, 2*var_u_prior, alpha=0.3)
+ax1.plot(x, f_prior)
+ax1.fill_between(x, f_prior - 2*var_f_prior, f_prior + 2*var_f_prior, alpha=0.3)
+ax2.plot(x, u_prior)
+ax2.fill_between(x, u_prior - 2*var_u_prior, u_prior + 2*var_u_prior, alpha=0.3)
 ax3.plot(x, f_post)
 ax3.fill_between(x, f_post - 2*var_f_post, f_post + 2*var_f_post, alpha=0.3)
 ax3.plot(x, K @ u)

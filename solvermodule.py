@@ -11,6 +11,7 @@ from constrainer import Constrainer
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
+STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
 
 class SolverModule(Module):
@@ -20,6 +21,7 @@ class SolverModule(Module):
         myprops = props[self._name]
         self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
+        self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
 
@@ -67,12 +69,16 @@ class SolverModule(Module):
         globdat[gn.STATE0] = u
 
         # Optionally store stiffness matrix in Globdat
-        if ( self._store_matrix ):
+        if self._store_matrix:
           globdat[gn.MATRIX0] = K
 
           # Optionally store mass matrix in Globdat
           if self._get_mass_matrix:
               globdat[gn.MATRIX2] = M
+
+        # Optionally store the constrainer in Globdat
+        if self._store_constraints:
+            globdat[gn.CONSTRAINTS] = c
 
         if self._step >= self._nsteps:
             return 'exit'

@@ -12,6 +12,7 @@ ALPHA = 'alpha'
 RANDOMOBS = 'randomObs'
 
 class GPModel(Model):
+
     def take_action(self, action, params, globdat):
         print('BarModel taking action', action)
 
@@ -20,9 +21,10 @@ class GPModel(Model):
         elif action == gpact.GETPRIORCOVARIANCE:
             self._get_prior_covariance(params, globdat)
         elif action == gpact.GETPOSTERIORMEAN:
-            self._get_post_mean(params, globdat)
+            self._get_posterior_mean(params, globdat)
         elif action == gpact.GETPOSTERIORCOVARIANCE:
-            self._get_post_covariance(params, globdat)
+            self._get_posterior_covariance(params, globdat)
+
 
     def configure(self, props, globdat):
 
@@ -37,32 +39,35 @@ class GPModel(Model):
         # Get the observational noise
         self._noise2 = float(props.get(OBSNOISE))**2
 
+        # Get the alpha parameter, or use the optimal alpha
+        self._alpha2 = props.get(ALPHA, 'opt')
+        if self._alpha2 != 'opt':
+            self._alpha2 = float(self._alpha2)**2
+
+
+    def configure_fem(self, globdat):
+
         # Get K, M and f from globdat
-        K = globdat.get(gn.MATRIX0, None)
-        self._M = globdat.get(gn.MATRIX2, None)
-        f = globdat.get(gn.EXTFORCE, None)
+        K = globdat.get(gn.MATRIX0)
+        M = globdat.get(gn.MATRIX2)
+        f = globdat.get(gn.EXTFORCE)
+        c = globdat.get(gn.CONSTRAINTS)
 
-        # Get the constrained K and f as well
-        if K is not None and f is not None:
-
-            # Constrain K and f
-            c = Constrainer()
-            self._Kc, self._fc = c.constrain(K, f)
+        # Constrain K, M and f
+        self._Mc = c.constrain(M, f)[0]
+        self._Kc, self._fc = c.constrain(K, f)
 
         # Get phi from Globdat
         self._phi = self._get_phis()[0]
 
-        # Compute the observations if possible
-        if '_fc' in vars(self):
-            self._y = self._phi.T @ self._fc
+        # Compute the observation vector
+        self._y = self._phi.T @ self._fc
 
-            # Get the alpha parameter, or use the optimal alpha
-            self._alpha2 = props.get(ALPHA, 'opt')
-            if self._alpha2 == 'opt':
-                self._alpha2 = self._get_alpha2_opt()
-                print('Setting alpha^2 to optimal value: {:.4f}'.format(self._alpha2))
-            else:
-                self._alpha2 = float(self._alpha2)**2
+        # Set alpha to the optimal value if necessary
+        if self._alpha2 == 'opt':
+            self._alpha2 = self._get_alpha2_opt()
+            print('Setting alpha^2 to optimal value: {:.4f}'.format(self._alpha2))
+
 
     def _get_prior_mean(self, params, globdat):
 
@@ -73,11 +78,12 @@ class GPModel(Model):
         # Only a 0-mean prior has been implemented
         params[gppn.PRIORMEAN] = np.zeros(self._dc)
 
+
     def _get_posterior_mean(self, params, globdat):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha2 * self._phi.T @ self._M @ self._phi + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._alpha2 * self._phi.T @ self._Mc @ self._phi + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition only if necessary
         if not '_sqrtObs' in vars(self):
@@ -100,7 +106,7 @@ class GPModel(Model):
 
                 # Get the posterior of the force field
                 if not '_f_post' in vars(self):
-                    self._f_post = self._alpha2 * self._M @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+                    self._f_post = self._alpha2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
                 # Solve to get the posterior of the displacement field
                 self._u_post = np.linalg.solve(self._Kc, self._f_post)
@@ -116,7 +122,7 @@ class GPModel(Model):
 
             # Get the posterior of the force field
             if not '_f_post' in vars(self):
-                self._f_post = self._alpha2 * self._M @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+                self._f_post = self._alpha2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
             # Return the posterior of the force field
             params[gppn.POSTERIORMEAN] = self._f_post
@@ -124,6 +130,7 @@ class GPModel(Model):
         else:
 
             raise ValueError(field)
+
 
     def _get_prior_covariance(self, params, globdat):
 
@@ -141,7 +148,7 @@ class GPModel(Model):
 
             # Do the cholesky decomposition only if necessary
             if not '_sqrtM' in vars(self):
-                self._sqrtM = np.linalg.cholesky(self._M)
+                self._sqrtM = np.linalg.cholesky(self._Mc)
 
             # Solve the system for each dof
             if not '_V2' in vars(self):
@@ -172,12 +179,12 @@ class GPModel(Model):
             if fullSigma:
 
                 # If so, compute the full covariance matrix
-                Sigma_prior = self._alpha2 * self._M
+                Sigma_prior = self._alpha2 * self._Mc
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
-                sigma_prior = self._alpha2 * self._M.diagonal()
+                sigma_prior = self._alpha2 * self._Mc.diagonal()
 
         else:
 
@@ -189,22 +196,31 @@ class GPModel(Model):
         else:
             params[gppn.PRIORCOVARIANCE] = sigma_prior
 
-    def _get_posterior_variance(self, params, globdat):
+
+    def _get_posterior_covariance(self, params, globdat):
 
         # Check if the posterior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
         fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
         # Check if the prior variance is given in the params, otherwise, take an action to obtain it
-        if not gppn.PRIORVARIANCE in params:
-            self.take_action(gpact.GETPRIORVARIANCE, params, globdat)
+        if not gppn.PRIORCOVARIANCE in params:
+            self.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
 
         # Get the prior variance from the params
-        sigma_prior = params[gppn.PRIORVARIANCE]
+        sigma_prior = params[gppn.PRIORCOVARIANCE]
+
+        # Get the observation covariance matrix
+        if not '_Sigma_obs' in vars(self):
+            self._Sigma_obs = self._alpha2 * self._phi.T @ self._Mc @ self._phi + np.identity(self._nobs) * self._noise2
+
+        # Do the cholesky decomposition only if necessary
+        if not '_sqrtObs' in vars(self):
+            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
 
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._phi.T @ self._M)
+            self._V1 = np.linalg.solve(self._sqrtObs, self._phi.T @ self._Mc)
 
         if field == 'u':
 
@@ -217,7 +233,6 @@ class GPModel(Model):
             # Solve the system for each dof
             if not '_V3' in vars(self):
                 self._V3 = np.linalg.solve(self._Kc, self._V1.T)
-
 
             # Check if the full covariance matrix should be returned
             if fullSigma:
@@ -265,6 +280,7 @@ class GPModel(Model):
         else:
             params[gppn.POSTERIORCOVARIANCE] = sigma_post
 
+
     def _get_alpha2_opt(self):
 
         #################
@@ -272,7 +288,7 @@ class GPModel(Model):
         #################
 
         # If so, determine the optimal value of alpha
-        L = np.linalg.cholesky(self._phi.T @ self._M @ self._phi)
+        L = np.linalg.cholesky(self._phi.T @ self._Mc @ self._phi)
         v = np.linalg.solve(L, self._y)
         alpha2 = v.T @ v / self._nobs
 

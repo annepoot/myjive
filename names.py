@@ -13,6 +13,7 @@ class GlobNames:
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
     EXTFORCE = 'extForce'
+    CONSTRAINTS = 'constraints'
     MATRIX0 = 'matrix0'
     MATRIX2 = 'matrix2'
     TABLES = 'tables'

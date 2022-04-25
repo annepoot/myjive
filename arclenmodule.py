@@ -131,7 +131,13 @@ class ArclenModule(Module):
 
         globdat[gn.LAMBDA] += Dlam
 
-        self._step += 1
+        # Check commit
+        globdat[gn.ACCEPTED] = True
+        model.take_action(act.CHECKCOMMIT, params, globdat)
+
+        # Only move to next time step if commit is accepted
+        if globdat[gn.ACCEPTED]:
+            self._step += 1
 
         if self._step >= self._nsteps:
             return 'exit'

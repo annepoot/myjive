@@ -21,14 +21,15 @@ class FrameViewModule(Module):
         self._step = 0
         self._storeHistory = self._interactive
 
+    # TODO: configure gn.History so every step has the same number of dofs as the last step (after hinges appear)
     def run(self, globdat):
         if self._storeHistory:
             if self._step == 0:
                 if gn.HISTORY in globdat:
                     self._storeHistory = False
-                else:
+                elif gn.HISTORY not in globdat and globdat[gn.ACCEPTED]:
                     globdat[gn.HISTORY] = np.array([globdat[gn.STATE0]])
-            else:
+            elif self._step != 0 and globdat[gn.ACCEPTED]:
                 globdat[gn.HISTORY] = np.vstack((globdat[gn.HISTORY], globdat[gn.STATE0]))
 
         self._step += 1
@@ -66,7 +67,7 @@ class FrameViewModule(Module):
 
         elif self._interactive:
             if gn.HISTORY not in globdat:
-                raise RuntimeError(gn.HISTORY, 'has not been defined')
+                raise RuntimeError(gn.HISTORY + ' has not been defined')
 
             # Initial plot
             nodes = globdat[gn.NSET]
@@ -137,6 +138,7 @@ class FrameViewModule(Module):
                 gn.SLIDERS = []
 
             gn.SLIDERS.append(s_step)
+
 
 def declare(factory):
     factory.declare_module('FrameView', FrameViewModule)

@@ -13,6 +13,8 @@ NONLIN = 'nonlin'
 EA = 'EA'
 GAs = 'GAs'
 EI = 'EI'
+PLASTIC = 'plastic'
+MP = 'mp'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx', 'dy', 'phi']
@@ -30,11 +32,22 @@ class FrameModel(Model):
         elif action == act.GETINTFORCE:
             self._get_int_force(params, globdat)
 
+        elif action == act.CHECKCOMMIT:
+            self._check_commit(params, globdat)
+
     def configure(self, props, globdat):
         self._subtype = str(props[SUBTYPE])
         self._EA = float(props[EA])
         self._GAs = float(props[GAs])
         self._EI = float(props[EI])
+
+        self._plastic = bool(props.get(PLASTIC, False))
+        if self._plastic:
+            self._mp = float(props.get(MP, None))
+        self._nhinges = 0
+        self._hingedofs = []
+        self._hingemoments = []
+
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
@@ -81,9 +94,8 @@ class FrameModel(Model):
                 ue = [globdat[gn.STATE0][i] for i in idofs]
 
                 d = d0 + ue[3:5] - ue[0:2]
-                l_ = np.linalg.norm(d)
-                lcps = (d0[0]*d[0]+d0[1]*d[1]) / l_0
-                lsps = (d0[0]*d[1]-d0[1]*d[0]) / l_0
+                lcps = (d0[0] * d[0] + d0[1] * d[1]) / l_0
+                lsps = (d0[0] * d[1] - d0[1] * d[0]) / l_0
 
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
@@ -171,9 +183,8 @@ class FrameModel(Model):
 
             if self._subtype == NONLIN:
                 d = d0 + ue[3:5] - ue[0:2]
-                l_ = np.linalg.norm(d)
-                lcps = (d0[0]*d[0]+d0[1]*d[1]) / l_0
-                lsps = (d0[0]*d[1]-d0[1]*d[0]) / l_0
+                lcps = (d0[0] * d[0] + d0[1] * d[1]) / l_0
+                lsps = (d0[0] * d[1] - d0[1] * d[0]) / l_0
                 for ip in range(self._ipcount):
                     N = sfuncs[:, ip]
                     dN = grads[:, 0, ip]
@@ -191,8 +202,110 @@ class FrameModel(Model):
 
             params[pn.INTFORCE][np.ix_(idofs)] += elfor
 
-    def _get_B_matrix(self, N, dN, omega, gamma=0, eps=0):
+        if self._nhinges > 0:
+            params[pn.INTFORCE][np.ix_(self._hingedofs)] = self._hingemoments
 
+    # TODO: variable 'params' is not used but is kept to have the same shape as other actions. Evaluate removal
+    def _check_commit(self, params, globdat):
+        globdat[gn.ACCEPTED] = True
+        if self._plastic:
+            if self._mp is None:
+                raise RuntimeError('Plastic moment ' + MP + ' has not been defined')
+
+            moments = self._get_moments(globdat)
+
+            # Get element and node where highest moment occurs
+            maxarg = np.argmax(abs(moments))
+            maxratio = np.max(abs(moments)) / self._mp
+            hingeelem = maxarg // 2
+            enodes = globdat[gn.ESET][hingeelem].get_nodes()
+            hingenode = enodes[maxarg % 2]
+            if abs(np.min(moments)) < abs(np.max(moments)):
+                sign = 1
+            else:
+                sign = -1
+
+            if maxratio > 1.:
+                globdat[gn.ACCEPTED] = False
+                self._add_plastic_hinge(globdat, hingenode, hingeelem, sign)
+
+    def _add_plastic_hinge(self, globdat, hingenode, hingeelem, sign):
+        print('Adding plastic hinge on node %i (in element %i)' % (hingenode, hingeelem))
+
+        # Add node
+        oldnode = hingenode
+        coords = globdat[gn.NSET][oldnode].get_coords()
+        globdat[gn.NSET].append(coords)
+        newnode = len(globdat[gn.NSET]) - 1
+
+        # Duplicate dofs and add new phi dof
+        globdat[gn.DOFSPACE].set_dof(oldnode, newnode, 'dx')
+        globdat[gn.DOFSPACE].set_dof(oldnode, newnode, 'dy')
+        globdat[gn.DOFSPACE].add_dof(newnode, 'phi')
+
+        # Initialize new dof
+        globdat[gn.STATE0] = globdat[gn.OLDSTATE0]
+        oldphidof = globdat[gn.DOFSPACE].get_dof(oldnode, 'phi')
+        phi = globdat[gn.STATE0][oldphidof]
+        globdat[gn.STATE0] = np.append(globdat[gn.STATE0], phi)
+        newphidof = globdat[gn.DOFSPACE].get_dof(newnode, 'phi')
+
+        # Update element connectivity
+        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)
+        self._elems = globdat[gn.ESET]
+
+        # Modify hinge variables
+        self._nhinges += 1
+        self._hingemoments.append(-self._mp * sign)
+        self._hingemoments.append(self._mp * sign)
+        self._hingedofs.append(newphidof)
+        self._hingedofs.append(oldphidof)
+
+    def _get_moments(self, globdat):
+        moments = np.zeros(2 * len(self._elems))
+        D = self._get_D_matrix()
+        for i, elem in enumerate(self._elems):
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=0)[:, :]
+
+            d0 = coords[1, :] - coords[0, :]
+            l_0 = np.linalg.norm(d0)
+            coords1d = np.array([0, l_0])
+
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords1d)
+            m1 = 0
+            m2 = 0
+
+            ue = [globdat[gn.STATE0][i] for i in idofs]
+
+            d = d0 + ue[3:5] - ue[0:2]
+            lcps = (d0[0] * d[0] + d0[1] * d[1]) / l_0
+            lsps = (d0[0] * d[1] - d0[1] * d[0]) / l_0
+
+            for ip in range(self._ipcount):
+                N = sfuncs[:, ip]
+                dN = grads[:, 0, ip]
+
+                theta = np.matmul(N, [ue[2], ue[5]])
+                kappa = np.matmul(dN, [ue[2], ue[5]])
+                gamma = (np.cos(theta) * lsps - np.sin(theta) * lcps) / l_0
+                eps = (np.cos(theta) * lcps + np.sin(theta) * lsps) / l_0 - 1
+                evec = [eps, gamma, kappa]
+                svec = np.matmul(D, evec)
+                g = gamma / 2
+                e = (1 + eps) / 2
+                t = 1 / l_0
+
+                m1 += weights[ip] * np.matmul([g, -e, -t], svec)
+                m2 += weights[ip] * np.matmul([g, -e, t], svec)
+
+            moments[2 * i] = m1
+            moments[2 * i + 1] = m2
+        return moments
+
+    def _get_B_matrix(self, N, dN, omega, gamma=0, eps=0):
         B = np.zeros((self._strcount, self._dofcount))
         for inode in range(self._shape.node_count()):
             i = 3 * inode
@@ -205,13 +318,13 @@ class FrameModel(Model):
 
     def _get_WN_matrix(self, N, dN, omega, eps=0):
         WN = np.zeros((6, 6))
-
         dn = dN[1]
         l0 = 1 / dn
         c = np.cos(omega)
         s = np.sin(omega)
         n1 = N[0]
         n2 = N[1]
+
         WN[0, 2] = n1 * s
         WN[0, 5] = n2 * s
         WN[1, 2] = -n1 * c
@@ -223,18 +336,19 @@ class FrameModel(Model):
         WN[3, 5] = -n2 * s
         WN[4, 5] = n2 * c
         WN[5, 5] = -n2 ** 2 * l0 * (1 + eps)
+
         WN = WN + WN.transpose() - np.diag(np.diag(WN))  # Add symmetric values in lower triangle
         return WN
 
     def _get_WV_matrix(self, N, dN, omega, gamma=0):
         WV = np.zeros((6, 6))
-
         dn = dN[1]
         l0 = 1 / dn
         c = np.cos(omega)
         s = np.sin(omega)
         n1 = N[0]
         n2 = N[1]
+
         WV[0, 2] = n1 * c
         WV[0, 5] = n2 * c
         WV[1, 2] = n1 * s
@@ -246,6 +360,7 @@ class FrameModel(Model):
         WV[3, 5] = -n2 * c
         WV[4, 5] = n2 * s
         WV[5, 5] = -n2 ** 2 * l0 * gamma
+
         WV = WV + WV.transpose() - np.diag(np.diag(WV))  # Add symmetric values in lower triangle
         return WV
 

@@ -35,6 +35,8 @@ class NonlinModule(Module):
         globdat[gn.TIMESTEP] = self._step
         print('Running time step', self._step)
 
+        globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
+
         K = np.zeros((dc, dc))
         fext = np.zeros(dc)
         fint = np.zeros(dc)
@@ -101,10 +103,17 @@ class NonlinModule(Module):
             else:
                 warnings.warn('No convergence in time step %i' % self._step)
 
-        self._step += 1
+        # Check commit
+        globdat[gn.ACCEPTED] = True
+        model.take_action(act.CHECKCOMMIT, params, globdat)
+
+        # Only move to next time step if commit is accepted
+        if globdat[gn.ACCEPTED]:
+            self._step += 1
 
         if self._step >= self._nsteps:
             return 'exit'
+
         else:
             return 'ok'
 

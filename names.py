@@ -19,6 +19,7 @@ class GlobNames:
     LAMBDA = 'lambda'
     MODULEDATA = 'module'
     SLIDERS = 'sliders'
+    ACCEPTED = 'accepted'
 
 
 class PropNames:
@@ -31,6 +32,7 @@ class Actions:
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
     GETUNITFORCE = 'getUnitForce'
+    CHECKCOMMIT = 'checkCommit'
     GETCONSTRAINTS = 'getConstraints'
     GETTABLE = 'getTable'
     ADVANCE = 'advance'

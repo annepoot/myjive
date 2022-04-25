@@ -86,10 +86,14 @@ gaussian =
 
   storeMatrix = True;
   getMassMatrix = True;
+};
 
-  nobs = 9;
-  obsNoise = 1e-5;
-  alpha = 1;
+sampler =
+{
+  type = Sampler;
+  model = gpmodel;
+
+  nsample = 30;
 };
 
 gpmodel =
@@ -98,5 +102,5 @@ gpmodel =
 
   obsNoise = 1e-5;
   alpha = opt;
-  nobs = 9;
+  nobs = 5;
 }

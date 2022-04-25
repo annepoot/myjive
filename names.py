@@ -48,6 +48,8 @@ class GPActions:
     GETPRIORCOVARIANCE = 'getPriorCovariance'
     GETPOSTERIORMEAN = 'getPosteriorMean'
     GETPOSTERIORCOVARIANCE = 'getPosteriorCovariance'
+    GETPRIORSAMPLES = 'getPriorSamples'
+    GETPOSTERIORSAMPLES = 'getPosteriorSamples'
 
 
 class GPParamNames:
@@ -55,5 +57,8 @@ class GPParamNames:
     PRIORCOVARIANCE = 'priorCovariance'
     POSTERIORMEAN = 'posteriorMean'
     POSTERIORCOVARIANCE = 'posteriorCovariance'
+    PRIORSAMPLES = 'priorSamples'
+    POSTERIORSAMPLES = 'posteriorSamples'
     FIELD = 'field'
     FULLCOVARIANCE = 'fullCovariance'
+    NSAMPLE = 'nsamples'

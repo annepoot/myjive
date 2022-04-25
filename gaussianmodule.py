@@ -18,7 +18,6 @@ class GaussianModule(Module):
     def init(self, props, globdat):
         myprops = props[self._name]
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
-        self._dc = globdat[gn.DOFSPACE].dof_count()
 
         # Get the appropriate model for this module
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
@@ -32,7 +31,6 @@ class GaussianModule(Module):
         globdat[self._modelname] = m
 
     def run(self, globdat):
-        dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[self._modelname]
 
         # Configure the model again, to make sure K, M and f are stored there as well

@@ -14,7 +14,7 @@ EA = 'EA'
 GAs = 'GAs'
 EI = 'EI'
 PLASTIC = 'plastic'
-MP = 'mp'
+MP = 'Mp'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx', 'dy', 'phi']
@@ -41,7 +41,7 @@ class FrameModel(Model):
         self._GAs = float(props[GAs])
         self._EI = float(props[EI])
 
-        self._plastic = bool(props.get(PLASTIC, False))
+        self._plastic = bool(eval(props.get(PLASTIC, 'False')))
         if self._plastic:
             self._mp = float(props.get(MP, None))
         self._nhinges = 0

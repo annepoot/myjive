@@ -14,7 +14,6 @@ class FrameViewModule(Module):
 
     def init(self, props, globdat):
         myprops = props[self._name]
-        self._shape = props['model']['frame']['shape']['type']
         self._linewidth = float(myprops.get(LINEWIDTH, 0.5))
         self._scale = float(myprops.get(DEFORM, 0.5))
         self._interactive = bool(eval(myprops.get(INTERACTIVE, 'True')))
@@ -135,9 +134,9 @@ class FrameViewModule(Module):
             plt.show()
 
             if gn.SLIDERS not in globdat:
-                gn.SLIDERS = []
+                globdat[gn.SLIDERS] = []
 
-            gn.SLIDERS.append(s_step)
+            globdat[gn.SLIDERS].append(s_step)
 
 
 def declare(factory):

@@ -101,6 +101,14 @@ class Line2Shape(Shape):
 
         return dN, wts
 
+    def eval_shape_values(self, loc):
+        val = np.zeros((self._ncount))
+
+        val[0] = 0.5 - 0.5 * loc
+        val[1] = 0.5 + 0.5 * loc
+
+        return val
+
     def get_shape_functions(self):
         return self._N
 

@@ -43,10 +43,11 @@ class BarModel(Model):
         self._strcount = self._rank * (self._rank + 1) // 2
 
         nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
-        for doftype in DOFTYPES[0:self._rank]:
-            globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
-                globdat[gn.DOFSPACE].add_dof(node, doftype)
+        for suffix in globdat[gn.MESHSUFFIXES]:
+            for doftype in DOFTYPES[0:self._rank]:
+                globdat[gn.DOFSPACE + suffix].add_type(doftype)
+                for node in nodes:
+                    globdat[gn.DOFSPACE + suffix].add_dof(node, doftype)
 
     def _get_matrix(self, params, globdat):
         D = np.array([[self._EA]])

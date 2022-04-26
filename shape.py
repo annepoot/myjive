@@ -27,3 +27,6 @@ class Shape:
 
     def get_shape_gradients(self, coords):
         pass
+
+    def eval_shape_values(self, loc):
+        pass

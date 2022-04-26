@@ -8,9 +8,12 @@ import main
 import proputils as pu
 import testutils as tu
 
-def mesher_lin(L, n):
+def mesher_lin(L, n, fname='2nodebar'):
     dx = L / n
-    with open('2nodebar.mesh', 'w') as fmesh:
+    if not '.' in fname:
+        fname += '.mesh'
+
+    with open(fname, 'w') as fmesh:
         fmesh.write('nodes (ID, x, [y], [z])\n')
         for i in range(n + 1):
             fmesh.write('%d %f\n' % (i, i * dx))

@@ -3,6 +3,7 @@ class GlobNames:
     DOFSPACE = 'dofSpace'
     MESHSHAPE = 'meshShape'
     MESHRANK = 'meshRank'
+    MESHSUFFIXES = 'meshSuffixes'
     ESET = 'elemSet'
     NSET = 'nodeSet'
     NGROUPS = 'nodeGroups'

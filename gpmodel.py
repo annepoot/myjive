@@ -3,13 +3,16 @@ import numpy as np
 from names import GPActions as gpact
 from names import GPParamNames as gppn
 from names import GlobNames as gn
+from names import PropNames as prn
 from model import Model, ModelFactory
-from constrainer import Constrainer
 
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
 ALPHA = 'alpha'
 RANDOMOBS = 'randomObs'
+SHAPE = 'shape'
+INTSCHEME = 'intScheme'
+DOFTYPES = ['dx']
 
 class GPModel(Model):
 
@@ -47,6 +50,8 @@ class GPModel(Model):
         if self._alpha != 'opt':
             self._alpha = float(self._alpha)
 
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
+        self._rank = 1
 
     def configure_fem(self, globdat):
 
@@ -62,6 +67,9 @@ class GPModel(Model):
 
         # Get phi from Globdat
         self._phi = self._get_phis()[0]
+
+        self._phi = self._get_phi_lumped(globdat)
+        globdat['phi'] = self._phi
 
         # Compute the observation vector
         self._y = self._phi.T @ self._fc
@@ -459,6 +467,60 @@ class GPModel(Model):
 
         return phi, phi_sub
 
+
+    def _get_phi_lumped(self, globdat):
+
+        suffix = 'Coarse'
+
+        elemsc = globdat[gn.ESET + suffix]
+        elems = globdat[gn.ESET]
+        nodesc = globdat[gn.NSET + suffix]
+        nodes = globdat[gn.NSET]
+        dofsc = globdat[gn.DOFSPACE + suffix]
+        dofs = globdat[gn.DOFSPACE]
+
+        phi = np.zeros((len(nodes), len(nodesc)))
+
+        # Go over the coarse mesh
+        for elemc in elemsc:
+            inodesc = elemc.get_nodes()
+            idofsc = dofsc.get_dofs(inodesc, DOFTYPES[0:self._rank])
+            coordsc = np.stack([nodesc[i].get_coords() for i in inodesc], axis=1)[0:self._rank, :]
+
+            lower = np.min(coordsc)
+            upper = np.max(coordsc)
+
+            # Go over the fine mesh
+            for elem in elems:
+                inodes = elem.get_nodes()
+                idofs = dofs.get_dofs(inodes, DOFTYPES[0:self._rank])
+                coords = np.stack([nodes[i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+                # Check if the elements overlap
+                if np.max(coords) > lower and np.min(coords) < upper:
+
+                    # Go over the nodes of the fine element
+                    for n in range(len(inodes)):
+
+                        # Get the nodal coords
+                        coord = coords[:, n][0]
+
+                        # Check if the node overlaps
+                        if coord >= lower and coord <= upper:
+
+                            # If so, get the relative position of the node
+                            relcoord = -1 + 2 * (coord - lower) / (upper - lower)
+
+                            # Get the shape function values at the location of the coords
+                            svals = self._shape.eval_shape_values(relcoord)
+
+                            # Get the dofs belonging to this node
+                            idof = dofs.get_dofs([inodes[n]], DOFTYPES[0:self._rank])
+
+                            # Store the relative shape function values in the phi matrix
+                            phi[idof, idofsc] = svals
+
+        return phi
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

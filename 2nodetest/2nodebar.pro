@@ -5,10 +5,18 @@ init =
 
   nodeGroups = [ left, right, mid ];
 
+  meshSuffixes = [ , Coarse ];
+
   mesh =
   {
     type = manual;
     file = 2nodebar.mesh;
+  };
+
+  meshCoarse =
+  {
+    type = manual;
+    file = 2nodebar_coarse.mesh;
   };
 
   left =
@@ -102,5 +110,11 @@ gpmodel =
 
   obsNoise = 1e-5;
   alpha = opt;
-  nobs = 5;
+  nobs = 8;
+
+  shape =
+  {
+    type = Line2;
+    intScheme = Gauss2;
+  };
 }

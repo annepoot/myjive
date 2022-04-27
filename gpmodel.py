@@ -33,14 +33,10 @@ class GPModel(Model):
             self._get_posterior_samples(params, globdat)
 
     def configure(self, props, globdat):
-
         self._dc = globdat[gn.DOFSPACE].dof_count()
-
-        # Get the number of observations either as a ratio or as a fixed integer
-        self._nobs = float(props.get(NOBS,self._dc))
-        if self._nobs < 1:
-            self._nobs = self._dc * self._nobs
-        self._nobs = int(np.round(self._nobs))
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
+        self._nobs = len(globdat[gn.COARSEMESH][gn.NSET])
+        self._rank = 1
 
         # Get the observational noise
         self._noise2 = float(props.get(OBSNOISE))**2
@@ -50,8 +46,12 @@ class GPModel(Model):
         if self._alpha != 'opt':
             self._alpha = float(self._alpha)
 
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
-        self._rank = 1
+        # Add the dofs to the coarse mesh
+        nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
+        for doftype in DOFTYPES[0:self._rank]:
+            globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
+            for node in nodes:
+                globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
 
     def configure_fem(self, globdat):
 
@@ -470,14 +470,12 @@ class GPModel(Model):
 
     def _get_phi_lumped(self, globdat):
 
-        suffix = 'Coarse'
-
-        elemsc = globdat[gn.ESET + suffix]
         elems = globdat[gn.ESET]
-        nodesc = globdat[gn.NSET + suffix]
+        elemsc = globdat[gn.COARSEMESH][gn.ESET]
         nodes = globdat[gn.NSET]
-        dofsc = globdat[gn.DOFSPACE + suffix]
+        nodesc = globdat[gn.COARSEMESH][gn.NSET]
         dofs = globdat[gn.DOFSPACE]
+        dofsc = globdat[gn.COARSEMESH][gn.DOFSPACE]
 
         phi = np.zeros((len(nodes), len(nodesc)))
 

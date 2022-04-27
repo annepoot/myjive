@@ -5,18 +5,10 @@ init =
 
   nodeGroups = [ left, right, mid ];
 
-  meshSuffixes = [ , Coarse ];
-
   mesh =
   {
     type = manual;
     file = 2nodebar.mesh;
-  };
-
-  meshCoarse =
-  {
-    type = manual;
-    file = 2nodebar_coarse.mesh;
   };
 
   left =
@@ -87,6 +79,35 @@ femodel =
   };
 };
 
+gpinit =
+{
+  type = GPInit;
+  model = gpmodel;
+
+  nodeGroups = [ left, right, mid ];
+
+  mesh =
+  {
+    type = manual;
+    file = 2nodebar_coarse.mesh;
+  };
+
+  left =
+  {
+    xtype = min;
+  };
+
+  right =
+  {
+    xtype = max;
+  };
+
+  mid =
+  {
+    xtype = mid;
+  };
+};
+
 gaussian =
 {
   type = Gaussian;
@@ -110,7 +131,6 @@ gpmodel =
 
   obsNoise = 1e-5;
   alpha = opt;
-  nobs = 8;
 
   shape =
   {

@@ -1,6 +1,6 @@
 // This variable is a characteristic length and it controles the mesh size around a Point.
 // It is possible to specify more than one variable for this purpose.
-cl = 1.0;
+cl = 0.40;
 
 // These variables control the dimensions
 H = 2.;

@@ -56,6 +56,7 @@ femodel =
     young = 10000.;
     thickness = 0.2;
     poisson = 0.2;
+    rho = 1;
     state = plane_stress;
 
     shape =

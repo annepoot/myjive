@@ -48,6 +48,40 @@ class Tri3Shape(Shape):
 
         return dN, wts
 
+    def eval_shape_values(self, loc):
+        val = np.zeros((self._ncount))
+
+        val[0] = 1.0 - loc[0] - loc[1]
+        val[1] = loc[0]
+        val[2] = loc[1]
+
+        return val
+
+    def get_relative_position(self, coords, loc):
+        relcoords = np.zeros(self._rank)
+
+        A = coords[:,0]
+        B = coords[:,1]
+        C = coords[:,2]
+
+        AB = np.sqrt((A[0]-B[0])**2 + (A[1]-B[1])**2)
+        AC = np.sqrt((A[0]-C[0])**2 + (A[1]-C[1])**2)
+
+        # Get the global distance of B, perpendicular to A-C
+        Bx = ((C[0]-A[0])*(A[1]-B[1]) - (A[0]-B[0])*(C[1]-A[1]))/AC
+
+        # Get the global distance of C, perpendicular to A-B
+        Cy = ((B[0]-A[0])*(A[1]-C[1]) - (A[0]-C[0])*(B[1]-A[1]))/AB
+
+        # Get the global distance of the target point, perpendicular to A-C and A-B
+        locx = ((C[0]-A[0])*(A[1]-loc[1]) - (A[0]-loc[0])*(C[1]-A[1]))/AC
+        locy = ((B[0]-A[0])*(A[1]-loc[1]) - (A[0]-loc[0])*(B[1]-A[1]))/AB
+
+        relcoords[0] = locx / Bx
+        relcoords[1] = locy / Cy
+
+        return relcoords
+
     def get_shape_functions(self):
         return self._N
 

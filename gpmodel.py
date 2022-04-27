@@ -36,7 +36,7 @@ class GPModel(Model):
         self._dc = globdat[gn.DOFSPACE].dof_count()
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         self._nobs = len(globdat[gn.COARSEMESH][gn.NSET])
-        self._rank = 1
+        self._rank = self._shape.global_rank()
 
         # Get the observational noise
         self._noise2 = float(props.get(OBSNOISE))**2
@@ -477,7 +477,7 @@ class GPModel(Model):
         dofs = globdat[gn.DOFSPACE]
         dofsc = globdat[gn.COARSEMESH][gn.DOFSPACE]
 
-        phi = np.zeros((len(nodes), len(nodesc)))
+        phi = np.zeros((dofs.dof_count(), dofsc.dof_count()))
 
         # Go over the coarse mesh
         for elemc in elemsc:
@@ -485,29 +485,55 @@ class GPModel(Model):
             idofsc = dofsc.get_dofs(inodesc, DOFTYPES[0:self._rank])
             coordsc = np.stack([nodesc[i].get_coords() for i in inodesc], axis=1)[0:self._rank, :]
 
-            lower = np.min(coordsc)
-            upper = np.max(coordsc)
+            # Get the bounding box of the coarse element
+            bbox = np.zeros((self._rank, 2))
+            for i in range(self._rank):
+                bbox[i,0] = min(coordsc[i,:])
+                bbox[i,1] = max(coordsc[i,:])
 
             # Go over the fine mesh
             for elem in elems:
                 inodes = elem.get_nodes()
-                idofs = dofs.get_dofs(inodes, DOFTYPES[0:self._rank])
                 coords = np.stack([nodes[i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
 
+                # Check if the bounding boxes of the coarse and fine element overlap
+                inside = True
+                for i in range(self._rank):
+                    if max(coords[i,:]) < bbox[i,0] or min(coords[i,:]) > bbox[i,1]:
+                        inside = False
+                        break
+
                 # Check if the elements overlap
-                if np.max(coords) > lower and np.min(coords) < upper:
+                if inside:
 
                     # Go over the nodes of the fine element
                     for n in range(len(inodes)):
 
                         # Get the nodal coords
-                        coord = coords[:, n][0]
+                        coord = coords[:, n]
 
-                        # Check if the node overlaps
-                        if coord >= lower and coord <= upper:
+                        # Check if the node falls inside the bounding box
+                        inside = True
+                        for i in range(self._rank):
+                            if coord[i] < bbox[i,0] or coord[i] > bbox[i,1]:
+                                inside = False
+                                break
 
-                            # If so, get the relative position of the node
+                        if inside:
+
+                            # Get the relative position of the node
                             relcoord = self._shape.get_relative_position(coordsc, coord)
+
+                            # In case of a 1D bar, the bounding box check is enough
+                            if self._rank == 1:
+                                inside = True
+
+                            elif self._rank == 2:
+                                # For the 2D case, check if the node actually falls within the triangle
+                                inside = relcoord[0] >= 0 and relcoord[1] >= 0 and relcoord[0] + relcoord[1] <= 1
+
+                        # Only continue if both checks are passed
+                        if inside:
 
                             # Get the shape function values at the location of the coords
                             svals = self._shape.eval_shape_values(relcoord)

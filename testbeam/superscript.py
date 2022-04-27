@@ -30,6 +30,8 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
+phi = globdat['phi']
+
 x = range(len(u_post))
 
 fix, [[ax1,ax2],[ax3,ax4]] = plt.subplots(2,2)

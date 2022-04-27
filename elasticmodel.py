@@ -79,6 +79,22 @@ class ElasticModel(Model):
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
+    def _get_mass_matrix(self, params, globdat):
+        M = self._rho * np.identity(self._rank)
+        for elem in self._elems:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
+
+            elmat = np.zeros((self._dofcount, self._dofcount))
+            for ip in range(self._ipcount):
+                N = self._get_N_matrix(sfuncs[:, ip])
+                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+
+            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+
     def _get_body_force(self, params, globdat):
         if self._rank == 2:
             gravity = np.array([0, -1])
@@ -92,9 +108,10 @@ class ElasticModel(Model):
 
                 elfor = np.zeros(self._dofcount)
                 for ip in range(self._ipcount):
-                    N = np.zeros((2, 6))
-                    N[0, 0:: 2] = sfuncs[:, ip].transpose()
-                    N[1, 1:: 2] = sfuncs[:, ip].transpose()
+                    # N = np.zeros((2, 6))
+                    # N[0, 0:: 2] = sfuncs[:, ip].transpose()
+                    # N[1, 1:: 2] = sfuncs[:, ip].transpose()
+                    N = self._get_N_matrix(sfuncs[:, ip])
                     elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b)
 
                 params[pn.EXTFORCE][idofs] += elfor
@@ -153,6 +170,13 @@ class ElasticModel(Model):
                 table['stress_xy'][inodes] += elsig[:, 3]
                 table['stress_yz'][inodes] += elsig[:, 4]
                 table['stress_zx'][inodes] += elsig[:, 5]
+
+    def _get_N_matrix(self, sfuncs):
+        N = np.zeros((self._rank, self._dofcount))
+        for i in range(self._rank):
+            N[i,i::self._rank] = sfuncs.transpose()
+            N[i,i::self._rank] = sfuncs.transpose()
+        return N
 
     def _get_B_matrix(self, grads):
         B = np.zeros((self._strcount, self._dofcount))

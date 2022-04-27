@@ -509,7 +509,7 @@ class GPModel(Model):
                         if coord >= lower and coord <= upper:
 
                             # If so, get the relative position of the node
-                            relcoord = -1 + 2 * (coord - lower) / (upper - lower)
+                            relcoord = self._shape.get_relative_position(coordsc, coord)
 
                             # Get the shape function values at the location of the coords
                             svals = self._shape.eval_shape_values(relcoord)

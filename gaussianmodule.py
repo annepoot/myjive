@@ -21,20 +21,9 @@ class GaussianModule(Module):
 
         # Get the appropriate model for this module
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
-        modelprops = props[self._modelname]
-        modelfac = globdat[gn.MODELFACTORY]
-
-        # Initialize model
-        print('GaussianModule: Creating model...')
-        m = modelfac.get_model(modelprops[prn.TYPE], self._modelname)
-        m.configure(modelprops, globdat)
-        globdat[self._modelname] = m
 
     def run(self, globdat):
         model = globdat[self._modelname]
-
-        # Configure the model again, to make sure K, M and f are stored there as well
-        model.configure_fem(globdat)
 
         # Define a dictionary for the settings of u
         u_params = {}

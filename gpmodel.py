@@ -3,13 +3,16 @@ import numpy as np
 from names import GPActions as gpact
 from names import GPParamNames as gppn
 from names import GlobNames as gn
+from names import PropNames as prn
 from model import Model, ModelFactory
-from constrainer import Constrainer
 
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
 ALPHA = 'alpha'
 RANDOMOBS = 'randomObs'
+SHAPE = 'shape'
+INTSCHEME = 'intScheme'
+DOFTYPES = ['dx']
 
 class GPModel(Model):
 
@@ -30,14 +33,10 @@ class GPModel(Model):
             self._get_posterior_samples(params, globdat)
 
     def configure(self, props, globdat):
-
         self._dc = globdat[gn.DOFSPACE].dof_count()
-
-        # Get the number of observations either as a ratio or as a fixed integer
-        self._nobs = float(props.get(NOBS,self._dc))
-        if self._nobs < 1:
-            self._nobs = self._dc * self._nobs
-        self._nobs = int(np.round(self._nobs))
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
+        self._nobs = len(globdat[gn.COARSEMESH][gn.NSET])
+        self._rank = 1
 
         # Get the observational noise
         self._noise2 = float(props.get(OBSNOISE))**2
@@ -47,6 +46,12 @@ class GPModel(Model):
         if self._alpha != 'opt':
             self._alpha = float(self._alpha)
 
+        # Add the dofs to the coarse mesh
+        nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
+        for doftype in DOFTYPES[0:self._rank]:
+            globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
+            for node in nodes:
+                globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
 
     def configure_fem(self, globdat):
 
@@ -62,6 +67,9 @@ class GPModel(Model):
 
         # Get phi from Globdat
         self._phi = self._get_phis()[0]
+
+        self._phi = self._get_phi_lumped(globdat)
+        globdat['phi'] = self._phi
 
         # Compute the observation vector
         self._y = self._phi.T @ self._fc
@@ -459,6 +467,58 @@ class GPModel(Model):
 
         return phi, phi_sub
 
+
+    def _get_phi_lumped(self, globdat):
+
+        elems = globdat[gn.ESET]
+        elemsc = globdat[gn.COARSEMESH][gn.ESET]
+        nodes = globdat[gn.NSET]
+        nodesc = globdat[gn.COARSEMESH][gn.NSET]
+        dofs = globdat[gn.DOFSPACE]
+        dofsc = globdat[gn.COARSEMESH][gn.DOFSPACE]
+
+        phi = np.zeros((len(nodes), len(nodesc)))
+
+        # Go over the coarse mesh
+        for elemc in elemsc:
+            inodesc = elemc.get_nodes()
+            idofsc = dofsc.get_dofs(inodesc, DOFTYPES[0:self._rank])
+            coordsc = np.stack([nodesc[i].get_coords() for i in inodesc], axis=1)[0:self._rank, :]
+
+            lower = np.min(coordsc)
+            upper = np.max(coordsc)
+
+            # Go over the fine mesh
+            for elem in elems:
+                inodes = elem.get_nodes()
+                idofs = dofs.get_dofs(inodes, DOFTYPES[0:self._rank])
+                coords = np.stack([nodes[i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+                # Check if the elements overlap
+                if np.max(coords) > lower and np.min(coords) < upper:
+
+                    # Go over the nodes of the fine element
+                    for n in range(len(inodes)):
+
+                        # Get the nodal coords
+                        coord = coords[:, n][0]
+
+                        # Check if the node overlaps
+                        if coord >= lower and coord <= upper:
+
+                            # If so, get the relative position of the node
+                            relcoord = self._shape.get_relative_position(coordsc, coord)
+
+                            # Get the shape function values at the location of the coords
+                            svals = self._shape.eval_shape_values(relcoord)
+
+                            # Get the dofs belonging to this node
+                            idof = dofs.get_dofs([inodes[n]], DOFTYPES[0:self._rank])
+
+                            # Store the relative shape function values in the phi matrix
+                            phi[idof, idofsc] = svals
+
+        return phi
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

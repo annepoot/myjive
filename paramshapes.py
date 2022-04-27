@@ -101,6 +101,20 @@ class Line2Shape(Shape):
 
         return dN, wts
 
+    def eval_shape_values(self, loc):
+        val = np.zeros((self._ncount))
+
+        val[0] = 0.5 - 0.5 * loc
+        val[1] = 0.5 + 0.5 * loc
+
+        return val
+
+    def get_relative_position(self, coords, loc):
+        lower = coords[0,0]
+        upper = coords[0,1]
+
+        return -1 + (loc - lower) / (upper - lower) * 2
+
     def get_shape_functions(self):
         return self._N
 
@@ -167,6 +181,21 @@ class Line3Shape(Shape):
             dN[:, :, ip] = dN[:, :, ip] / J
 
         return dN, wts
+
+    def eval_shape_values(self, loc):
+        val = np.zeros((self._ncount))
+
+        val[0] = 0.5 * loc * (loc - 1)
+        val[1] = 1 - loc ** 2
+        val[2] = 0.5 * loc * (loc + 1)
+
+        return val
+
+    def get_relative_position(self, coords, loc):
+        lower = coords[0,0]
+        upper = coords[0,2]
+
+        return -1 + (loc - lower) / (upper - lower) * 2
 
     def get_shape_functions(self):
         return self._N

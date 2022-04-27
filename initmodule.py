@@ -15,7 +15,6 @@ MESH = 'mesh'
 TYPE = 'type'
 FILE = 'file'
 
-
 class InitModule(Module):
     def init(self, props, globdat):
         myprops = props.get(self._name)
@@ -24,15 +23,16 @@ class InitModule(Module):
             raise KeyError('Properties for InitModule not found')
 
         # Initialize some parameters
-
         self._ctol = 1.e-5
-        globdat[gn.NGROUPS] = {}
-        globdat[gn.EGROUPS] = {}
         modelfac = globdat[gn.MODELFACTORY]
 
         # Get the appropriate model for this module
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
         modelprops = props[self._modelname]
+
+        # Initialize the node/elemenet group dictionaries
+        globdat[gn.NGROUPS] = {}
+        globdat[gn.EGROUPS] = {}
 
         # Initialize DofSpace
         print('InitModule: Creating DofSpace...')

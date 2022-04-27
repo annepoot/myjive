@@ -16,6 +16,7 @@ import gpmodel
 import initmodule
 import solvermodule
 import gaussianmodule
+import gpinitmodule
 import samplermodule
 import outputmodule
 import vtkoutmodule
@@ -45,6 +46,7 @@ def declare_modules(globdat):
     initmodule.declare(factory)
     solvermodule.declare(factory)
     gaussianmodule.declare(factory)
+    gpinitmodule.declare(factory)
     samplermodule.declare(factory)
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)

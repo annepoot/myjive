@@ -12,7 +12,7 @@ ALPHA = 'alpha'
 RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
-DOFTYPES = ['dx']
+DOFTYPES = ['dx', 'dy']
 
 class GPModel(Model):
 
@@ -35,7 +35,6 @@ class GPModel(Model):
     def configure(self, props, globdat):
         self._dc = globdat[gn.DOFSPACE].dof_count()
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
-        self._nobs = len(globdat[gn.COARSEMESH][gn.NSET])
         self._rank = self._shape.global_rank()
 
         # Get the observational noise
@@ -52,6 +51,9 @@ class GPModel(Model):
             globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
             for node in nodes:
                 globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
+
+        # Get the number of observations (which is the number of dofs in the coarse mesh)
+        self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
 
     def configure_fem(self, globdat):
 
@@ -542,7 +544,8 @@ class GPModel(Model):
                             idof = dofs.get_dofs([inodes[n]], DOFTYPES[0:self._rank])
 
                             # Store the relative shape function values in the phi matrix
-                            phi[idof, idofsc] = svals
+                            for i in range(self._rank):
+                                phi[idof[i], idofsc[i::self._rank]] = svals
 
         return phi
 

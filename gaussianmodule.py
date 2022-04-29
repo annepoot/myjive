@@ -53,10 +53,10 @@ class GaussianModule(Module):
             globdat['u_prior'] = u_params[gppn.PRIORMEAN]
             globdat['f_post'] = f_params[gppn.POSTERIORMEAN]
             globdat['u_post'] = u_params[gppn.POSTERIORMEAN]
-            globdat['sigma_f_prior'] = f_params[gppn.PRIORCOVARIANCE]
-            globdat['sigma_f_post'] = f_params[gppn.POSTERIORCOVARIANCE]
-            globdat['sigma_u_prior'] = u_params[gppn.PRIORCOVARIANCE]
-            globdat['sigma_u_post'] = u_params[gppn.POSTERIORCOVARIANCE]
+            globdat['var_f_prior'] = f_params[gppn.PRIORCOVARIANCE]
+            globdat['var_f_post'] = f_params[gppn.POSTERIORCOVARIANCE]
+            globdat['var_u_prior'] = u_params[gppn.PRIORCOVARIANCE]
+            globdat['var_u_post'] = u_params[gppn.POSTERIORCOVARIANCE]
 
         return 'exit'
 

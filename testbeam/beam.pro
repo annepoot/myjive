@@ -146,4 +146,13 @@ gpmodel =
     type = Triangle3;
     intScheme = Gauss1;
   };
-}
+};
+
+view =
+{
+  type = View;
+  model = gpmodel;
+
+  plot = std_u_post[dy];
+  ncolors = 100;
+};

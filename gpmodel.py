@@ -1,6 +1,8 @@
 import numpy as np
 
+from names import Actions as act
 from names import GPActions as gpact
+from names import ParamNames as pn
 from names import GPParamNames as gppn
 from names import GlobNames as gn
 from names import PropNames as prn
@@ -31,6 +33,11 @@ class GPModel(Model):
             self._get_prior_samples(params, globdat)
         elif action == gpact.GETPOSTERIORSAMPLES:
             self._get_posterior_samples(params, globdat)
+        elif action == act.GETTABLE:
+            if 'var' in params[pn.TABLENAME]:
+                self._get_variances(params, globdat)
+            elif 'std' in params[pn.TABLENAME]:
+                self._get_standard_deviations(params, globdat)
 
     def configure(self, props, globdat):
         self._dc = globdat[gn.DOFSPACE].dof_count()
@@ -176,9 +183,9 @@ class GPModel(Model):
             else:
 
                 # Compute only the diagonal of the covariance matrix
-                sigma_prior = np.zeros(self._dc)
+                var_prior = np.zeros(self._dc)
                 for i in range(self._dc):
-                    sigma_prior[i] = self._alpha**2 * self._V2[i,:] @ self._V2[i,:].T
+                    var_prior[i] = self._alpha**2 * self._V2[i,:] @ self._V2[i,:].T
 
         elif field == 'f':
 
@@ -197,7 +204,7 @@ class GPModel(Model):
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
-                sigma_prior = self._alpha**2 * self._Mc.diagonal()
+                var_prior = self._alpha**2 * self._Mc.diagonal()
 
         else:
 
@@ -207,7 +214,7 @@ class GPModel(Model):
         if fullSigma:
             params[gppn.PRIORCOVARIANCE] = Sigma_prior
         else:
-            params[gppn.PRIORCOVARIANCE] = sigma_prior
+            params[gppn.PRIORCOVARIANCE] = var_prior
 
 
     def _get_posterior_covariance(self, params, globdat):
@@ -221,7 +228,7 @@ class GPModel(Model):
             self.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
 
         # Get the prior variance from the params
-        sigma_prior = params[gppn.PRIORCOVARIANCE]
+        var_prior = params[gppn.PRIORCOVARIANCE]
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
@@ -251,15 +258,15 @@ class GPModel(Model):
             if fullSigma:
 
                 # If so, compute the full covariance matrix
-                Sigma_post = sigma_prior.copy()
+                Sigma_post = var_prior.copy()
                 Sigma_post -= self._alpha**4 * self._V3 @ self._V3.T
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
-                sigma_post = sigma_prior.copy()
+                var_post = var_prior.copy()
                 for i in range(self._dc):
-                    sigma_post[i] -= self._alpha**4 * self._V3[i,:] @ self._V3[i,:].T
+                    var_post[i] -= self._alpha**4 * self._V3[i,:] @ self._V3[i,:].T
 
         elif field == 'f':
 
@@ -273,15 +280,15 @@ class GPModel(Model):
             if fullSigma:
 
                 # If so, compute the full covariance matrix
-                Sigma_post = sigma_prior.copy()
+                Sigma_post = var_prior.copy()
                 Sigma_post -= self._alpha**4 * self._V1.T @ self._V1
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
-                sigma_post = sigma_prior.copy()
+                var_post = var_prior.copy()
                 for i in range(self._dc):
-                    sigma_post[i] -= self._alpha**4 * self._V1[:,i].T @ self._V1[:,i]
+                    var_post[i] -= self._alpha**4 * self._V1[:,i].T @ self._V1[:,i]
 
         else:
 
@@ -291,7 +298,7 @@ class GPModel(Model):
         if fullSigma:
             params[gppn.POSTERIORCOVARIANCE] = Sigma_post
         else:
-            params[gppn.POSTERIORCOVARIANCE] = sigma_post
+            params[gppn.POSTERIORCOVARIANCE] = var_post
 
 
     def _get_prior_samples(self, params, globdat):
@@ -548,6 +555,80 @@ class GPModel(Model):
                                 phi[idof[i], idofsc[i::self._rank]] = svals
 
         return phi
+
+    def _get_variances(self, params, globdat):
+
+        table = params[pn.TABLE]
+        name = params[pn.TABLENAME]
+        tbwts = params[pn.TABLEWEIGHTS]
+
+        # Initialize the tables
+        if 'dx' not in table:
+            table['dx'] = np.zeros(len(globdat[gn.NSET]))
+        if self._rank > 1:
+            if 'dy' not in table:
+                table['dy'] = np.zeros(len(globdat[gn.NSET]))
+        if self._rank > 2:
+            if 'dz' not in table:
+                table['dz'] = np.zeros(len(globdat[gn.NSET]))
+
+        # Define a dictionary for the settings of u
+        u_params = {}
+        u_params[gppn.FIELD] = 'u'
+        u_params[gppn.FULLCOVARIANCE] = False
+
+        # Define a dictionary for the settings of f
+        f_params = {}
+        f_params[gppn.FIELD] = 'f'
+        f_params[gppn.FULLCOVARIANCE] = False
+
+        if name == 'var_f_prior':
+            self._get_prior_covariance(f_params, globdat)
+            var = f_params[gppn.PRIORCOVARIANCE]
+        elif name == 'var_f_post':
+            self._get_posterior_covariance(f_params, globdat)
+            var = f_params[gppn.POSTERIORCOVARIANCE]
+        elif name == 'var_u_prior':
+            self._get_prior_covariance(u_params, globdat)
+            var = u_params[gppn.PRIORCOVARIANCE]
+        elif name == 'var_u_post':
+            self._get_posterior_covariance(u_params, globdat)
+            var = u_params[gppn.POSTERIORCOVARIANCE]
+
+        c = globdat[gn.CONSTRAINTS]
+        cdofs, cvals = c.get_constraints()
+
+        for elem in globdat[gn.ESET]:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+
+            for inode in inodes:
+                idofs = globdat[gn.DOFSPACE].get_dofs([inode], DOFTYPES[0:self._rank])
+
+                table['dx'][inode] = var[idofs[0]]
+                if self._rank > 1:
+                    table['dy'][inode] = var[idofs[1]]
+                if self._rank > 2:
+                    table['dz'][inode] = var[idofs[2]]
+
+                if any(idof in cdofs for idof in idofs):
+                    tbwts[inode] = np.inf
+                else:
+                    tbwts[inode] = 1
+
+    def _get_standard_deviations(self, params, globdat):
+        table = params[pn.TABLE]
+        name = params[pn.TABLENAME]
+
+        params[pn.TABLENAME] = name.replace('std_', 'var_')
+
+        # Get the variances first
+        self._get_variances(params, globdat)
+
+        for comp in table:
+            table[comp] = np.sqrt(table[comp])
+
+        params[pn.TABLENAME] = name
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

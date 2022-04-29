@@ -124,20 +124,20 @@ class ElasticModel(Model):
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
-        if 'stress_xx' not in table:
-            table['stress_xx'] = np.zeros(len(globdat[gn.NSET]))
+        if 'xx' not in table:
+            table['xx'] = np.zeros(len(globdat[gn.NSET]))
         if self._rank > 1:
-            if 'stress_yy' not in table:
-                table['stress_yy'] = np.zeros(len(globdat[gn.NSET]))
-            if 'stress_xy' not in table:
-                table['stress_xy'] = np.zeros(len(globdat[gn.NSET]))
+            if 'yy' not in table:
+                table['yy'] = np.zeros(len(globdat[gn.NSET]))
+            if 'xy' not in table:
+                table['xy'] = np.zeros(len(globdat[gn.NSET]))
         elif self._rank > 2:
-            if 'stress_zz' not in table:
-                table['stress_zz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'stress_yz' not in table:
-                table['stress_yz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'stress_xz' not in table:
-                table['stress_zx'] = np.zeros(len(globdat[gn.NSET]))
+            if 'zz' not in table:
+                table['zz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'yz' not in table:
+                table['yz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'zx' not in table:
+                table['zx'] = np.zeros(len(globdat[gn.NSET]))
 
         for elem in self._elems:
             inodes = elem.get_nodes()
@@ -159,17 +159,17 @@ class ElasticModel(Model):
 
             tbwts[inodes] += elwts
 
-            table['stress_xx'][inodes] += elsig[:, 0]
+            table['xx'][inodes] += elsig[:, 0]
 
             if self._rank == 2:
-                table['stress_yy'][inodes] += elsig[:, 1]
-                table['stress_xy'][inodes] += elsig[:, 2]
+                table['yy'][inodes] += elsig[:, 1]
+                table['xy'][inodes] += elsig[:, 2]
             elif self._rank == 3:
-                table['stress_yy'][inodes] += elsig[:, 1]
-                table['stress_zz'][inodes] += elsig[:, 2]
-                table['stress_xy'][inodes] += elsig[:, 3]
-                table['stress_yz'][inodes] += elsig[:, 4]
-                table['stress_zx'][inodes] += elsig[:, 5]
+                table['yy'][inodes] += elsig[:, 1]
+                table['zz'][inodes] += elsig[:, 2]
+                table['xy'][inodes] += elsig[:, 3]
+                table['yz'][inodes] += elsig[:, 4]
+                table['zx'][inodes] += elsig[:, 5]
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._rank, self._dofcount))

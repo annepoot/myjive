@@ -44,8 +44,6 @@ class SamplerModule(Module):
         # Take the appropriate actions for f
         model.take_action(gpact.GETPRIORSAMPLES, f_params, globdat)
         model.take_action(gpact.GETPOSTERIORSAMPLES, f_params, globdat)
-        model.take_action(gpact.GETPRIORCOVARIANCE, f_params, globdat)
-        model.take_action(gpact.GETPOSTERIORCOVARIANCE, f_params, globdat)
 
         globdat['samples_f_prior'] = f_params[gppn.PRIORSAMPLES]
         globdat['samples_u_prior'] = u_params[gppn.PRIORSAMPLES]

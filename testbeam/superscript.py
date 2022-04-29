@@ -32,3 +32,17 @@ samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
 phi = globdat['phi']
+
+c = globdat['constraints']
+cdofs, cvals = c.get_constraints()
+u_post[cdofs] = 0
+samples_u_prior[cdofs,:] = 0
+samples_u_post[cdofs,:] = 0
+
+err = abs(u_post - u)
+
+QuickViewer(err, globdat)
+
+for sample in samples_u_post.T:
+
+    QuickViewer(sample, globdat, 1)

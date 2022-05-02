@@ -38,10 +38,19 @@ cdofs, cvals = c.get_constraints()
 u_post[cdofs] = 0
 samples_u_prior[cdofs,:] = 0
 samples_u_post[cdofs,:] = 0
+std_u_post[cdofs] = 0
 
 err = abs(u_post - u)
 
 QuickViewer(err, globdat)
+
+QuickViewer(u_post, globdat)
+
+QuickViewer(u, globdat, 1)
+
+for sample in samples_u_prior.T:
+
+    QuickViewer(sample, globdat, 1)
 
 for sample in samples_u_post.T:
 

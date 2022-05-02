@@ -5,6 +5,7 @@ from names import ParamNames as pn
 from names import GlobNames as gn
 from names import PropNames as prn
 from model import *
+from node import Node
 
 ELEMENTS = 'elements'
 SUBTYPE = 'subtype'
@@ -205,7 +206,6 @@ class FrameModel(Model):
         if self._nhinges > 0:
             params[pn.INTFORCE][np.ix_(self._hingedofs)] = self._hingemoments
 
-    # TODO: variable 'params' is not used but is kept to have the same shape as other actions. Evaluate removal
     def _check_commit(self, params, globdat):
         globdat[gn.ACCEPTED] = True
         if self._plastic:
@@ -227,15 +227,15 @@ class FrameModel(Model):
 
             if maxratio > 1.:
                 globdat[gn.ACCEPTED] = False
-                self._add_plastic_hinge(globdat, hingenode, hingeelem, sign)
+                self._add_plastic_hinge(globdat, params, hingenode, hingeelem, sign)
 
-    def _add_plastic_hinge(self, globdat, hingenode, hingeelem, sign):
+    def _add_plastic_hinge(self, globdat, params, hingenode, hingeelem, sign):
         print('Adding plastic hinge on node %i (in element %i)' % (hingenode, hingeelem))
 
         # Add node
         oldnode = hingenode
         coords = globdat[gn.NSET][oldnode].get_coords()
-        globdat[gn.NSET].append(coords)
+        globdat[gn.NSET].append(Node(coords))
         newnode = len(globdat[gn.NSET]) - 1
 
         # Duplicate dofs and add new phi dof
@@ -244,11 +244,12 @@ class FrameModel(Model):
         globdat[gn.DOFSPACE].add_dof(newnode, 'phi')
 
         # Initialize new dof
-        globdat[gn.STATE0] = globdat[gn.OLDSTATE0]
         oldphidof = globdat[gn.DOFSPACE].get_dof(oldnode, 'phi')
-        phi = globdat[gn.STATE0][oldphidof]
-        globdat[gn.STATE0] = np.append(globdat[gn.STATE0], phi)
         newphidof = globdat[gn.DOFSPACE].get_dof(newnode, 'phi')
+        phi_state0 = globdat[gn.OLDSTATE0][oldphidof]
+        phi_oldstate0 = globdat[gn.BACKUPSTATE0][oldphidof]
+        globdat[gn.STATE0] = np.append(globdat[gn.OLDSTATE0], phi_state0)
+        globdat[gn.OLDSTATE0] = np.append(globdat[gn.BACKUPSTATE0], phi_oldstate0)
 
         # Update element connectivity
         globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)

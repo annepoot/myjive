@@ -49,9 +49,11 @@ class ArclenModule(Module):
             globdat[gn.LAMBDA] = 0.
             duOld = np.zeros(dc)
         else:
+            globdat[gn.BACKUPSTATE0] = np.copy(globdat[gn.OLDSTATE0])
             duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
 
         globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
+
         K = np.zeros((dc, dc))
         fint = np.zeros(dc)
         fhat = self._fhat
@@ -132,12 +134,16 @@ class ArclenModule(Module):
         globdat[gn.LAMBDA] += Dlam
 
         # Check commit
-        globdat[gn.ACCEPTED] = True
+        params[pn.EXTFORCE] = self._fext0
         model.take_action(act.CHECKCOMMIT, params, globdat)
+        self._fext0 = params[pn.EXTFORCE]
 
         # Only move to next time step if commit is accepted
         if globdat[gn.ACCEPTED]:
             self._step += 1
+        else:
+            self._fhat = np.append(self._fhat, 0)
+            self._fext0 = np.append(self._fext0, 0)
 
         if self._step >= self._nsteps:
             return 'exit'

@@ -66,8 +66,9 @@ class ViewModule(Module):
             idofs = dofs.get_dofs([n], types)
             du = disp[idofs]
 
-            dx[n] += self._scale * du[0]
-            dy[n] += self._scale * du[1]
+            if len(idofs) == 2:
+              dx[n] += self._scale * du[0]
+              dy[n] += self._scale * du[1]
 
         plt.figure()
         ax = plt.gca()

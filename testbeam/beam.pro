@@ -70,9 +70,9 @@ femodel =
   {
     type = Dirichlet;
 
-    groups = [ lb, lb, rb, rb ];
-    dofs   = [ dx, dy, dx, dy ];
-    values = [ 0., 0., 0., 0. ];
+    groups = [ lb, lb, rb ];
+    dofs   = [ dx, dy, dy ];
+    values = [ 0., 0., 0. ];
   };
 
   neum =

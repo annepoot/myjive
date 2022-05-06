@@ -75,7 +75,7 @@ femodel =
 
     groups = [ mid ];
     dofs = [ dx ];
-    values = [ 1.0 ];
+    values = [ 5.0 ];
   };
 };
 

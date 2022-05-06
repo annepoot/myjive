@@ -42,16 +42,18 @@ std_u_post[cdofs] = 0
 
 err = abs(u_post - u)
 
-QuickViewer(err, globdat)
+QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)', fname='beam_u_post')
 
-QuickViewer(u_post, globdat)
+QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)', fname='beam_u')
 
-QuickViewer(u, globdat, 1)
+QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)', fname='beam_err')
 
-for sample in samples_u_prior.T:
+QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)', fname='beam_std')
 
-    QuickViewer(sample, globdat, 1)
+for i, sample in enumerate(samples_u_prior.T):
 
-for sample in samples_u_post.T:
+    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_prior_{}'.format(i+1))
 
-    QuickViewer(sample, globdat, 1)
+for i, sample in enumerate(samples_u_post.T):
+
+    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_posterior_{}'.format(i+1))

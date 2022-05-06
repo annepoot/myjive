@@ -75,8 +75,6 @@ class GPModel(Model):
         self._Kc, self._fc = c.constrain(K, f)
 
         # Get phi from Globdat
-        self._phi = self._get_phis()[0]
-
         self._phi = self._get_phi_lumped(globdat)
         globdat['phi'] = self._phi
 

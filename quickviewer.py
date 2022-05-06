@@ -12,7 +12,7 @@ PLOT = 'plot'
 NCOLORS = 'ncolors'
 DEFORM = 'deform'
 
-def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100):
+def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100, title=None, fname=None):
 
     nodes = globdat[gn.NSET]
     elems = globdat[gn.ESET]
@@ -68,4 +68,11 @@ def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100):
     plt.colorbar(ticks=ticks)
 
     plt.triplot(triang,'k-',linewidth=linewidth)
+
+    if not title is None:
+        plt.title(title)
+
+    if not fname is None:
+        plt.savefig(fname, dpi=300)
+
     plt.show(block=False)

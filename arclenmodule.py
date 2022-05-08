@@ -28,6 +28,7 @@ class ArclenModule(Module):
         self._tolerance = float(myprops.get(TOLERANCE, 1e-6))
         self._beta = float(myprops.get(BETA, 0.1))
         self._dl = float(myprops.get(DL, 0.02))
+        globdat[gn.ACCEPTED] = True
 
         model = globdat[gn.MODEL]
         dc = globdat[gn.DOFSPACE].dof_count()
@@ -46,13 +47,9 @@ class ArclenModule(Module):
 
         if self._step == 0:
             globdat[gn.STATE0] = np.zeros(dc)
+            globdat[gn.OLDSTATE0] = np.zeros(dc)
             globdat[gn.LAMBDA] = 0.
-            duOld = np.zeros(dc)
-        else:
-            globdat[gn.BACKUPSTATE0] = np.copy(globdat[gn.OLDSTATE0])
-            duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
-
-        globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
+            self._duOld = np.zeros(dc)
 
         K = np.zeros((dc, dc))
         fint = np.zeros(dc)
@@ -88,7 +85,7 @@ class ArclenModule(Module):
         if self._step < 1:
             lsign = 1
         else:  # Choose solution with smallest angle wrt previous solution
-            lsign = np.sign(np.dot(duOld, fhat) * np.dot(duII, fhat))
+            lsign = np.sign(np.dot(self._duOld, fhat) * np.dot(duII, fhat))
 
         beta2F = self._beta ** 2 * np.dot(fhat, fhat)
         Dlam = lsign * self._dl / np.sqrt(np.dot(duII, duII) + beta2F)
@@ -141,9 +138,14 @@ class ArclenModule(Module):
         # Only move to next time step if commit is accepted
         if globdat[gn.ACCEPTED]:
             self._step += 1
-        else:
+            self._duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
+            globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
+
+        
+        while len(self._fhat) < globdat[gn.DOFSPACE].dof_count():
             self._fhat = np.append(self._fhat, 0)
             self._fext0 = np.append(self._fext0, 0)
+            self._duOld = np.append(self._duOld, 0)
 
         if self._step >= self._nsteps:
             return 'exit'

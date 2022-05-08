@@ -24,6 +24,7 @@ class NonlinModule(Module):
         self._nsteps = int(myprops.get(NSTEPS, 1))
         self._itermax = int(myprops.get(ITERMAX, 100))
         self._tolerance = float(myprops.get(TOLERANCE, 1e-6))
+        globdat[gn.ACCEPTED] = True
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
@@ -31,13 +32,10 @@ class NonlinModule(Module):
 
         if self._step == 0:
             globdat[gn.STATE0] = np.zeros(dc)
-        else:
-            globdat[gn.BACKUPSTATE0] = np.copy(globdat[gn.OLDSTATE0])
+            globdat[gn.OLDSTATE0] = np.zeros(dc)
 
         globdat[gn.TIMESTEP] = self._step
         print('Running time step', self._step)
-
-        globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
 
         K = np.zeros((dc, dc))
         fext = np.zeros(dc)
@@ -111,6 +109,7 @@ class NonlinModule(Module):
         # Only move to next time step if commit is accepted
         if globdat[gn.ACCEPTED]:
             self._step += 1
+            globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
 
         if self._step >= self._nsteps:
             return 'exit'

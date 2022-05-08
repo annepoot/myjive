@@ -203,8 +203,7 @@ class FrameModel(Model):
 
             params[pn.INTFORCE][np.ix_(idofs)] += elfor
 
-        if self._nhinges > 0:
-            params[pn.INTFORCE][np.ix_(self._hingedofs)] = self._hingemoments
+        params[pn.INTFORCE][np.ix_(self._hingedofs)] += self._hingemoments
 
     def _check_commit(self, params, globdat):
         globdat[gn.ACCEPTED] = True
@@ -225,7 +224,7 @@ class FrameModel(Model):
             else:
                 sign = -1
 
-            if maxratio > 1.:
+            if maxratio > 1.0001:
                 globdat[gn.ACCEPTED] = False
                 self._add_plastic_hinge(globdat, params, hingenode, hingeelem, sign)
 
@@ -246,14 +245,17 @@ class FrameModel(Model):
         # Initialize new dof
         oldphidof = globdat[gn.DOFSPACE].get_dof(oldnode, 'phi')
         newphidof = globdat[gn.DOFSPACE].get_dof(newnode, 'phi')
-        phi_state0 = globdat[gn.OLDSTATE0][oldphidof]
-        phi_oldstate0 = globdat[gn.BACKUPSTATE0][oldphidof]
-        globdat[gn.STATE0] = np.append(globdat[gn.OLDSTATE0], phi_state0)
-        globdat[gn.OLDSTATE0] = np.append(globdat[gn.BACKUPSTATE0], phi_oldstate0)
+        state0 = globdat[gn.STATE0]
+        oldstate0 = globdat[gn.OLDSTATE0]
+        globdat[gn.STATE0] = np.append(state0,state0[oldphidof])
+        globdat[gn.OLDSTATE0] = np.append(oldstate0,oldstate0[oldphidof])
+
+        # Add history
+        if gn.HISTORY in globdat:
+            globdat[gn.HISTORY] = np.column_stack(( globdat[gn.HISTORY], globdat[gn.HISTORY][:,oldphidof]))
 
         # Update element connectivity
-        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)
-        self._elems = globdat[gn.ESET]
+        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)        
 
         # Modify hinge variables
         self._nhinges += 1

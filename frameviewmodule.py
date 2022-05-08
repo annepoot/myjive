@@ -20,7 +20,6 @@ class FrameViewModule(Module):
         self._step = 0
         self._storeHistory = self._interactive
 
-    # TODO: configure gn.History so every step has the same number of dofs as the last step (after hinges appear)
     def run(self, globdat):
         if self._storeHistory:
             if self._step == 0:

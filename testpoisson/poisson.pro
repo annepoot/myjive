@@ -79,11 +79,71 @@ femodel =
   };
 };
 
+gpinit =
+{
+  type = GPInit;
+  model = gpmodel;
+
+  mesh =
+  {
+    type = gmsh;
+    file = mesh.msh;
+  };
+
+  nodeGroups = [ left, right, bottom ];
+
+  left =
+  {
+    xtype = min;
+  };
+
+  right =
+  {
+    xtype = max;
+  };
+
+  bottom =
+  {
+    ytype = min;
+  };
+};
+
+gaussian =
+{
+  type = Gaussian;
+  model = gpmodel;
+
+  storeMatrix = True;
+  getMassMatrix = True;
+};
+
+sampler =
+{
+  type = Sampler;
+  model = gpmodel;
+
+  nsample = 10;
+};
+
+gpmodel =
+{
+  type = GP;
+
+  obsNoise = 1e-5;
+  alpha = 1;
+
+  shape =
+  {
+    type = Triangle3;
+    intScheme = Gauss1;
+  };
+};
+
 view =
 {
   type = View;
-  model = femodel;
+  model = gpmodel;
 
-  plot = solution[u];
+  plot = std_u_post[u];
   ncolors = 100;
 };

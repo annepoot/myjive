@@ -172,10 +172,9 @@ class ElasticModel(Model):
                 table['zx'][inodes] += elsig[:, 5]
 
     def _get_N_matrix(self, sfuncs):
-        N = np.zeros((self._rank, self._dofcount))
-        for i in range(self._rank):
-            N[i,i::self._rank] = sfuncs.transpose()
-            N[i,i::self._rank] = sfuncs.transpose()
+        N = np.zeros((len(DOFTYPES[0:self._rank]), self._dofcount))
+        for i in range(len(DOFTYPES[0:self._rank])):
+            N[i,i::len(DOFTYPES[0:self._rank])] = sfuncs.transpose()
         return N
 
     def _get_B_matrix(self, grads):

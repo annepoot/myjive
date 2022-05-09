@@ -44,8 +44,9 @@ def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100, t
         idofs = dofs.get_dofs([n], types)
         du = disp[idofs]
 
-        dx[n] += scale * du[0]
-        dy[n] += scale * du[1]
+        if len(idofs) == 2:
+          dx[n] += scale * du[0]
+          dy[n] += scale * du[1]
 
     plt.figure()
     ax = plt.gca()

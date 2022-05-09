@@ -4,7 +4,7 @@ from names import Actions    as act
 from names import ParamNames as pn
 from names import GlobNames  as gn
 from names import PropNames  as prn
-from model import *
+from model import Model
 
 ELEMENTS = 'elements'
 KAPPA = 'kappa'
@@ -16,9 +16,10 @@ DOFTYPES = ['u']
 class PoissonModel(Model):
     def take_action(self, action, params, globdat):
         print('PoissonModel taking action', action)
-        lim = 2
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
+        elif action == act.GETMATRIX2:
+            self._get_mass_matrix(params, globdat)
 
     def configure(self, props, globdat):
         self._kappa = float(props[KAPPA])
@@ -54,6 +55,27 @@ class PoissonModel(Model):
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
+    def _get_mass_matrix(self, params, globdat):
+        M = np.identity(len(DOFTYPES))
+        for elem in self._elems:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
+
+            elmat = np.zeros((self._dofcount, self._dofcount))
+            for ip in range(self._ipcount):
+                N = self._get_N_matrix(sfuncs[:, ip])
+                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+
+            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+
+    def _get_N_matrix(self, sfuncs):
+        N = np.zeros((len(DOFTYPES), self._dofcount))
+        for i in range(len(DOFTYPES)):
+            N[i,i::len(DOFTYPES)] = sfuncs.transpose()
+        return N
 
 def declare(factory):
     factory.declare_model('Poisson', PoissonModel)

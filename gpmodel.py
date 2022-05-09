@@ -14,7 +14,7 @@ ALPHA = 'alpha'
 RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
-DOFTYPES = ['dx', 'dy']
+# DOFTYPES = ['dx', 'dy']
 
 class GPModel(Model):
 
@@ -52,9 +52,11 @@ class GPModel(Model):
         if self._alpha != 'opt':
             self._alpha = float(self._alpha)
 
+        # Get the dofs of the fine mesh
+        self._dof_types = globdat[gn.DOFSPACE].get_types()
         # Add the dofs to the coarse mesh
         nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
-        for doftype in DOFTYPES[0:self._rank]:
+        for doftype in self._dof_types:
             globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
             for node in nodes:
                 globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
@@ -489,7 +491,7 @@ class GPModel(Model):
         # Go over the coarse mesh
         for elemc in elemsc:
             inodesc = elemc.get_nodes()
-            idofsc = dofsc.get_dofs(inodesc, DOFTYPES[0:self._rank])
+            idofsc = dofsc.get_dofs(inodesc, self._dof_types)
             coordsc = np.stack([nodesc[i].get_coords() for i in inodesc], axis=1)[0:self._rank, :]
 
             # Get the bounding box of the coarse element
@@ -546,11 +548,11 @@ class GPModel(Model):
                             svals = self._shape.eval_shape_values(relcoord)
 
                             # Get the dofs belonging to this node
-                            idof = dofs.get_dofs([inodes[n]], DOFTYPES[0:self._rank])
+                            idofs = dofs.get_dofs([inodes[n]], self._dof_types)
 
                             # Store the relative shape function values in the phi matrix
-                            for i in range(self._rank):
-                                phi[idof[i], idofsc[i::self._rank]] = svals
+                            for i, idof in enumerate(idofs):
+                                phi[idof, idofsc[i::len(self._dof_types)]] = svals
 
         return phi
 
@@ -561,14 +563,18 @@ class GPModel(Model):
         tbwts = params[pn.TABLEWEIGHTS]
 
         # Initialize the tables
-        if 'dx' not in table:
-            table['dx'] = np.zeros(len(globdat[gn.NSET]))
-        if self._rank > 1:
-            if 'dy' not in table:
-                table['dy'] = np.zeros(len(globdat[gn.NSET]))
-        if self._rank > 2:
-            if 'dz' not in table:
-                table['dz'] = np.zeros(len(globdat[gn.NSET]))
+        for dof_type in self._dof_types:
+            if dof_type not in table:
+                table[dof_type] = np.zeros(len(globdat[gn.NSET]))
+
+        # if 'dx' not in table:
+        #     table['dx'] = np.zeros(len(globdat[gn.NSET]))
+        # if len(self._dof_types) > 1:
+        #     if 'dy' not in table:
+        #         table['dy'] = np.zeros(len(globdat[gn.NSET]))
+        # if len(self._dof_types) > 2:
+        #     if 'dz' not in table:
+        #         table['dz'] = np.zeros(len(globdat[gn.NSET]))
 
         # Define a dictionary for the settings of u
         u_params = {}
@@ -598,16 +604,19 @@ class GPModel(Model):
 
         for elem in globdat[gn.ESET]:
             inodes = elem.get_nodes()
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, self._dof_types)
 
             for inode in inodes:
-                idofs = globdat[gn.DOFSPACE].get_dofs([inode], DOFTYPES[0:self._rank])
+                idofs = globdat[gn.DOFSPACE].get_dofs([inode], self._dof_types)
 
-                table['dx'][inode] = var[idofs[0]]
-                if self._rank > 1:
-                    table['dy'][inode] = var[idofs[1]]
-                if self._rank > 2:
-                    table['dz'][inode] = var[idofs[2]]
+                for i, dof_type in enumerate(self._dof_types):
+                    table[dof_type][inode] = var[idofs[i]]
+
+                # table['dx'][inode] = var[idofs[0]]
+                # if len(self._dof_types) > 1:
+                #     table['dy'][inode] = var[idofs[1]]
+                # if len(self._dof_types) > 2:
+                #     table['dz'][inode] = var[idofs[2]]
 
                 if any(idof in cdofs for idof in idofs):
                     tbwts[inode] = np.inf

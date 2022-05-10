@@ -13,12 +13,14 @@ class GlobNames:
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
     OLDSTATE0 = 'oldstate0'
+    BACKUPSTATE0 = 'backupstate0'
     HISTORY = 'history'
     MATRIX0 = 'matrix0'
     TABLES = 'tables'
     LAMBDA = 'lambda'
     MODULEDATA = 'module'
     SLIDERS = 'sliders'
+    ACCEPTED = 'accepted'
 
 
 class PropNames:
@@ -31,6 +33,7 @@ class Actions:
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
     GETUNITFORCE = 'getUnitForce'
+    CHECKCOMMIT = 'checkCommit'
     GETCONSTRAINTS = 'getConstraints'
     GETTABLE = 'getTable'
     ADVANCE = 'advance'

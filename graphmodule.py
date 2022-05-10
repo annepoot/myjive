@@ -20,7 +20,6 @@ class GraphModule(Module):
 
             self._xdata = pu.parse_list(myprops[XDATA])
             self._ydata = pu.parse_list(myprops[YDATA])
-            print(self._xdata)
 
     def run(self, globdat):
         return 'ok'

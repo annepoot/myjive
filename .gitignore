@@ -2,3 +2,6 @@ __pycache__
 *.disp
 *.vtu
 go
+.ipynb_checkpoints/
+*.swp
+

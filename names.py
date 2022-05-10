@@ -21,6 +21,7 @@ class GlobNames:
     MODULEDATA = 'module'
     SLIDERS = 'sliders'
     ACCEPTED = 'accepted'
+    LBFACTORS = 'lbFactors'
 
 
 class PropNames:

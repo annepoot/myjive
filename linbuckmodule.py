@@ -65,7 +65,9 @@ class LinBuckModule(Module):
         zs = sorted(z, key=lambda f: abs(f[0]))
         lss, vss = list(zip(*zs))
  
+        globdat[gn.LBFACTORS] = lss
         globdat[gn.HISTORY] = np.asarray(vss)
+        print('LinBuckModule: critical load factor:  %8.3e' % np.real_if_close(lss[0]))
 
         return 'exit'
 

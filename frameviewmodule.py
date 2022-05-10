@@ -8,6 +8,8 @@ from names import GlobNames as gn
 LINEWIDTH = 'linewidth'
 DEFORM = 'deform'
 INTERACTIVE = 'interactive'
+LABEL = 'label'
+MAXSTEP = 'maxStep'
 
 
 class FrameViewModule(Module):
@@ -15,10 +17,12 @@ class FrameViewModule(Module):
     def init(self, props, globdat):
         myprops = props[self._name]
         self._linewidth = float(myprops.get(LINEWIDTH, 0.5))
-        self._scale = float(myprops.get(DEFORM, 0.5))
+        self._scale = float(myprops.get(DEFORM, 1.0))
         self._interactive = bool(eval(myprops.get(INTERACTIVE, 'True')))
         self._step = 0
         self._storeHistory = self._interactive
+        self._label = myprops.get(LABEL, 'Step')
+        self._maxStep = int(myprops.get(MAXSTEP, -1))
 
     def run(self, globdat):
         if self._storeHistory:
@@ -59,7 +63,7 @@ class FrameViewModule(Module):
                 inodes = elem.get_nodes()
                 x = dx[inodes]
                 y = dy[inodes]
-                plt.plot(x, y, 'k-o', linewidth=self._linewidth)
+                plt.plot(x, y, 'k-o', linewidth=self._linewidth, markersize=4)
 
             plt.show(block=False)
 
@@ -97,15 +101,18 @@ class FrameViewModule(Module):
                     x = np.hstack((x, dx[inodes]))
                     y = np.hstack((y, dy[inodes]))
 
-            line, = plt.plot(x, y, 'k-o', linewidth=self._linewidth)
+            line, = plt.plot(x, y, 'k-o', linewidth=self._linewidth, markersize=4)
 
             # Slider axes
             axcolor = 'lightgoldenrodyellow'
             axstep = plt.axes([0.1, 0.1, 0.8, 0.03], facecolor=axcolor)
 
             # Create slider object
-            s_step = Slider(ax=axstep, label='Step', valmin=1.,
-                            valmax=float(len(globdat[gn.HISTORY])), valinit=1., valstep=1.)
+            if  self._maxStep < 0 :
+                self._maxStep = len(globdat[gn.HISTORY])
+
+            s_step = Slider(ax=axstep, label=self._label, valmin=1.,
+                            valmax=self._maxStep, valinit=1., valstep=1.)
 
             # Slider function. Updates drawing with new x,y coordinates
             def update(val):

@@ -23,7 +23,6 @@ class MultiModel(Model):
         for m in models:
             modelprops = props[m]
 
-            print('multimodel ', modelprops[TYPE])
             model = mfac.get_model(modelprops[TYPE], m)
             model.configure(modelprops, globdat)
 

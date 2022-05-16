@@ -1,8 +1,12 @@
 init =
 {
-  mesh = beam.msh;
-
   nodeGroups = [ lb, rb, bottom, top, left, right, rt ];
+
+  mesh =
+  {
+    type = gmsh;
+    file = beam.msh;
+  };
 
   bottom =
   {
@@ -68,14 +72,14 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ left, left ];
     dofs   = [ dx, dy ];
     values = [ 0., 0. ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -92,6 +96,7 @@ solver =
 
 vtkout =
 {
+  type = VTKOut;
   file = results;
   tables = [ stress ];
 };

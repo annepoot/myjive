@@ -1,8 +1,12 @@
 init =
 {
-  mesh = mesh.msh;
-
   nodeGroups = [ left, right ];
+
+  mesh =
+  {
+    type = gmsh;
+    file = mesh.msh;
+  };
 
   left =
   {
@@ -38,7 +42,7 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ left, right ];
     dofs   = [ u, u ];

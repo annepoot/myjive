@@ -1,6 +1,7 @@
 def parse_file(fname):
-    with open(fname, 'r') as input:
-        filestr = input.read().replace('\n', '').replace('\t', '')
+    fileraw = open(fname, 'r').read()
+
+    filestr = uncomment_file(fileraw)
 
     data = {}
 
@@ -13,9 +14,6 @@ def parse_file(fname):
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
             data[key], i, sp = read_level(newline,i,sp)
-        elif '=' in line:
-            [key, value] = line.split('=')
-            subdata[key] = value
         elif line != '':
             raise RuntimeError ('Unable to parse: %s' % line)
 
@@ -28,7 +26,7 @@ def read_level(line,i,sp):
     subdata = {}
 
     while True:
-        if '{' in line: 
+        if '{' in line:
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
             subdata[key], i, sp = read_level(newline,i,sp)
@@ -50,4 +48,64 @@ def read_level(line,i,sp):
 def parse_list(lst,typ=str):
    stringlist = lst.strip('[').strip(']').replace(' ','').split(',')
    return list(map(typ, stringlist))
- 
+
+
+def uncomment_file(fileraw):
+    filestr = ''
+    comment_mode = False
+
+    # Go through all lines in the raw file
+    for line in fileraw.split('\n'):
+
+        # Check if we are in comment mode
+        if comment_mode:
+
+            # If so, try to find '*/' and remove only the part before it
+            end = line.find('*/')
+            if end >= 0:
+                comment_mode = False
+                line = line[end+len('*/'):]
+
+            # If comment_mode is still enabled, don't include anything
+            else:
+                line = ''
+
+        if not comment_mode:
+
+            # If we are not in comment mode, remove all full comments from the line
+            line = uncomment_line(line)
+
+            # If there is a '/*' in the line, enable comment mode, and remove the part after '/*' from the line
+            start = line.find('/*')
+            if start >= 0:
+                comment_mode = True
+                line = line[:start]
+
+        # Add the line to the file string
+        filestr += line.replace('\t', '')
+
+    return filestr
+
+
+def uncomment_line(line):
+    clean_line = line
+
+    # Remove all comments from the line (assuming that comment_mode is False)
+    while True:
+        # If the first identifier is a '//', remove everything after it
+        start_oneline = clean_line.find('//')
+        start_block = clean_line.find('/*')
+        if start_oneline >= 0:
+            if start_oneline < start_block or start_block < 0:
+                clean_line = clean_line[:start_oneline]
+
+        # Remove everything in the first one-line block comment that is found
+        start = clean_line.find('/*')
+        end = clean_line.find('*/')
+        if start >= 0 and end >= 0 and end > start:
+            clean_line = clean_line[:start] + clean_line[end+len('*/'):]
+        else:
+            # Exit if no comments are left
+            break
+
+    return clean_line

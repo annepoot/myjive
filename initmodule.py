@@ -68,7 +68,7 @@ class InitModule(Module):
         globdat[gn.MODEL] = m
 
     def run(self, globdat):
-        return ('ok')
+        return 'ok'
 
     def shutdown(self, globdat):
         pass
@@ -211,13 +211,19 @@ class InitModule(Module):
 
         nN = len(nodes)
         inode = nN
+        imember = 0
 
         for mem, nel in zip(members, nelem):
 
-            if nel == 1:
+            ie0 = len(elems)
+
+            if nel <= 0:
                 pass
 
-            elif nel > 1:
+            elif nel == 1:
+                elems.append(Element(mem))
+
+            else:
                 x0 = nodes[mem[0]].get_coords()
                 x1 = nodes[mem[1]].get_coords()
                 dx = (x1 - x0) / nel
@@ -237,6 +243,11 @@ class InitModule(Module):
                 elems.append(Element(connectivity))  # last element on member
                 inode += 1
 
+            ie1 = len(elems)
+            globdat[gn.EGROUPS]['member'+str(imember)] = [*range(ie0,ie1)]
+            imember += 1
+
+        print('done reading geo ' + str(len(elems)) + ' elements')
         globdat[gn.NSET] = nodes
         globdat[gn.ESET] = elems
         globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
@@ -289,7 +300,6 @@ class InitModule(Module):
                             pass
             else:
                 group = pu.parse_list(gprops,int)
-                print(gprops, group)
 
             globdat[gn.NGROUPS][g] = group
             print('InitModule: Created group', g, 'with nodes', group)

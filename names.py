@@ -12,8 +12,16 @@ class GlobNames:
     SHAPEFACTORY = 'shapeFactory'
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
+    OLDSTATE0 = 'oldstate0'
+    BACKUPSTATE0 = 'backupstate0'
+    HISTORY = 'history'
     MATRIX0 = 'matrix0'
     TABLES = 'tables'
+    LAMBDA = 'lambda'
+    MODULEDATA = 'module'
+    SLIDERS = 'sliders'
+    ACCEPTED = 'accepted'
+    LBFACTORS = 'lbFactors'
 
 
 class PropNames:
@@ -22,16 +30,22 @@ class PropNames:
 
 class Actions:
     GETMATRIX0 = 'getMatrix0'
+    GETMATRIXLB = 'getMatrixLB'
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
+    GETUNITFORCE = 'getUnitForce'
+    CHECKCOMMIT = 'checkCommit'
     GETCONSTRAINTS = 'getConstraints'
     GETTABLE = 'getTable'
+    ADVANCE = 'advance'
 
 
 class ParamNames:
     MATRIX0 = 'matrix0'
+    MATRIX1 = 'matrix1'
     INTFORCE = 'intForce'
     EXTFORCE = 'extForce'
+    UNITFORCE = 'unitForce'
     CONSTRAINTS = 'constraints'
     TABLE = 'table'
     TABLENAME = 'tableName'

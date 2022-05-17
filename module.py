@@ -22,9 +22,6 @@ class Module:
     def init(self, props, globdat):
         print('Empty module init')
 
-    def init(self, globdat):
-        print('Empty module init')
-
     def run(self, globdat):
         print('Empty module run')
         return 'exit'

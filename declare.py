@@ -11,6 +11,7 @@ import neumannmodel
 import poissonmodel
 import elasticmodel
 import timoshenkomodel
+import framemodel
 import gpmodel
 
 import initmodule
@@ -18,9 +19,14 @@ import solvermodule
 import gaussianmodule
 import gpinitmodule
 import samplermodule
+import nonlinmodule
+import arclenmodule
 import outputmodule
 import vtkoutmodule
-import viewmodule
+import linbuckmodule
+import frameviewmodule
+import loaddispmodule
+import graphmodule
 
 import paramshapes
 
@@ -35,6 +41,7 @@ def declare_models(globdat):
     poissonmodel.declare(factory)
     elasticmodel.declare(factory)
     timoshenkomodel.declare(factory)
+    framemodel.declare(factory)
     gpmodel.declare(factory)
 
     globdat[gn.MODELFACTORY] = factory
@@ -48,9 +55,14 @@ def declare_modules(globdat):
     gaussianmodule.declare(factory)
     gpinitmodule.declare(factory)
     samplermodule.declare(factory)
+    nonlinmodule.declare(factory)
+    arclenmodule.declare(factory)
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)
-    viewmodule.declare(factory)
+    linbuckmodule.declare(factory)
+    frameviewmodule.declare(factory)
+    loaddispmodule.declare(factory)
+    graphmodule.declare(factory)
 
     globdat[gn.MODULEFACTORY] = factory
 

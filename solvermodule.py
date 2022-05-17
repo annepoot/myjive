@@ -14,11 +14,13 @@ STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
 
+
 class SolverModule(Module):
 
     def init(self, props, globdat):
-        self._step = 0
+
         myprops = props[self._name]
+        self._step = 0
         self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
@@ -26,6 +28,7 @@ class SolverModule(Module):
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
 
     def run(self, globdat):
+
         dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[self._modelname]
 
@@ -37,10 +40,7 @@ class SolverModule(Module):
         f = np.zeros(dc)
         c = Constrainer()
 
-        params = {}
-        params[pn.MATRIX0] = K
-        params[pn.EXTFORCE] = f
-        params[pn.CONSTRAINTS] = c
+        params = {pn.MATRIX0: K, pn.EXTFORCE: f, pn.CONSTRAINTS: c}
 
         # Assemble K
         model.take_action(act.GETMATRIX0, params, globdat)
@@ -70,11 +70,11 @@ class SolverModule(Module):
 
         # Optionally store stiffness matrix in Globdat
         if self._store_matrix:
-          globdat[gn.MATRIX0] = K
+            globdat[gn.MATRIX0] = K
 
-          # Optionally store mass matrix in Globdat
-          if self._get_mass_matrix:
-              globdat[gn.MATRIX2] = M
+            # Optionally store mass matrix in Globdat
+            if self._get_mass_matrix:
+                globdat[gn.MATRIX2] = M
 
         # Optionally store the constrainer in Globdat
         if self._store_constraints:

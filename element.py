@@ -6,4 +6,7 @@ class Element:
         self._nodes = nodes
 
     def get_nodes(self):
-        return (self._nodes)
+        return self._nodes
+
+    def change_node(self, oldnode, newnode):
+        self._nodes[self._nodes == oldnode] = newnode

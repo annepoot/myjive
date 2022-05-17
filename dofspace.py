@@ -7,7 +7,8 @@ class DofSpace:
         self._count = 0
 
     def add_type(self, name):
-        self._dofs[name] = {}
+        if name not in self._dofs:
+            self._dofs[name] = {}
 
     def add_dof(self, inode, tname):
         if inode not in self._dofs[tname]:
@@ -23,8 +24,11 @@ class DofSpace:
     def get_types(self):
         return self._dofs.keys()
 
+    def find_dof(self, inode, typ):
+        return self._dofs[typ].get(inode)
+
     def get_dof(self, inode, typ):
-        idof = self._dofs[typ].get(inode)
+        idof = self.find_dof(inode, typ)
         if idof is None:
             raise RuntimeError('DofSpace: Non-existent DOF')
         return idof
@@ -39,3 +43,7 @@ class DofSpace:
                     idofs.append(idof)
 
         return idofs
+
+    def set_dof(self, oldnode, newnode, typ):
+        dof = self.get_dof(oldnode, typ)
+        self._dofs[typ][newnode] = dof

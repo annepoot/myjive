@@ -50,6 +50,28 @@ class Tri3Shape(Shape):
 
         return sgrads
 
+    def get_local_point(self, glob_point, glob_coords):
+        # Return the local coordinates corresponding to the given global point
+        Ax = glob_coords[0,0]
+        Ay = glob_coords[1,0]
+        Bx = glob_coords[0,1]
+        By = glob_coords[1,1]
+        Cx = glob_coords[0,2]
+        Cy = glob_coords[1,2]
+
+        mat = np.zeros((self._rank, self._rank))
+        rhs = np.zeros(self._rank)
+
+        mat[0,0] = Bx - Ax
+        mat[0,1] = Cx - Ax
+        mat[1,0] = By - Ay
+        mat[1,1] = Cy - Ay
+
+        rhs[0] = glob_point[0] - Ax
+        rhs[1] = glob_point[1] - Ay
+
+        return np.linalg.solve(mat, rhs)
+
 
 class Tri6Shape(Shape):
     def __init__(self, intscheme):
@@ -153,6 +175,18 @@ class Line2Shape(Shape):
         sgrads[1, 0] = 0.5
 
         return sgrads
+
+    def get_local_point(self, glob_point, glob_coords):
+        # Return the local coordinates corresponding to the given global point
+        loc_point = np.zeros(self._rank)
+
+        A = glob_coords[0,0]
+        B = glob_coords[0,1]
+        X = glob_point[0]
+
+        loc_point[0] = (A + B - 2*X)/(A - B)
+
+        return loc_point
 
 
 class Line3Shape(Shape):

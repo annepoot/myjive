@@ -1,178 +1,205 @@
 import numpy as np
 
-from shape import *
-
+from shape import Shape
 
 class Tri3Shape(Shape):
     def __init__(self, intscheme):
         print('Creating Tri3Shape...')
 
+        # Set the nodecount and rank of the elements
         self._ncount = 3
         self._rank = 2
-        self._int = intscheme
 
-        if self._int == 'Gauss1':
-            self._ipcount = 1
-            self._ips = np.zeros((2, 1))
-            self._wts = np.zeros(1)
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
 
-            self._ips[0, 0] = 1.0 / 3.0
-            self._ips[1, 0] = 1.0 / 3.0
-            self._wts[0] = 0.5
+    def get_local_node_coords(self):
+        # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
+        loc_coords = np.zeros((self._rank, self._ncount))
 
-        else:
-            raise SyntaxError('Unsupported integration scheme for Triangle3 shape')
+        loc_coords[0, 0] = 0.0
+        loc_coords[0, 1] = 1.0
+        loc_coords[0, 2] = 0.0
+        loc_coords[1, 0] = 0.0
+        loc_coords[1, 1] = 0.0
+        loc_coords[1, 2] = 1.0
 
-        self._N = np.zeros((self._ncount, self._ipcount))
-        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
+        return loc_coords
 
-        self._N[0, :] = 1.0 - self._ips[0, :] - self._ips[1, :]
-        self._N[1, :] = self._ips[0, :]
-        self._N[2, :] = self._ips[1, :]
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
 
-        self._dN[0, 0, :] = -1.0
-        self._dN[0, 1, :] = -1.0
-        self._dN[1, 0, :] = 1.0
-        self._dN[1, 1, :] = 0.0
-        self._dN[2, 0, :] = 0.0
-        self._dN[2, 1, :] = 1.0
+        sfuncs[0] = 1.0 - loc_point[0] - loc_point[1]
+        sfuncs[1] = loc_point[0]
+        sfuncs[2] = loc_point[1]
 
-    def get_shape_gradients(self, coords):
-        wts = np.copy(self._wts)
-        dN = np.copy(self._dN)
+        return sfuncs
 
-        for ip in range(self._ipcount):
-            J = np.matmul(coords, dN[:, :, ip])
-            wts[ip] *= np.linalg.det(J)
-            dN[:, :, ip] = np.matmul(dN[:, :, ip], np.linalg.inv(J))
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
 
-        return dN, wts
+        sgrads[0, 0] = -1.0
+        sgrads[0, 1] = -1.0
+        sgrads[1, 0] = 1.0
+        sgrads[1, 1] = 0.0
+        sgrads[2, 0] = 0.0
+        sgrads[2, 1] = 1.0
 
-    def get_shape_functions(self):
-        return self._N
+        return sgrads
+
+
+class Tri6Shape(Shape):
+    def __init__(self, intscheme):
+        print('Creating Tri6Shape...')
+
+        # Set the nodecount and rank of the elements
+        self._ncount = 6
+        self._rank = 2
+
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
+
+    def get_local_node_coords(self):
+        # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
+        loc_coords = np.zeros((self._rank, self._ncount))
+
+        loc_coords[0, 0] = 0.0
+        loc_coords[0, 1] = 0.5
+        loc_coords[0, 2] = 1.0
+        loc_coords[0, 3] = 0.5
+        loc_coords[0, 4] = 0.0
+        loc_coords[0, 5] = 0.0
+        loc_coords[1, 0] = 0.0
+        loc_coords[1, 1] = 0.0
+        loc_coords[1, 2] = 0.0
+        loc_coords[1, 3] = 0.5
+        loc_coords[1, 4] = 1.0
+        loc_coords[1, 5] = 0.5
+
+        return loc_coords
+
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
+
+        sfuncs[0] = 2 * (0.5 - loc_point[0] - loc_point[1]) * (1 - loc_point[0] - loc_point[1])
+        sfuncs[1] = 4 * loc_point[0] * (1 - loc_point[0] - loc_point[1])
+        sfuncs[2] = -2 * loc_point[0] * (0.5 - loc_point[0])
+        sfuncs[3] = 4 * loc_point[0] * loc_point[1]
+        sfuncs[4] = -2 * loc_point[1] * (0.5 - loc_point[1])
+        sfuncs[5] = 4 * loc_point[1] * (1 - loc_point[0] - loc_point[1])
+
+        return sfuncs
+
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
+
+        sgrads[0, 0] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
+        sgrads[0, 1] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
+        sgrads[1, 0] = 4 - 8 * loc_point[0] - 4 * loc_point[1]
+        sgrads[1, 1] = -4 * loc_point[0]
+        sgrads[2, 0] = -1 + 4 * loc_point[0]
+        sgrads[2, 1] = 0.0
+        sgrads[3, 0] = 4 * loc_point[1]
+        sgrads[3, 1] = 4 * loc_point[0]
+        sgrads[4, 0] = 0.0
+        sgrads[4, 1] = -1 + 4 * loc_point[1]
+        sgrads[5, 0] = -4 * loc_point[1]
+        sgrads[5, 1] = 4 - 4 * loc_point[0] - 8 * loc_point[1]
+
+        return sgrads
 
 
 class Line2Shape(Shape):
     def __init__(self, intscheme):
         print('Creating Line2Shape...')
 
+        # Set the nodecount and rank of the elements
         self._ncount = 2
         self._rank = 1
-        self._int = intscheme
 
-        if self._int == 'Gauss1':
-            self._ipcount = 1
-            self._ips = np.zeros((1, 1))
-            self._wts = np.zeros(1)
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
 
-            self._ips[0, 0] = 0
-            self._wts[0] = 2
+    def get_local_node_coords(self):
+        # Return the standard line with nodes at (-1) and (1)
+        loc_coords = np.zeros((self._rank, self._ncount))
 
-        elif self._int == 'Gauss2':
-            self._ipcount = 2
-            self._ips = np.zeros((1, 2))
-            self._wts = np.zeros(2)
+        loc_coords[0, 0] = -1.0
+        loc_coords[0, 1] = 1.0
 
-            self._ips[0, 0] = -1 / np.sqrt(3)
-            self._ips[0, 1] = 1 / np.sqrt(3)
-            self._wts[0] = 1
-            self._wts[1] = 1
+        return loc_coords
 
-        else:
-            raise SyntaxError('Unsupported integration scheme for Line2 shape')
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
 
-        self._N = np.zeros((self._ncount, self._ipcount))
-        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
+        sfuncs[0] = 0.5 - 0.5 * loc_point[0]
+        sfuncs[1] = 0.5 + 0.5 * loc_point[0]
 
-        self._N[0, :] = 0.5 - 0.5 * self._ips[0, :]
-        self._N[1, :] = 0.5 + 0.5 * self._ips[0, :]
+        return sfuncs
 
-        self._dN[0, 0, :] = -0.5
-        self._dN[1, 0, :] = 0.5
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
 
-    def get_shape_gradients(self, coords):
-        wts = np.copy(self._wts)
-        dN = np.copy(self._dN)
+        sgrads[0, 0] = -0.5
+        sgrads[1, 0] = 0.5
 
-        for ip in range(self._ipcount):
-            J = np.matmul(coords, dN[:, :, ip]).item()
-            wts[ip] *= J
-            dN[:, :, ip] = dN[:, :, ip] / J
-
-        return dN, wts
-
-    def get_shape_functions(self):
-        return self._N
+        return sgrads
 
 
 class Line3Shape(Shape):
     def __init__(self, intscheme):
-        print('Creating Line3Shape...')
+        print('Creating Line2Shape...')
 
+        # Set the nodecount and rank of the elements
         self._ncount = 3
         self._rank = 1
-        self._int = intscheme
 
-        if self._int == 'Gauss1':
-            self._ipcount = 1
-            self._ips = np.zeros((1, 1))
-            self._wts = np.zeros(1)
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
 
-            self._ips[0, 0] = 0
-            self._wts[0] = 2
+    def get_local_node_coords(self):
+        # Return the standard line with nodes at (-1) and (1)
+        loc_coords = np.zeros((self._rank, self._ncount))
 
-        elif self._int == 'Gauss2':
-            self._ipcount = 2
-            self._ips = np.zeros((1, 2))
-            self._wts = np.zeros(2)
+        loc_coords[0, 0] = -1.0
+        loc_coords[0, 1] = 0.0
+        loc_coords[0, 2] = 1.0
 
-            self._ips[0, 0] = -1 / np.sqrt(3)
-            self._ips[0, 1] = 1 / np.sqrt(3)
-            self._wts[0] = 1
-            self._wts[1] = 1
+        return loc_coords
 
-        elif self._int == 'Gauss3':
-            self._ipcount = 3
-            self._ips = np.zeros((1,3))
-            self._wts = np.zeros(3)
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
 
-            self._ips[0, 0] = -np.sqrt(3/5)
-            self._ips[0, 1] = 0
-            self._ips[0, 2] = np.sqrt(3/5)
-            self._wts[0] = 5/9
-            self._wts[1] = 8/9
-            self._wts[2] = 5/9
+        sfuncs[0] = 0.5 * loc_point[0] * (loc_point[0] - 1)
+        sfuncs[1] = 1 - loc_point[0]**2
+        sfuncs[2] = 0.5 * loc_point[0] * (loc_point[0] + 1)
 
-        else:
-            raise SyntaxError('Unsupported integration scheme for Line3 shape')
+        return sfuncs
 
-        self._N = np.zeros((self._ncount, self._ipcount))
-        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
 
-        self._N[0, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] - 1)
-        self._N[1, :] = 1 - self._ips[0, :] ** 2
-        self._N[2, :] = 0.5 * self._ips[0, :] * (self._ips[0, :] + 1)
+        sgrads[0, 0] = loc_point[0] - 0.5
+        sgrads[1, 0] = -2 * loc_point[0]
+        sgrads[2, 0] = loc_point[0] + 0.5
 
-        self._dN[0, 0, :] = self._ips[0, :] - 0.5
-        self._dN[1, 0, :] = -2 * self._ips[0, :]
-        self._dN[2, 0, :] = self._ips[0, :] + 0.5
-
-    def get_shape_gradients(self, coords):
-        wts = np.copy(self._wts)
-        dN = np.copy(self._dN)
-
-        for ip in range(self._ipcount):
-            J = np.matmul(coords, dN[:, :, ip]).item()
-            wts[ip] *= J
-            dN[:, :, ip] = dN[:, :, ip] / J
-
-        return dN, wts
-
-    def get_shape_functions(self):
-        return self._N
+        return sgrads
 
 
 def declare(factory):
     factory.declare_shape('Triangle3', Tri3Shape)
+    factory.declare_shape('Triangle6', Tri6Shape)
     factory.declare_shape('Line2', Line2Shape)
     factory.declare_shape('Line3', Line3Shape)

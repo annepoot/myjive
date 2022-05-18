@@ -29,6 +29,10 @@ class Shape:
             self._ipcount = 1
         elif self._int == 'Gauss2':
             self._ipcount = 2
+        elif self._int == 'Gauss3':
+            self._ipcount = 3
+        else:
+            raise ValueError(self._int)
 
         self._ips = np.zeros((self._rank, self._ipcount))
         self._wts = np.zeros(self._ipcount)
@@ -45,11 +49,26 @@ class Shape:
                 self._wts[0] = 1
                 self._wts[1] = 1
 
+            elif self._int == 'Gauss3':
+                self._ips[0, 0] = - np.sqrt(3.0 / 5.0)
+                self._ips[0, 1] = 0
+                self._ips[0, 2] = np.sqrt(3.0 / 5.0)
+                self._wts[0] = 5.0 / 9.0
+                self._wts[1] = 8.0 / 9.0
+                self._wts[2] = 5.0 / 9.0
+
+            else:
+                raise ValueError(self._int)
+
         elif self._rank == 2:
+
             if self._int == 'Gauss1':
                 self._ips[0, 0] = 1.0 / 3.0
                 self._ips[1, 0] = 1.0 / 3.0
                 self._wts[0] = 0.5
+
+            else:
+                raise ValueError(self._int)
 
         self._N = np.zeros((self._ncount, self._ipcount))
         self._dN = np.zeros((self._ncount, self._rank, self._ipcount))

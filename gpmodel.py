@@ -531,7 +531,7 @@ class GPModel(Model):
                         if inside:
 
                             # Get the relative position of the node
-                            relcoord = self._shape.get_relative_position(coordsc, coord)
+                            loc_point = self._shape.get_local_point(coord, coordsc)
 
                             # In case of a 1D bar, the bounding box check is enough
                             if self._rank == 1:
@@ -539,13 +539,13 @@ class GPModel(Model):
 
                             elif self._rank == 2:
                                 # For the 2D case, check if the node actually falls within the triangle
-                                inside = relcoord[0] >= 0 and relcoord[1] >= 0 and relcoord[0] + relcoord[1] <= 1
+                                inside = loc_point[0] >= 0 and loc_point[1] >= 0 and loc_point[0] + loc_point[1] <= 1
 
                         # Only continue if both checks are passed
                         if inside:
 
                             # Get the shape function values at the location of the coords
-                            svals = self._shape.eval_shape_values(relcoord)
+                            svals = self._shape.eval_shape_functions(loc_point)
 
                             # Get the dofs belonging to this node
                             idofs = dofs.get_dofs([inodes[n]], self._dof_types)

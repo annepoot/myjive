@@ -120,7 +120,7 @@ class Shape:
         sfuncs = self.eval_shape_functions(loc_point)
         return np.matmul(glob_coords, sfuncs)
 
-    def get_local_point(self):
+    def get_local_point(self, glob_point, glob_coords):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def contains_local_point(self):

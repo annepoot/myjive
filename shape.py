@@ -1,5 +1,6 @@
 
 import numpy as np
+from scipy.optimize import fsolve
 
 NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
@@ -121,9 +122,24 @@ class Shape:
         return np.matmul(glob_coords, sfuncs)
 
     def get_local_point(self, glob_point, glob_coords):
-        raise NotImplementedError(NOTIMPLEMENTEDMSG)
+        # Note: since this is (in general) a non-linear problem, a non-linear solver must be called.
+        # Inherited classes are encouraged to get more efficient implementations
+        def f(x):
+            return self.get_global_point(x, glob_coords) - glob_point
 
-    def contains_local_point(self):
+        # The initial guess is the local coordinate in the middle of the element
+        x0 = np.mean(self.get_local_node_coords(), axis=1)
+
+        # Do a non-linear solve to find the corresponding local point
+        loc_point = fsolve(f, x0)
+
+        # Make sure that the solution is actually inside the element
+        if not self.contains_local_point(loc_point, tol=1e-8):
+            raise ValueError(glob_point)
+
+        return loc_point
+
+    def contains_local_point(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_shape_gradients(self, glob_coords):

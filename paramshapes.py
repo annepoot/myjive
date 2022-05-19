@@ -72,6 +72,17 @@ class Tri3Shape(Shape):
 
         return np.linalg.solve(mat, rhs)
 
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] + loc_point[1] > 1 + tol:
+            return False
+        elif loc_point[0] < 0 - tol:
+            return False
+        elif loc_point[1] < 0 - tol:
+            return False
+        else:
+            return True
+
 
 class Tri6Shape(Shape):
     def __init__(self, intscheme):
@@ -136,6 +147,17 @@ class Tri6Shape(Shape):
 
         return sgrads
 
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] + loc_point[1] > 1 + tol:
+            return False
+        elif loc_point[0] < 0 - tol:
+            return False
+        elif loc_point[1] < 0 - tol:
+            return False
+        else:
+            return True
+
 
 class Line2Shape(Shape):
     def __init__(self, intscheme):
@@ -188,6 +210,15 @@ class Line2Shape(Shape):
 
         return loc_point
 
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] > 1 + tol:
+            return False
+        elif loc_point[0] < -1 - tol:
+            return False
+        else:
+            return True
+
 
 class Line3Shape(Shape):
     def __init__(self, intscheme):
@@ -230,6 +261,15 @@ class Line3Shape(Shape):
         sgrads[2, 0] = loc_point[0] + 0.5
 
         return sgrads
+
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] > 1 + tol:
+            return False
+        elif loc_point[0] < -1 - tol:
+            return False
+        else:
+            return True
 
 
 def declare(factory):

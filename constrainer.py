@@ -10,9 +10,6 @@ class Constrainer:
         self._dofs.append(dof)
         self._vals.append(val)
 
-    def get_constraints(self):
-        return self._dofs, self._vals
-
     def constrain(self, k, f):
         kc = np.copy(k)
         fc = np.copy(f)
@@ -31,5 +28,3 @@ class Constrainer:
 
     def get_constraints(self):
         return self._dofs, self._vals
-        
-        

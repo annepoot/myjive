@@ -77,3 +77,5 @@ class GPParamNames:
     FIELD = 'field'
     FULLCOVARIANCE = 'fullCovariance'
     NSAMPLE = 'nsamples'
+    SEED = 'seed'
+    RNG = 'randomNumberGenerator'

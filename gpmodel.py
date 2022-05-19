@@ -306,6 +306,7 @@ class GPModel(Model):
         # Check if the prior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
         nsamples = params.get(gppn.NSAMPLE, 1)
+        rng = params.get(gppn.RNG, np.random.default_rng())
 
         # Do the cholesky decomposition of M only if necessary
         if not '_sqrtM' in vars(self):
@@ -318,7 +319,7 @@ class GPModel(Model):
         for i in range(nsamples):
 
             # Get a sample from the standard normal distribution
-            z = np.random.randn(self._dc)
+            z = rng.standard_normal(self._dc)
 
             # Get the sample of the force field
             f = self._alpha * self._sqrtM @ z
@@ -355,10 +356,7 @@ class GPModel(Model):
         # Check if the posterior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
         nsamples = params.get(gppn.NSAMPLE, 1)
-
-        # Do the cholesky decomposition of M only if necessary
-        if not '_sqrtM' in vars(self):
-            self._sqrtM = np.linalg.cholesky(self._Mc)
+        rng = params.get(gppn.RNG, np.random.default_rng())
 
         # Do the cholesky decomposition of M only if necessary
         if not '_sqrtM' in vars(self):
@@ -383,8 +381,8 @@ class GPModel(Model):
         for i in range(nsamples):
 
             # Get two samples from the standard normal distribution
-            z1 = np.random.randn(self._dc)
-            z2 = np.random.randn(self._nobs)
+            z1 = rng.standard_normal(self._dc)
+            z2 = rng.standard_normal(self._nobs)
 
             # Get x1 ~ N(0, alpha^2 M) and x2 ~ N(0, Sigma_e)
             x1 = self._alpha * self._sqrtM @ z1

@@ -36,27 +36,26 @@ L = 10
 k = float(props['femodel']['bar']['k'])
 
 globdat_c = main.jive(props_c)
-Kc = globdat_c['matrix0']
-uc = globdat_c['state0']
+u_coarse = globdat_c['state0']
 
 globdat = main.jive(props)
-Kf = globdat['matrix0']
-Mf = globdat['matrix2']
-uf = globdat['state0']
+K = globdat['matrix0']
+M = globdat['matrix2']
+u = globdat['state0']
+f = globdat['extForce']
+c = globdat['constraints']
 
-K = Kf
-M = Mf
-u = uf
+Kc, fc = c.constrain(K, f)
 
-xf = np.linspace(0, 10, len(uf))
-xc = np.linspace(0, 10, len(uc))
+xf = np.linspace(0, 10, len(u))
+xc = np.linspace(0, 10, len(u_coarse))
 
 step = int((len(xf)-1) / (len(xc)-1))
 
 u_post = globdat['u_post']
 
-print(uc)
-print(uf[::step])
+print(u_coarse)
+print(u[::step])
 print(u_post[::step])
 
 phi = globdat['phi']
@@ -75,9 +74,10 @@ samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
 plt.figure()
-plt.plot(xc, uc, label='coarse solution')
-plt.plot(xf, uf, label='fine solution')
+plt.plot(xc, u_coarse, label='coarse solution')
+plt.plot(xf, u, label='fine solution')
 plt.plot(xf, u_post, label='posterior mean')
+plt.plot(xf, samples_u_post, color='gray', linewidth=0.2)
 plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
 plt.legend()
 plt.show()

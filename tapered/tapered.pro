@@ -41,7 +41,7 @@ solver =
 femodel =
 {
   type = Multi;
-  models = [ bar, diri, neum ];
+  models = [ bar, diri ];
 
   bar =
   {
@@ -65,9 +65,9 @@ femodel =
   {
     type = Dirichlet;
 
-    groups = [ left ];
-    dofs   = [ dx ];
-    values = [ 0.0 ];
+    groups = [ left, right ];
+    dofs   = [ dx, dx ];
+    values = [ 0.0, 1.0 ];
   };
 
   neum =

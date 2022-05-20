@@ -72,16 +72,50 @@ class GPModel(Model):
         f = globdat.get(gn.EXTFORCE)
         c = globdat.get(gn.CONSTRAINTS)
 
+
+        # # Constrain K, M and f
+        # self._Mc = c.constrain(M, f)[0]
+        # self._Kc, self._fc = c.constrain(K, f)
+
+        # # Get phi from Globdat
+        # self._phi = self._get_phi_lumped(globdat)
+        # globdat['phi'] = self._phi
+
+        # # Compute the observation vector
+        # self._y = self._phi.T @ self._fc
+
         # Constrain K, M and f
-        self._Mc = c.constrain(M, f)[0]
-        self._Kc, self._fc = c.constrain(K, f)
+        # self._Mc = c.constrain(M, f)[0]
+        self._Mc = M
+        self._Kc = c.constrain(K, f)[0]
 
         # Get phi from Globdat
         self._phi = self._get_phi_lumped(globdat)
         globdat['phi'] = self._phi
 
-        # Compute the observation vector
-        self._y = self._phi.T @ self._fc
+        nf = self._phi.shape[0]
+        nc = self._phi.shape[1]
+
+        dofsf, vals = c.get_constraints()
+        dofsc = [0, nc-1]
+
+        H = self._phi.T @ K
+        f_obs = self._phi.T @ f
+
+        Hc = H.copy()
+        self._y = f_obs.copy()
+
+        for doff, dofc, val in zip(dofsf, dofsc, vals):
+            for i in range(nc):
+                if i == dofc:
+                    self._y[i] = val
+                else:
+                    self._y[i] -= Hc[i, doff] * val
+
+            self._phi[doff,:] = self._phi[:,dofc] = 0.0
+            self._phi[doff,dofc] = 1.0
+
+        globdat['phi'] = self._phi
 
         # Set alpha to the optimal value if necessary
         if self._alpha == 'opt':

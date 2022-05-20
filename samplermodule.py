@@ -17,7 +17,6 @@ class SamplerModule(Module):
         self._seed = myprops.get(SEED,None)
         if not self._seed is None:
             self._seed = int(self._seed)
-        self._rng = np.random.default_rng(self._seed)
 
         # Get the appropriate model for this module
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
@@ -32,13 +31,13 @@ class SamplerModule(Module):
         u_params = {}
         u_params[gppn.FIELD] = 'u'
         u_params[gppn.NSAMPLE] = self._nsample
-        u_params[gppn.RNG] = self._rng
+        u_params[gppn.RNG] = np.random.default_rng(self._seed)
 
         # Define a dictionary for the settings of f
         f_params = {}
         f_params[gppn.FIELD] = 'f'
         f_params[gppn.NSAMPLE] = self._nsample
-        f_params[gppn.RNG] = self._rng
+        f_params[gppn.RNG] = np.random.default_rng(self._seed)
 
         # Take the appropriate actions for u
         model.take_action(gpact.GETPRIORSAMPLES, u_params, globdat)

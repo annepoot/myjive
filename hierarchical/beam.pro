@@ -8,7 +8,7 @@ init =
   mesh =
   {
     type = gmsh;
-    file = beam_fine.msh;
+    file = beam_fine2.msh;
   };
 
   lb =

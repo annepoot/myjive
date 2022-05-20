@@ -74,6 +74,8 @@ class GPModel(Model):
 
         # Constrain K, M and f
         self._Mc = c.constrain(M, f)[0]
+        # !!! When is it necessary to add the noise? Can we do without it?
+        self._Mc += 1e-10 * np.identity(self._Mc.shape[0])
         self._Kc, self._fc = c.constrain(K, f)
 
         # Get phi from Globdat

@@ -50,7 +50,7 @@ femodel =
     elements = all;
 
     A = 1.0;
-    E = 3.0 - 0.58 * abs(x-5);
+    E = 3.0 - 0.29 * x;
     k = 0.0;
     q = 0.0;
 

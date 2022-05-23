@@ -6,12 +6,12 @@ from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
 
-from module import *
+from module import Module
 from constrainer import Constrainer
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
-
+GETMASSMATRIX = 'getMassMatrix'
 
 class SolverModule(Module):
 
@@ -21,6 +21,7 @@ class SolverModule(Module):
         self._step = 0
         self._nsteps = int(myprops.get(NSTEPS, 1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX, 'False')))
+        self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
 
     def run(self, globdat):
 
@@ -49,6 +50,12 @@ class SolverModule(Module):
         # Constrain K and f
         Kc, fc = c.constrain(K, f)
 
+        # Optionally get the mass matrix
+        if self._get_mass_matrix:
+            M = np.zeros((dc, dc))
+            params[pn.MATRIX2] = M
+            model.take_action(act.GETMATRIX2, params, globdat)
+
         # Sparsify and solve
         smat = sparse.csr_matrix(Kc)
         u = linalg.spsolve(smat, fc)
@@ -59,6 +66,10 @@ class SolverModule(Module):
         # Optionally store stiffness matrix in Globdat
         if self._store_matrix:
             globdat[gn.MATRIX0] = K
+
+            # Optionally store mass matrix in Globdat
+            if self._get_mass_matrix:
+                globdat[gn.MATRIX2] = M
 
         if self._step >= self._nsteps:
             return 'exit'

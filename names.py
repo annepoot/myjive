@@ -16,6 +16,7 @@ class GlobNames:
     BACKUPSTATE0 = 'backupstate0'
     HISTORY = 'history'
     MATRIX0 = 'matrix0'
+    MATRIX2 = 'matrix2'
     TABLES = 'tables'
     LAMBDA = 'lambda'
     MODULEDATA = 'module'
@@ -30,6 +31,7 @@ class PropNames:
 
 class Actions:
     GETMATRIX0 = 'getMatrix0'
+    GETMATRIX2 = 'getMatrix2'
     GETMATRIXLB = 'getMatrixLB'
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
@@ -43,6 +45,7 @@ class Actions:
 class ParamNames:
     MATRIX0 = 'matrix0'
     MATRIX1 = 'matrix1'
+    MATRIX2 = 'matrix2'
     INTFORCE = 'intForce'
     EXTFORCE = 'extForce'
     UNITFORCE = 'unitForce'

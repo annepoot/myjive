@@ -4,7 +4,7 @@ from names import Actions as act
 from names import ParamNames as pn
 from names import GlobNames as gn
 from names import PropNames as prn
-from model import *
+from model import Model
 
 ELEMENTS = 'elements'
 YOUNG = 'young'
@@ -24,6 +24,8 @@ class ElasticModel(Model):
         print('ElasticModel taking action', action)
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
+        if action == act.GETMATRIX2:
+            self._get_mass_matrix(params, globdat)
         elif action == act.GETEXTFORCE:
             self._get_body_force(params, globdat)
         elif action == act.GETTABLE:
@@ -77,6 +79,22 @@ class ElasticModel(Model):
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
+    def _get_mass_matrix(self, params, globdat):
+        M = self._rho * np.identity(self._rank)
+        for elem in self._elems:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            sfuncs = self._shape.get_shape_functions()
+            weights = self._shape.get_integration_weights(coords)
+
+            elmat = np.zeros((self._dofcount, self._dofcount))
+            for ip in range(self._ipcount):
+                N = self._get_N_matrix(sfuncs[:, ip])
+                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+
+            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+
     def _get_body_force(self, params, globdat):
         if self._rank == 2:
             gravity = np.array([0, -1])
@@ -86,19 +104,16 @@ class ElasticModel(Model):
                 idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
                 coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
                 sfuncs = self._shape.get_shape_functions()
-                grads, weights = self._shape.get_shape_gradients(coords)
+                weights = self._shape.get_integration_weights(coords)
 
                 elfor = np.zeros(self._dofcount)
                 for ip in range(self._ipcount):
-                    N = np.zeros((2, 6))
-                    N[0, 0:: 2] = sfuncs[:, ip].transpose()
-                    N[1, 1:: 2] = sfuncs[:, ip].transpose()
+                    N = self._get_N_matrix(sfuncs[:, ip])
                     elfor += weights[ip] * self._thickness * np.matmul(np.transpose(N), b)
 
                 params[pn.EXTFORCE][idofs] += elfor
         else:
             pass
-
 
     def _get_stresses(self, params, globdat):
         D = self._get_D_matrix()
@@ -151,6 +166,12 @@ class ElasticModel(Model):
                 table['stress_xy'][inodes] += elsig[:, 3]
                 table['stress_yz'][inodes] += elsig[:, 4]
                 table['stress_zx'][inodes] += elsig[:, 5]
+
+    def _get_N_matrix(self, sfuncs):
+        N = np.zeros((self._rank, self._dofcount))
+        for i in range(self._rank):
+            N[i,i::self._rank] = sfuncs.transpose()
+        return N
 
     def _get_B_matrix(self, grads):
         B = np.zeros((self._strcount, self._dofcount))

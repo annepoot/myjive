@@ -6,14 +6,13 @@ from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
 
-from module import *
+from module import Module
 from constrainer import Constrainer
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
-
 
 class SolverModule(Module):
 
@@ -79,7 +78,7 @@ class SolverModule(Module):
         # Optionally store the constrainer in Globdat
         if self._store_constraints:
             globdat[gn.CONSTRAINTS] = c
-
+        
         if self._step >= self._nsteps:
             return 'exit'
         else:

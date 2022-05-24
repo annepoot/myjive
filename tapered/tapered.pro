@@ -35,7 +35,7 @@ solver =
   nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
 femodel =
@@ -131,7 +131,7 @@ gpmodel =
   type = GP;
 
   obsNoise = 1e-5;
-  alpha = opt;
+  alpha = 0.1;
 
   shape =
   {

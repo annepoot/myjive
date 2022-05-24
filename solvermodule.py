@@ -64,7 +64,7 @@ class SolverModule(Module):
             # Updating the chain structure might be a good opportunity to fix this.
             if self._get_unit_mass_matrix:
                 rho = model._models[0]._rho
-                model._models[0]._rho = 1
+                model._models[0]._rho = 1.
 
             model.take_action(act.GETMATRIX2, params, globdat)
 

@@ -6,14 +6,14 @@ from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
 
-from module import *
+from module import Module
 from constrainer import Constrainer
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
-
+GETUNITMASSMATRIX = 'getUnitMassMatrix'
 
 class SolverModule(Module):
 
@@ -25,6 +25,7 @@ class SolverModule(Module):
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
+        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX,'False')))
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
 
     def run(self, globdat):
@@ -55,10 +56,20 @@ class SolverModule(Module):
         Kc, fc = c.constrain(K, f)
 
         # Optionally get the mass matrix
-        if self._get_mass_matrix:
+        if self._get_mass_matrix or self._get_unit_mass_matrix:
             M = np.zeros((dc, dc))
             params[pn.MATRIX2] = M
+
+            # !!! This is a quickfix, please change this when possible
+            # Updating the chain structure might be a good opportunity to fix this.
+            if self._get_unit_mass_matrix:
+                rho = model._models[0]._rho
+                model._models[0]._rho = 1
+
             model.take_action(act.GETMATRIX2, params, globdat)
+
+            if self._get_unit_mass_matrix:
+                model._models[0]._rho = rho
 
         # Sparsify and solve
         smat = sparse.csr_matrix(Kc)
@@ -73,7 +84,7 @@ class SolverModule(Module):
             globdat[gn.MATRIX0] = K
 
             # Optionally store mass matrix in Globdat
-            if self._get_mass_matrix:
+            if self._get_mass_matrix or self._get_unit_mass_matrix:
                 globdat[gn.MATRIX2] = M
 
         # Optionally store the constrainer in Globdat

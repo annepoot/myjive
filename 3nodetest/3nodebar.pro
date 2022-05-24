@@ -31,7 +31,7 @@ solver =
   model = femodel;
   nsteps = 1;
   storeMatrix = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
 femodel =
@@ -83,7 +83,7 @@ gaussian =
   model = gpmodel;
 
   storeMatrix = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 
   nobs = 9;
   obsNoise = 1e-5;

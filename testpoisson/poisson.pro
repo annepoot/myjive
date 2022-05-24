@@ -35,7 +35,7 @@ solver =
   nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
 femodel =
@@ -114,7 +114,7 @@ gaussian =
   model = gpmodel;
 
   storeMatrix = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
 sampler =
@@ -137,13 +137,4 @@ gpmodel =
     type = Triangle3;
     intScheme = Gauss1;
   };
-};
-
-view =
-{
-  type = View;
-  model = gpmodel;
-
-  plot = std_u_post[u];
-  ncolors = 100;
 };

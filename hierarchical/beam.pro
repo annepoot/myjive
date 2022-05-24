@@ -8,7 +8,7 @@ init =
   mesh =
   {
     type = gmsh;
-    file = beam.msh;
+    file = beam_fine2.msh;
   };
 
   lb =
@@ -38,7 +38,7 @@ solver =
   nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
-  getUnitMassMatrix = True;
+  getMassMatrix = True;
 };
 
 femodel =
@@ -123,7 +123,7 @@ gaussian =
   model = gpmodel;
 
   storeMatrix = True;
-  getUnitMassMatrix = True;
+  getMassMatrix = True;
 };
 
 sampler =

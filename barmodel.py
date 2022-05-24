@@ -12,7 +12,7 @@ E = 'E'
 A = 'A'
 k = 'k'
 q = 'q'
-rho = 'rho'
+RHO = 'rho'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx']
@@ -48,8 +48,9 @@ class BarModel(Model):
             pass
 
         self._k = float(props.get(k, 0))
+        self._rho = float(props.get(RHO,0))
         self._q = float(props.get(q, 0))
-        self._rho = float(props.get(rho,1))
+
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
@@ -95,8 +96,8 @@ class BarModel(Model):
                 D = np.array([[E_ * A_]])
                 K = np.array([[k_]])
 
-                elmat += weights[ip] * (
-                            np.matmul(np.transpose(B), np.matmul(D, B)) + np.matmul(np.transpose(N), np.matmul(K, N)))
+                elmat += weights[ip] * (np.matmul(np.transpose(B), np.matmul(D, B))
+                                        + np.matmul(np.transpose(N), np.matmul(K, N)))
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
@@ -112,7 +113,7 @@ class BarModel(Model):
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
+            weights = self._shape.get_integration_weights(coords)
 
             elmat = np.zeros((self._dofcount, self._dofcount))
             for ip in range(self._ipcount):
@@ -147,6 +148,7 @@ class BarModel(Model):
                 elfor += weights[ip] * np.matmul(np.transpose(N), Q)
 
             params[pn.EXTFORCE][idofs] += elfor
+
 
 def declare(factory):
     factory.declare_model('Bar', BarModel)

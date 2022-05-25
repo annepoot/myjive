@@ -13,6 +13,9 @@ import elasticmodel
 import timoshenkomodel
 import framemodel
 import gpmodel
+import xbarmodel
+import xelasticmodel
+import xpoissonmodel
 
 import initmodule
 import solvermodule
@@ -43,6 +46,9 @@ def declare_models(globdat):
     timoshenkomodel.declare(factory)
     framemodel.declare(factory)
     gpmodel.declare(factory)
+    xbarmodel.declare(factory)
+    xelasticmodel.declare(factory)
+    xpoissonmodel.declare(factory)
 
     globdat[gn.MODELFACTORY] = factory
 

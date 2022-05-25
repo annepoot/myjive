@@ -109,3 +109,17 @@ def uncomment_line(line):
             break
 
     return clean_line
+
+def try_float(value):
+
+    try:
+        return float(value)
+    except:
+        return value
+
+def evaluate(value, eval_params):
+
+    if type(value) is str:
+        return eval(value, {}, eval_params)
+    else:
+        return value

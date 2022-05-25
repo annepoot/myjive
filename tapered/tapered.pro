@@ -57,7 +57,7 @@ model =
 
   bar =
   {
-    type = Bar;
+    type = XBar;
 
     elements = all;
 

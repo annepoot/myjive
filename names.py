@@ -58,6 +58,9 @@ class ParamNames:
     TABLEWEIGHTS = 'tableWeights'
     RHO = 'rho'
     AREA = 'area'
+    YOUNG = 'young'
+    SPRING = 'spring'
+    LOAD = 'load'
 
 
 class GPActions:

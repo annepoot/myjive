@@ -1,10 +1,10 @@
 import numpy as np
 
-import proputils as pu
 from names import Actions as act
 from names import ParamNames as pn
 from names import GlobNames as gn
 from barmodel import BarModel
+import proputils as pu
 
 ELEMENTS = 'elements'
 EA = 'EA'

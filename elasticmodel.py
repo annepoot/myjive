@@ -3,7 +3,6 @@ import numpy as np
 from names import Actions as act
 from names import ParamNames as pn
 from names import GlobNames as gn
-from names import PropNames as prn
 from model import Model
 
 ELEMENTS = 'elements'

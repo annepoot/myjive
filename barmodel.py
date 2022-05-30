@@ -50,7 +50,7 @@ class BarModel(Model):
         self._ipcount = self._shape.ipoint_count()
         self._nodecount = self._shape.node_count()
         self._dofcount = self._rank * self._nodecount
-        self._strcount = self._rank * (self._rank + 1) // 2
+        self._strcount = self._rank * (self._rank + 1) // 2   # 1-->1, 2-->3, 3-->6
 
         # Create a new dof for every node and dof type
         nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])

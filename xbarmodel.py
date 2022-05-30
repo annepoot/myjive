@@ -6,9 +6,15 @@ from names import ParamNames as pn
 from names import GlobNames as gn
 from barmodel import BarModel
 
-LOAD = 'q'
+ELEMENTS = 'elements'
+EA = 'EA'
+k = 'k'
+RHOA = 'rhoA'
+SHAPE = 'shape'
+TYPE = 'type'
+INTSCHEME = 'intScheme'
 DOFTYPES = ['dx']
-
+LOAD = 'q'
 
 class XBarModel(BarModel):
     def take_action(self, action, params, globdat):
@@ -20,115 +26,84 @@ class XBarModel(BarModel):
         # Add extended actions below
         if action == act.GETEXTFORCE:
             self._get_body_force(params, globdat)
+        elif action == act.GETUNITMATRIX2:
+            self._get_unit_mass_matrix(params, globdat)
 
     def configure(self, props, globdat):
+        # This function gets only the core values from props
 
-        # Perform the configuration of the parent class
-        super().configure(props, globdat)
+        # Get basic parameter values
+        self._EA = pu.soft_cast(props[EA], float)
+        self._k = pu.soft_cast(props.get(k, 0), float)
+        self._rhoA = pu.soft_cast(props.get(RHOA, 0), float)
+        self._q = pu.soft_cast(props.get(LOAD, 0), float)
 
-        # Get the body force on the bar
-        self._q = float(props.get(LOAD, 0))
+        # Get shape and element info
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+        self._elems = [globdat[gn.ESET][e] for e in egroup]
 
-        # Try to turn all properties into floats
-        self._E = pu.try_float(self._E)
-        self._A = pu.try_float(self._A)
-        self._k = pu.try_float(self._k)
-        self._rho = pu.try_float(self._rho)
-        self._q = pu.try_float(self._q)
+        # The rest of the configuration happens in configure_noprops
+        self._configure_noprops(globdat)
 
-    def _get_matrix(self, params, globdat):
-        E_ = params.get(pn.YOUNG, self._E)
-        A_ = params.get(pn.AREA, self._A)
-        k_ = params.get(pn.SPRING, self._k)
-        eval_params = {}
+    def _get_unit_mass_matrix(self, params, globdat):
 
-        for elem in self._elems:
-            inodes = elem.get_nodes()
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
-            sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
+        # Swap out rhoA for 1
+        rhoA_ = self._rhoA
+        self._rhoA = 1.
 
-            elmat = np.zeros((self._dofcount, self._dofcount))
-            for ip in range(self._ipcount):
-                B = np.zeros((1, self._nodecount))
-                N = np.zeros((1, self._nodecount))
-                B = grads[:, :, ip].transpose()
-                N[0, :] = sfuncs[:, ip].transpose()
+        # Get the mass matrix
+        self._get_mass_matrix(params, globdat)
 
-                if type(E_) is str or type(A_) is str or type(k_) is str:
-                    x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
-                    eval_params['x'] = x
-
-                E = pu.evaluate(E_, eval_params)
-                A = pu.evaluate(A_, eval_params)
-                k = pu.evaluate(k_, eval_params)
-
-                D = np.array([[E * A]])
-                K = np.array([[k]])
-
-                elmat += weights[ip] * (np.matmul(np.transpose(B), np.matmul(D, B))
-                                        + np.matmul(np.transpose(N), np.matmul(K, N)))
-
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
-
-    def _get_mass_matrix(self, params, globdat):
-        rho_ = params.get(pn.RHO, self._rho)
-        A_ = params.get(pn.AREA, self._A)
-        eval_params = {}
-
-        for elem in self._elems:
-            inodes = elem.get_nodes()
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
-            sfuncs = self._shape.get_shape_functions()
-            weights = self._shape.get_integration_weights(coords)
-
-            elmat = np.zeros((self._dofcount, self._dofcount))
-            for ip in range(self._ipcount):
-                N = np.zeros((1, self._nodecount))
-                N[0, :] = sfuncs[:, ip].transpose()
-
-                if type(rho_) is str or type(A_) is str:
-                    x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
-                    eval_params['x'] = x
-
-                rho = pu.evaluate(rho_, eval_params)
-                A = pu.evaluate(A_, eval_params)
-
-                M = np.array([[rho * A]])
-
-                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
-
-            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+        # Restore the original rhoA value
+        self._rhoA = rhoA_
 
     def _get_body_force(self, params, globdat):
-        q_ = params.get(pn.LOAD, self._q)
-        eval_params = {}
 
         for elem in self._elems:
+            # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
+            weights = self._shape.get_integration_weights(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
 
+            # Reset the element force vector
             elfor = np.zeros(self._dofcount)
+
             for ip in range(self._ipcount):
-                N = np.zeros((1, self._dofcount * self._rank))
-                N[0, :] = sfuncs[:, ip].transpose()
+                # Get the N matrix and Q vector for each integration point
+                N = self._get_N_matrix(sfuncs[:,ip])
+                Q = self._get_Q_vector(ipcoords[:,ip])
 
-                if type(q_) is str:
-                    x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
-                    eval_params['x'] = x
-
-                q = pu.evaluate(q_, eval_params)
-
-                Q = np.array([q])
-
+                # Compute the element force vector
                 elfor += weights[ip] * np.matmul(np.transpose(N), Q)
 
+            # Add the element force vector to the global force vector
             params[pn.EXTFORCE][idofs] += elfor
+
+    def _get_D_matrix(self, ipcoords):
+        EA_ = pu.evaluate(self._EA, {'x':ipcoords[0]})
+        D = np.array([[EA_]])
+        return D
+
+    def _get_K_matrix(self, ipcoords):
+        k_ = pu.evaluate(self._k, {'x':ipcoords[0]})
+        K = np.array([[k_]])
+        return K
+
+    def _get_M_matrix(self, ipcoords):
+        rhoA_ = pu.evaluate(self._rhoA, {'x':ipcoords[0]})
+        M = np.array([[rhoA_]])
+        return M
+
+    def _get_Q_vector(self, ipcoords):
+        q_ = pu.evaluate(self._q, {'x':ipcoords[0]})
+        Q = np.array([q_])
+        return Q
 
 
 def declare(factory):

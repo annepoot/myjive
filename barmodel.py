@@ -123,7 +123,7 @@ class BarModel(Model):
 
     def _get_B_matrix(self, grads):
         B = np.zeros((1, self._nodecount))
-        B[:,:] = grads.transpose()
+        B[0,:] = grads.transpose()
         return B
 
     def _get_D_matrix(self, ipcoords):

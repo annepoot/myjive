@@ -260,7 +260,7 @@ class ElasticModel(Model):
         if self._rank == 3:
             a = E * (1. - nu) / ((1. + nu) * (1. - 2. * nu))
             b = E * nu / ((1. + nu) * (1. - 2. * nu))
-            D = [
+            D[:,:] = [
                 [a, b, b, .0, .0, .0],
                 [b, a, b, .0, .0, .0],
                 [b, b, a, .0, .0, .0],
@@ -273,7 +273,7 @@ class ElasticModel(Model):
             if self._state == PE_STATE:
                 a = E * (1. - nu) / ((1. + nu) * (1. - 2. * nu))
                 b = E * nu / ((1. + nu) * (1. - 2. * nu))
-                D = [
+                D[:,:] = [
                     [a, b, .0],
                     [b, a, .0],
                     [.0, .0, g]
@@ -282,7 +282,7 @@ class ElasticModel(Model):
                 assert (self._state == PS_STATE)
                 a = E / (1. - nu * nu)
                 b = a * nu
-                D = [
+                D[:,:] = [
                     [a, b, .0],
                     [b, a, .0],
                     [.0, .0, g]

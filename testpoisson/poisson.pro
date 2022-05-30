@@ -59,7 +59,7 @@ model =
 
   poisson =
   {
-    type = Poisson;
+    type = XPoisson;
 
     elements = all;
 

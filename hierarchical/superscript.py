@@ -11,8 +11,11 @@ from quickviewer import QuickViewer
 from copy import deepcopy
 
 props = pu.parse_file('beam.pro')
+props_c = pu.parse_file('beam_coarse.pro')
 
 globdat = main.jive(props)
+globdat_c = main.jive(props_c)
+
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
@@ -41,13 +44,17 @@ samples_u_prior[cdofs,:] = 0
 samples_u_post[cdofs,:] = 0
 std_u_post[cdofs] = 0
 
-err = abs(u_post - u)
+err = abs(u_post - phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
 QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
 
-QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)')
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+plt.savefig(dpi=450, fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', ''))
+plt.show()
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 

@@ -6,7 +6,7 @@ from names import ParamNames as pn
 from names import GPParamNames as gppn
 from names import GlobNames as gn
 from names import PropNames as prn
-from model import Model, ModelFactory
+from model import Model
 
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
@@ -169,6 +169,7 @@ class GPModel(Model):
             #######################
 
             # u_bar = alpha2 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
+
             if not '_u_post' in vars(self):
 
                 # Solve to get the posterior of the displacement field

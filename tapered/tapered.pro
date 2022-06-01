@@ -52,7 +52,7 @@ femodel =
     A = 1.0;
     E = 3.0 - 0.29 * x;
     k = 0.0;
-    q = 0.0;
+    q = 0.1;
 
     shape =
     {
@@ -124,6 +124,7 @@ sampler =
   model = gpmodel;
 
   nsample = 30;
+  seed = 0;
 };
 
 gpmodel =

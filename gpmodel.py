@@ -40,7 +40,7 @@ class GPModel(Model):
                 self._get_standard_deviations(params, globdat)
 
     def configure(self, props, globdat):
-        self._dc = globdat[gn.DOFSPACE].dof_count() - 2
+        self._dc = globdat[gn.DOFSPACE].dof_count()
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         self._rank = self._shape.global_rank()
 
@@ -62,7 +62,7 @@ class GPModel(Model):
                 globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
 
         # Get the number of observations (which is the number of dofs in the coarse mesh)
-        self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count() - 2
+        self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
 
     def configure_fem(self, globdat):
 
@@ -74,66 +74,38 @@ class GPModel(Model):
 
         cdofs, cvals = c.get_constraints()
 
-        B = np.delete(K[:,cdofs], cdofs, axis=0)
-        K = np.delete(np.delete(K, cdofs, axis=0), cdofs, axis=1)
-        M = np.delete(np.delete(M, cdofs, axis=0), cdofs, axis=1)
-        f = np.delete(f, cdofs, axis=0)
+        # The posterior mean force vector has to contain the Dirichlet BCs
+        mf = np.zeros_like(f)
+        Kc, mf = c.constrain(K, mf)
 
-        self._Mc = M
-        self._Kc = K
-        self._fc = f
-        self._m = - B @ cvals
+        # Get the actual constrained stiffness matrix and force vector
+        Kc, fc = c.constrain(K, f)
 
+        # Get the mass matrix, and remove the Dirichlet BCs
+        Mc = M.copy()
+        Mc[cdofs,:] = Mc[:,cdofs] = 0.0
+        Mc += 1e-10 * np.identity(Mc.shape[0])
+
+        # Store all constrained matrices and vectors
+        self._Mc = Mc
+        self._Kc = Kc
+        self._fc = fc
+        self._m = np.linalg.solve(Kc, mf)
+
+        # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi_lumped(globdat)
-        phi = np.delete(np.delete(phi, cdofs, axis=0), [0,-1], axis=1)
+
+        for i in range(phi.shape[1]):
+            for cdof in cdofs:
+                if np.isclose(phi[cdof,i], 1):
+                    phi[cdof,:]= phi[:,i] = 0.0
+                    phi[cdof,i] = 1.0
+
         self._phi = phi
-
-
-
-        # # # Constrain K, M and f
-        # # self._Mc = c.constrain(M, f)[0]
-        # # self._Kc, self._fc = c.constrain(K, f)
-
-        # # # Get phi from Globdat
-        # # self._phi = self._get_phi_lumped(globdat)
-        # # globdat['phi'] = self._phi
-
-        # # # Compute the observation vector
-        # # self._y = self._phi.T @ self._fc
-
-        # # Constrain K, M and f
-        # self._Mc = c.constrain(M, f)[0]
-        # # !!! When is it necessary to add the noise? Can we do without it?
-        # self._Mc += 1e-10 * np.identity(self._Mc.shape[0])
-        # self._Kc, self._fc = c.constrain(K, f)
-
-        # # Get phi from Globdat
-        # self._phi = self._get_phi_lumped(globdat)
-        # globdat['phi'] = self._phi
-
-        # nf = self._phi.shape[0]
-        # nc = self._phi.shape[1]
-
-        # dofsf, vals = c.get_constraints()
-        # dofsc = [0, nc-1]
-
-        # H = self._phi.T @ K
-        f_obs = self._phi.T @ f
-
-        # Hc = H.copy()
-        self._y = f_obs.copy()
-
-        # for doff, dofc, val in zip(dofsf, dofsc, vals):
-        #     for i in range(nc):
-        #         if i == dofc:
-        #             self._y[i] = val
-        #         else:
-        #             self._y[i] -= Hc[i, doff] * val
-
-        #     self._phi[doff,:] = self._phi[:,dofc] = 0.0
-        #     self._phi[doff,dofc] = 1.0
-
         globdat['phi'] = self._phi
+
+        # Get the observed force vector
+        self._y = self._phi.T @ (self._fc - self._Kc @ self._m)
 
         # Set alpha to the optimal value if necessary
         if self._alpha == 'opt':
@@ -143,12 +115,30 @@ class GPModel(Model):
 
     def _get_prior_mean(self, params, globdat):
 
-        #########################
-        # PRIOR MEAN ON u and f #
-        #########################
+        # Check if the prior on u, eps or f should be obtained
+        field = params.get(gppn.FIELD, 'u')
 
-        # Only a 0-mean prior has been implemented
-        params[gppn.PRIORMEAN] = np.zeros(self._dc)
+        if field == 'u':
+
+            ###################
+            # PRIOR MEAN ON u #
+            ###################
+
+            # Return the prior of the displacement field
+            params[gppn.PRIORMEAN] = self._m
+
+        elif field == 'f':
+
+            ###################
+            # PRIOR MEAN ON f #
+            ###################
+
+            # Return the prior of the force field
+            params[gppn.PRIORMEAN] = self._Kc @ self._m
+
+        else:
+
+            raise ValueError(field)
 
 
     def _get_posterior_mean(self, params, globdat):
@@ -167,7 +157,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_f_post' in vars(self):
-            self._f_post = self._m + self._alpha**2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            self._f_post = self._Kc @ self._m + self._alpha**2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
         # Check if the prior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
@@ -382,7 +372,7 @@ class GPModel(Model):
                 #####################
 
                 # Compute the corresponding displacement field
-                u = np.linalg.solve(self._Kc, f)
+                u = np.linalg.solve(self._Kc, f) + self._m
 
                 samples[:,i] = u
 
@@ -392,7 +382,7 @@ class GPModel(Model):
                 # PRIOR SAMPLE ON f #
                 #####################
 
-                samples[:,i] = f
+                samples[:,i] = f + self._Kc @ self._m
 
             else:
 
@@ -448,7 +438,7 @@ class GPModel(Model):
             f = self._alpha**2 * self._Mc @ self._phi @ f
 
             # Add the prior sample
-            f += x1 + self._m
+            f += x1
 
             if field == 'u':
 
@@ -457,7 +447,7 @@ class GPModel(Model):
                 #########################
 
                 # Compute the corresponding displacement field
-                u = np.linalg.solve(self._Kc, f)
+                u = np.linalg.solve(self._Kc, f) + self._m
 
                 samples[:,i] = u
 
@@ -467,7 +457,7 @@ class GPModel(Model):
                 # POSTERIOR SAMPLE ON f #
                 #########################
 
-                samples[:,i] = f
+                samples[:,i] = f + self._Kc @ self._m
 
             else:
 

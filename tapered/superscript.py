@@ -74,10 +74,13 @@ samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
 plt.figure()
+plt.plot(xf, u_post, label='posterior mean')
+plt.plot(xf, u_prior, label='prior mean')
+plt.plot(xf, samples_u_post, color='gray', linewidth=0.2)
+plt.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
+plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
+plt.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
 plt.plot(xc, u_coarse, label='coarse solution')
 plt.plot(xf, u, label='fine solution')
-plt.plot(xf[1:-1], u_post, label='posterior mean')
-plt.plot(xf[1:-1], samples_u_post, color='gray', linewidth=0.2)
-plt.fill_between(xf[1:-1], u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
 plt.legend()
 plt.show()

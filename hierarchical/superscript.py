@@ -60,11 +60,11 @@ QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\b
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1), fname='samples/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'/beam_sample_prior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, scale=10.0, title=r'Prior samples from $u$ (sample {})'.format(i+1), fname='samples/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'/beam_sample_prior_{}'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1), fname='samples/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'/beam_sample_posterior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, scale=10.0, title=r'Posterior samples from $u$ (sample {})'.format(i+1), fname='samples/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'/beam_sample_posterior_{}'.format(i+1))
 
 fine_list = ['post', 'coarse', 'medium', 'fine', 'fine2']
 x_dict = {}

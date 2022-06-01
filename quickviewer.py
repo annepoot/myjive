@@ -42,7 +42,7 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolo
 
     for n in range(len(nodes)):
         idofs = dofs.get_dofs([n], types)
-        du = disp[idofs]
+        du = array[idofs]
 
         if len(idofs) == 2:
           dx[n] += scale * du[0]

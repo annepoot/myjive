@@ -35,13 +35,13 @@ solver =
   nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
 femodel =
 {
   type = Multi;
-  models = [ bar, diri, neum ];
+  models = [ bar, diri ];
 
   bar =
   {
@@ -52,7 +52,7 @@ femodel =
     A = 1.0;
     E = 3.0 - 0.29 * x;
     k = 0.0;
-    q = 0.0;
+    q = 0.1;
 
     shape =
     {
@@ -65,9 +65,9 @@ femodel =
   {
     type = Dirichlet;
 
-    groups = [ left ];
-    dofs   = [ dx ];
-    values = [ 0.0 ];
+    groups = [ left, right ];
+    dofs   = [ dx, dx ];
+    values = [ 0.0, 1.0 ];
   };
 
   neum =
@@ -124,14 +124,15 @@ sampler =
   model = gpmodel;
 
   nsample = 30;
+  seed = 0;
 };
 
 gpmodel =
 {
   type = GP;
 
-  obsNoise = 1e-5;
-  alpha = opt;
+  obsNoise = 1e-10;
+  alpha = 0.1;
 
   shape =
   {

@@ -123,13 +123,14 @@ sampler =
   model = gpmodel;
 
   nsample = 10;
+  seed = 0;
 };
 
 gpmodel =
 {
   type = GP;
 
-  obsNoise = 1e-5;
+  obsNoise = 1e-8;
   alpha = 1;
 
   shape =

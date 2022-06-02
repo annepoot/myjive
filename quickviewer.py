@@ -12,7 +12,7 @@ PLOT = 'plot'
 NCOLORS = 'ncolors'
 DEFORM = 'deform'
 
-def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100, title=None, fname=None):
+def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolors=100, title=None, fname=None):
 
     nodes = globdat[gn.NSET]
     elems = globdat[gn.ESET]
@@ -42,18 +42,22 @@ def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100, t
 
     for n in range(len(nodes)):
         idofs = dofs.get_dofs([n], types)
-        du = disp[idofs]
+        du = array[idofs]
 
         if len(idofs) == 2:
           dx[n] += scale * du[0]
           dy[n] += scale * du[1]
 
-    plt.figure()
-    ax = plt.gca()
+    if ax is None:
+        fig = plt.figure()
+        ax = plt.gca()
+    else:
+        fig = ax.get_figure()
+
     plt.ion()
-    plt.cla()
-    plt.axis('equal')
-    plt.axis('off')
+    ax.cla()
+    ax.set_axis_off()
+    ax.set_aspect('equal', adjustable='datalim')
 
     triang = tri.Triangulation (dx, dy, el)
 
@@ -63,17 +67,16 @@ def QuickViewer(array, globdat, comp=1, linewidth=0.2, scale=0.0, ncolors=100, t
         idofs = dofs.get_dofs([n], types)
         z[n] = array[idofs[comp]]
 
-    plt.tricontourf(triang,z,levels=np.linspace(z.min(),z.max(),ncolors))
-
+    mappable = ax.tricontourf(triang,z,levels=np.linspace(z.min(),z.max(),ncolors))
     ticks = np.linspace(z.min(),z.max(),5,endpoint=True)
-    plt.colorbar(ticks=ticks)
-
-    plt.triplot(triang,'k-',linewidth=linewidth)
+    plt.colorbar(mappable, ticks=ticks,ax=ax)
+    ax.triplot(triang,'k-',linewidth=linewidth)
 
     if not title is None:
-        plt.title(title)
+        ax.set_title(title)
 
     if not fname is None:
         plt.savefig(fname, dpi=300)
 
-    plt.show(block=False)
+    if ax is None:
+        plt.show(block=False)

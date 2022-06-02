@@ -98,8 +98,18 @@ class GPModel(Model):
         for i in range(phi.shape[1]):
             for cdof in cdofs:
                 if np.isclose(phi[cdof,i], 1):
-                    phi[cdof,:]= phi[:,i] = 0.0
-                    phi[cdof,i] = 1.0
+                    for j in range(phi.shape[0]):
+
+                        # Note: this construction is here, because the entries of phi that belong to other DBCs should not be set to 0
+                        # This specifically happens if DBCs are applied along an edge.
+                        if j == cdof:
+                            assert np.isclose(phi[j,:i], 0).all()
+                            assert np.isclose(phi[j,i+1:], 0).all()
+
+                            phi[j,i] = 1.0
+
+                        elif not j in cdofs:
+                            phi[j,i] = 0.0
 
         self._phi = phi
         globdat['phi'] = self._phi
@@ -573,13 +583,8 @@ class GPModel(Model):
                             # Get the relative position of the node
                             loc_point = self._shape.get_local_point(coord, coordsc)
 
-                            # In case of a 1D bar, the bounding box check is enough
-                            if self._rank == 1:
-                                inside = True
-
-                            elif self._rank == 2:
-                                # For the 2D case, check if the node actually falls within the triangle
-                                inside = loc_point[0] >= 0 and loc_point[1] >= 0 and loc_point[0] + loc_point[1] <= 1
+                            # Check if the node actually falls within shape
+                            inside = self._shape.contains_local_point(loc_point, tol=1e-8)
 
                         # Only continue if both checks are passed
                         if inside:

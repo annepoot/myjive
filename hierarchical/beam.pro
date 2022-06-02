@@ -139,7 +139,7 @@ gpmodel =
 {
   type = GP;
 
-  obsNoise = 1e-5;
+  obsNoise = 1e-10;
   alpha = opt;
 
   shape =

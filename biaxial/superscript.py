@@ -9,14 +9,12 @@ import proputils as pu
 import testutils as tu
 from quickviewer import QuickViewer
 
-props = pu.parse_file('beam.pro')
+props = pu.parse_file('biax.pro')
 
 globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
-# phi = globdat['phi']
-# phi_sub = globdat['phi_sub']
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']
@@ -35,18 +33,19 @@ phi = globdat['phi']
 
 err = abs(u_post - u)
 
-QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)', fname='beam_u_post')
+QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)', fname='beam_u')
+QuickViewer(u, globdat, 0, title=r'Exact horizontal displacement ($u$)')
+QuickViewer(u, globdat, 1, title=r'Exact veritcal displacement ($u$)')
 
-QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)', fname='beam_err')
+QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)')
 
-QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)', fname='beam_std')
+QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_prior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_posterior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1))

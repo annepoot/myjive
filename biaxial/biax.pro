@@ -3,30 +3,32 @@ init =
   type = Init;
   model = femodel;
 
-  nodeGroups = [ lb, rb, tm ];
+  nodeGroups = [ top, left, bottom, right ];
 
   mesh =
   {
     type = gmsh;
-    file = beam.msh;
+    file = biax_fine.msh;
   };
 
-  lb =
-  {
-    xtype = min;
-    ytype = min;
-  };
-
-  rb =
-  {
-    xtype = max;
-    ytype = min;
-  };
-
-  tm =
+  top =
   {
     ytype = max;
-    xtype = mid;
+  };
+
+  bottom =
+  {
+    ytype = min;
+  };
+
+  left =
+  {
+    xtype = min;
+  };
+
+  right =
+  {
+    xtype = max;
   };
 };
 
@@ -45,7 +47,7 @@ femodel =
 {
   type = Multi;
 
-  models = [ elastic, diri, neum ];
+  models = [ elastic, diri ];
 
   elastic =
   {
@@ -70,18 +72,9 @@ femodel =
   {
     type = Dirichlet;
 
-    groups = [ lb, lb, rb ];
-    dofs   = [ dx, dy, dy ];
-    values = [ 0., 0., 0. ];
-  };
-
-  neum =
-  {
-    type = Neumann;
-
-    groups = [ tm ];
-    dofs   = [ dy ];
-    values = [ -1. ];
+    groups = [ top, bottom, left, right ];
+    dofs   = [ dy, dy, dx, dx ];
+    values = [ 1., 0., 0., 1. ];
   };
 };
 
@@ -90,30 +83,32 @@ gpinit =
   type = GPInit;
   model = gpmodel;
 
-  nodeGroups = [ lb, rb, tm ];
+  nodeGroups = [ top, left, bottom, right ];
 
   mesh =
   {
     type = gmsh;
-    file = beam_coarse.msh;
+    file = biax_coarse.msh;
   };
 
-  lb =
-  {
-    xtype = min;
-    ytype = min;
-  };
-
-  rb =
-  {
-    xtype = max;
-    ytype = min;
-  };
-
-  tm =
+  top =
   {
     ytype = max;
-    xtype = mid;
+  };
+
+  bottom =
+  {
+    ytype = min;
+  };
+
+  left =
+  {
+    xtype = min;
+  };
+
+  right =
+  {
+    xtype = max;
   };
 };
 

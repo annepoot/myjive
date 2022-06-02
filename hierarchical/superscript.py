@@ -37,14 +37,7 @@ samples_f_post = globdat['samples_f_post']
 
 phi = globdat['phi']
 
-c = globdat['constraints']
-cdofs, cvals = c.get_constraints()
-u_post[cdofs] = 0
-samples_u_prior[cdofs,:] = 0
-samples_u_post[cdofs,:] = 0
-std_u_post[cdofs] = 0
-
-err = abs(u_post - phi @ globdat_c['state0'])
+err = abs(u - phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 

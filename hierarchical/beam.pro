@@ -131,7 +131,7 @@ sampler =
   type = Sampler;
   model = gpmodel;
 
-  nsample = 3;
+  nsample = 10;
   seed=0;
 };
 

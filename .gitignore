@@ -2,6 +2,7 @@ __pycache__
 *.disp
 *.vtu
 *.png
+*.pdf
 go
 .ipynb_checkpoints/
 *.swp

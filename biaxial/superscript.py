@@ -8,8 +8,18 @@ import main
 import proputils as pu
 import testutils as tu
 from quickviewer import QuickViewer
+from copy import deepcopy
 
 props = pu.parse_file('biax.pro')
+
+props_c = {}
+props_c['init'] = deepcopy(props['init'])
+props_c['solver'] = deepcopy(props['solver'])
+props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init']['mesh']['file'] = 'biax_coarse.msh'
+
+globdat_c = main.jive(props_c)
+u_coarse = globdat_c['state0']
 
 globdat = main.jive(props)
 K = globdat['matrix0']
@@ -31,7 +41,7 @@ samples_f_post = globdat['samples_f_post']
 
 phi = globdat['phi']
 
-err = abs(u_post - u)
+err = abs(u - phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 

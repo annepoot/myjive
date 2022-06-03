@@ -30,11 +30,6 @@ props_c['solver'] = deepcopy(props['solver'])
 props_c['femodel'] = deepcopy(props['femodel'])
 props_c['init']['mesh']['file'] = '2nodebar_coarse.mesh'
 
-P = 1
-L = 10
-# EA = float(props['femodel']['bar']['EA'])
-k = float(props['femodel']['bar']['k'])
-
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
 

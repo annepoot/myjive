@@ -11,11 +11,17 @@ from quickviewer import QuickViewer
 from copy import deepcopy
 
 props = pu.parse_file('beam.pro')
-props_c = pu.parse_file('beam_coarse.pro')
+
+props_c = {}
+props_c['init'] = deepcopy(props['init'])
+props_c['solver'] = deepcopy(props['solver'])
+props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init']['mesh']['file'] = 'beam_coarse.msh'
+
+globdat_c = main.jive(props_c)
+u_coarse = globdat_c['state0']
 
 globdat = main.jive(props)
-globdat_c = main.jive(props_c)
-
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']

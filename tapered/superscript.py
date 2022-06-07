@@ -53,7 +53,8 @@ print(u_coarse)
 print(u[::step])
 print(u_post[::step])
 
-phi = globdat['phi']
+Phi = globdat['Phi']
+Phic = globdat['Phic']
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']

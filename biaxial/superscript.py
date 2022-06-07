@@ -25,6 +25,7 @@ globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
+
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']
@@ -39,16 +40,15 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
-phi = globdat['phi']
+Phi = globdat['Phi']
 
-err = abs(u - phi @ globdat_c['state0'])
+err = abs(u - Phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 0, title=r'Exact horizontal displacement ($u$)')
 QuickViewer(u, globdat, 1, title=r'Exact veritcal displacement ($u$)')
 
-QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)')
+QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 

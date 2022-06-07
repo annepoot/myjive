@@ -32,8 +32,7 @@ globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
-# phi = globdat['phi']
-# phi_sub = globdat['phi_sub']
+
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']

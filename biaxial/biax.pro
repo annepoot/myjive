@@ -135,7 +135,7 @@ gpmodel =
   type = GP;
 
   obsNoise = 1e-10;
-  alpha = 100;
+  alpha = 1000;
 
   shape =
   {

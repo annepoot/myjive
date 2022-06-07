@@ -95,6 +95,9 @@ class GPModel(Model):
         # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi_lumped(globdat)
 
+        self._Phi = phi.copy()
+        globdat['Phi'] = self._Phi
+
         for i in range(phi.shape[1]):
             for cdof in cdofs:
                 if np.isclose(phi[cdof,i], 1):
@@ -111,11 +114,11 @@ class GPModel(Model):
                         elif not j in cdofs:
                             phi[j,i] = 0.0
 
-        self._phi = phi
-        globdat['phi'] = self._phi
+        self._Phic = phi
+        globdat['Phic'] = self._Phic
 
         # Get the observed force vector
-        self._y = self._phi.T @ (self._fc - self._Kc @ self._m)
+        self._y = self._Phic.T @ (self._fc - self._Kc @ self._m)
 
         # Set alpha to the optimal value if necessary
         if self._alpha == 'opt':
@@ -155,7 +158,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._phi.T @ self._Mc @ self._phi + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -167,7 +170,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_f_post' in vars(self):
-            self._f_post = self._Kc @ self._m + self._alpha**2 * self._Mc @ self._phi @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            self._f_post = self._Kc @ self._m + self._alpha**2 * self._Mc @ self._Phic @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
         # Check if the prior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
@@ -284,7 +287,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._phi.T @ self._Mc @ self._phi + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -292,7 +295,7 @@ class GPModel(Model):
 
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._phi.T @ self._Mc)
+            self._V1 = np.linalg.solve(self._sqrtObs, self._Phic.T @ self._Mc)
 
         if field == 'u':
 
@@ -416,7 +419,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._phi.T @ self._Mc @ self._phi + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -441,12 +444,12 @@ class GPModel(Model):
             x2 = self._sqrtNoise @ z2
 
             # Compute the perturbed observation
-            f_pert = self._y - self._phi.T @ x1 + x2
+            f_pert = self._y - self._Phic.T @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
             f = np.linalg.solve(self._sqrtObs, f_pert)
             f = np.linalg.solve(self._sqrtObs.T, f)
-            f = self._alpha**2 * self._Mc @ self._phi @ f
+            f = self._alpha**2 * self._Mc @ self._Phic @ f
 
             # Add the prior sample
             f += x1
@@ -485,7 +488,7 @@ class GPModel(Model):
         #################
 
         # If so, determine the optimal value of alpha
-        L = np.linalg.cholesky(self._phi.T @ self._Mc @ self._phi)
+        L = np.linalg.cholesky(self._Phic.T @ self._Mc @ self._Phic)
         v = np.linalg.solve(L, self._y)
         alpha2 = v.T @ v / self._nobs
 

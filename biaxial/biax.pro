@@ -58,7 +58,7 @@ femodel =
     young = 10000.;
     thickness = 0.2;
     poisson = 0.2;
-    rho = 1;
+    rho = 0.0;
     state = plane_stress;
 
     shape =
@@ -126,7 +126,7 @@ sampler =
   type = Sampler;
   model = gpmodel;
 
-  nsample = 10;
+  nsample = 3;
   seed = 0;
 };
 
@@ -135,7 +135,7 @@ gpmodel =
   type = GP;
 
   obsNoise = 1e-10;
-  alpha = opt;
+  alpha = 100;
 
   shape =
   {

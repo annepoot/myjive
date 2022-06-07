@@ -8,15 +8,24 @@ import main
 import proputils as pu
 import testutils as tu
 from quickviewer import QuickViewer
+from copy import deepcopy
 
 props = pu.parse_file('beam.pro')
+
+props_c = {}
+props_c['init'] = deepcopy(props['init'])
+props_c['solver'] = deepcopy(props['solver'])
+props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init']['mesh']['file'] = 'beam_coarse.msh'
+
+globdat_c = main.jive(props_c)
+u_coarse = globdat_c['state0']
 
 globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
-# phi = globdat['phi']
-# phi_sub = globdat['phi_sub']
+
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']
@@ -31,22 +40,22 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
-phi = globdat['phi']
+Phi = globdat['Phi']
 
-err = abs(u_post - u)
+err = abs(u - Phi @ globdat_c['state0'])
 
-QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)', fname='beam_u_post')
+QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)', fname='beam_u')
+QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
 
-QuickViewer(err, globdat, title=r'Posterior mean error ($|\bar u - u|$)', fname='beam_err')
+QuickViewer(err, globdat, 1, title=r'Discretization error ($|u_f - u_c|$)')
 
-QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)', fname='beam_std')
+QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_prior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1), fname='samples/beam_sample_posterior_{}'.format(i+1))
+    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1))

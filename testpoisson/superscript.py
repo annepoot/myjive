@@ -8,8 +8,18 @@ import main
 import proputils as pu
 import testutils as tu
 from quickviewer import QuickViewer
+from copy import deepcopy
 
 props = pu.parse_file('poisson.pro')
+
+props_c = {}
+props_c['init'] = deepcopy(props['init'])
+props_c['solver'] = deepcopy(props['solver'])
+props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init']['mesh']['file'] = 'mesh.msh'
+
+globdat_c = main.jive(props_c)
+u_coarse = globdat_c['state0']
 
 globdat = main.jive(props)
 K = globdat['matrix0']
@@ -30,15 +40,15 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
-phi = globdat['phi']
+Phi = globdat['Phi']
 
-err = abs(u_post - u)
+err = abs(u - Phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, 0, title=r'Posterior mean diplacement ($\bar u$)')
 
 QuickViewer(u, globdat, 0, title=r'Exact displacement ($u$)')
 
-QuickViewer(err, globdat, 0, title=r'Posterior mean error ($|\bar u - u|$)')
+QuickViewer(err, globdat, 0, title=r'Discretization error ($|u_f - u_c|$)')
 
 QuickViewer(std_u_post, globdat, 0, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 

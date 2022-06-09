@@ -6,7 +6,7 @@ init =
   mesh =
   {
     type = gmsh;
-    file = mesh.msh;
+    file = tri6mesh.msh;
   };
 
   nodeGroups = [ left, right, bottom ];
@@ -55,7 +55,7 @@ femodel =
 
     shape =
     {
-      type = Triangle3;
+      type = Triangle6;
       intScheme = Gauss1;
     };
   };
@@ -87,7 +87,7 @@ gpinit =
   mesh =
   {
     type = gmsh;
-    file = mesh.msh;
+    file = tri3mesh.msh;
   };
 
   nodeGroups = [ left, right, bottom ];

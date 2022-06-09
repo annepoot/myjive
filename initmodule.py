@@ -134,6 +134,10 @@ class InitModule(Module):
                             globdat[gn.MESHSHAPE] = 'Line3'
                             globdat[gn.MESHRANK] = 1
                             nnodes = 3
+                        elif eltype == 9:
+                            globdat[gn.MESHSHAPE] = 'Triangle6'
+                            globdat[gn.MESHRANK] = 2
+                            nnodes = 6
                         else:
                             raise SyntaxError('InitModule: Unsupported element type')
                     elif eltype != int(sp[1]):

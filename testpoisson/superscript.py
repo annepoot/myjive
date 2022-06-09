@@ -12,14 +12,23 @@ from copy import deepcopy
 
 props = pu.parse_file('poisson.pro')
 
-props_c = {}
-props_c['init'] = deepcopy(props['init'])
-props_c['solver'] = deepcopy(props['solver'])
-props_c['femodel'] = deepcopy(props['femodel'])
-props_c['init']['mesh']['file'] = 'mesh.msh'
+props_f = {}
+props_f['init'] = deepcopy(props['init'])
+props_f['solver'] = deepcopy(props['solver'])
+props_f['femodel'] = deepcopy(props['femodel'])
+
+globdat_f = main.jive(props_f)
+u_fine = globdat_f['state0']
+
+props_c = deepcopy(props_f)
+props_c['init']['mesh']['file'] = 'tri3mesh.msh'
+props_c['femodel']['poisson']['shape']['type'] = 'Triangle3'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
+
+QuickViewer(u_coarse, globdat_c, comp=0, title=r'Coarse displacement field ($u_c$)')
+QuickViewer(u_fine, globdat_f, comp=0, title=r'Fine displacement field ($u_f$)')
 
 globdat = main.jive(props)
 K = globdat['matrix0']
@@ -45,6 +54,10 @@ Phi = globdat['Phi']
 err = abs(u - Phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, 0, title=r'Posterior mean diplacement ($\bar u$)')
+
+QuickViewer(globdat_c['state0'], globdat_c, 0, title=r'Coarse solution ($u_c$)')
+
+QuickViewer(Phi @ globdat_c['state0'], globdat, 0, title=r'Projected coarse solution ($u_c$)')
 
 QuickViewer(u, globdat, 0, title=r'Exact displacement ($u$)')
 

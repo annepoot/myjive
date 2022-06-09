@@ -67,6 +67,16 @@ class Shape:
                 self._ips[0, 0] = 1.0 / 3.0
                 self._ips[1, 0] = 1.0 / 3.0
                 self._wts[0] = 0.5
+            elif self._int == 'Gauss3':
+                self._ips[0, 0] = 1.0 / 6.0
+                self._ips[1, 0] = 1.0 / 6.0
+                self._ips[0, 1] = 2.0 / 3.0
+                self._ips[1, 1] = 1.0 / 6.0
+                self._ips[0, 2] = 1.0 / 6.0
+                self._ips[1, 2] = 2.0 / 3.0
+                self._wts[0] = 1.0 / 6.0
+                self._wts[1] = 1.0 / 6.0
+                self._wts[2] = 1.0 / 6.0
 
             else:
                 raise ValueError(self._int)

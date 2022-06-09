@@ -20,11 +20,17 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolo
     dofs = globdat[gn.DOFSPACE]
     types = dofs.get_types()
 
-    assert globdat[gn.MESHSHAPE] == 'Triangle3', 'ViewModule only supports triangles for now'
+    shape = globdat[gn.MESHSHAPE]
+
+    assert  shape == 'Triangle3' or shape == 'Triangle6', 'ViewModule only supports triangles for now'
 
     x = np.zeros(len(nodes))
     y = np.zeros(len(nodes))
-    el= np.zeros((len(elems),3),dtype=int)
+
+    if shape == 'Triangle3':
+        el= np.zeros((len(elems),3),dtype=int)
+    elif shape == 'Triangle6':
+        el= np.zeros((len(elems)*4,3),dtype=int)
 
     for n, node in enumerate(nodes):
         coords = node.get_coords()
@@ -35,7 +41,13 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolo
     for e, elem in enumerate(elems):
         inodes = elem.get_nodes()
 
-        el[e,:] = inodes
+        if shape == 'Triangle3':
+            el[e,:] = inodes
+        elif shape == 'Triangle6':
+            el[4*e+0,:] = inodes[[0,3,5]]
+            el[4*e+1,:] = inodes[[1,4,3]]
+            el[4*e+2,:] = inodes[[2,5,4]]
+            el[4*e+3,:] = inodes[[3,4,5]]
 
     dx = np.copy(x)
     dy = np.copy(y)

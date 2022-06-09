@@ -100,16 +100,16 @@ class Tri6Shape(Shape):
         loc_coords = np.zeros((self._rank, self._ncount))
 
         loc_coords[0, 0] = 0.0
-        loc_coords[0, 1] = 0.5
-        loc_coords[0, 2] = 1.0
+        loc_coords[0, 1] = 1.0
+        loc_coords[0, 2] = 0.0
         loc_coords[0, 3] = 0.5
-        loc_coords[0, 4] = 0.0
+        loc_coords[0, 4] = 0.5
         loc_coords[0, 5] = 0.0
         loc_coords[1, 0] = 0.0
-        loc_coords[1, 1] = 0.0
+        loc_coords[1, 1] = 1.0
         loc_coords[1, 2] = 0.0
-        loc_coords[1, 3] = 0.5
-        loc_coords[1, 4] = 1.0
+        loc_coords[1, 3] = 0.0
+        loc_coords[1, 4] = 0.5
         loc_coords[1, 5] = 0.5
 
         return loc_coords
@@ -119,10 +119,10 @@ class Tri6Shape(Shape):
         sfuncs = np.zeros(self._ncount)
 
         sfuncs[0] = 2 * (0.5 - loc_point[0] - loc_point[1]) * (1 - loc_point[0] - loc_point[1])
-        sfuncs[1] = 4 * loc_point[0] * (1 - loc_point[0] - loc_point[1])
-        sfuncs[2] = -2 * loc_point[0] * (0.5 - loc_point[0])
-        sfuncs[3] = 4 * loc_point[0] * loc_point[1]
-        sfuncs[4] = -2 * loc_point[1] * (0.5 - loc_point[1])
+        sfuncs[1] = -2 * loc_point[0] * (0.5 - loc_point[0])
+        sfuncs[2] = -2 * loc_point[1] * (0.5 - loc_point[1])
+        sfuncs[3] = 4 * loc_point[0] * (1 - loc_point[0] - loc_point[1])
+        sfuncs[4] = 4 * loc_point[0] * loc_point[1]
         sfuncs[5] = 4 * loc_point[1] * (1 - loc_point[0] - loc_point[1])
 
         return sfuncs
@@ -134,14 +134,14 @@ class Tri6Shape(Shape):
 
         sgrads[0, 0] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
         sgrads[0, 1] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
-        sgrads[1, 0] = 4 - 8 * loc_point[0] - 4 * loc_point[1]
-        sgrads[1, 1] = -4 * loc_point[0]
-        sgrads[2, 0] = -1 + 4 * loc_point[0]
-        sgrads[2, 1] = 0.0
-        sgrads[3, 0] = 4 * loc_point[1]
-        sgrads[3, 1] = 4 * loc_point[0]
-        sgrads[4, 0] = 0.0
-        sgrads[4, 1] = -1 + 4 * loc_point[1]
+        sgrads[1, 0] = -1 + 4 * loc_point[0]
+        sgrads[1, 1] = 0.0
+        sgrads[2, 0] = 0.0
+        sgrads[2, 1] = -1 + 4 * loc_point[1]
+        sgrads[3, 0] = 4 - 8 * loc_point[0] - 4 * loc_point[1]
+        sgrads[3, 1] = -4 * loc_point[0]
+        sgrads[4, 0] = 4 * loc_point[1]
+        sgrads[4, 1] = 4 * loc_point[0]
         sgrads[5, 0] = -4 * loc_point[1]
         sgrads[5, 1] = 4 - 4 * loc_point[0] - 8 * loc_point[1]
 

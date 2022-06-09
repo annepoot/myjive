@@ -56,7 +56,7 @@ femodel =
     shape =
     {
       type = Triangle6;
-      intScheme = Gauss1;
+      intScheme = Gauss3;
     };
   };
 
@@ -136,6 +136,6 @@ gpmodel =
   shape =
   {
     type = Triangle3;
-    intScheme = Gauss1;
+    intScheme = Gauss3;
   };
 };

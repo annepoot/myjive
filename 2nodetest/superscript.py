@@ -23,10 +23,7 @@ def mesher_lin(L, n, fname='2nodebar'):
 
 props = pu.parse_file('2nodebar.pro')
 
-P = 1
 L = 10
-EA = float(props['model']['bar']['EA'])
-k = float(props['model']['bar']['k'])
 
 globdat = main.jive(props)
 K = globdat['matrix0']
@@ -70,5 +67,4 @@ ax4.fill_between(x, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
 ax4.plot(x, samples_u_post, color='gray', linewidth=0.2)
 ax4.plot(x, u)
 ax4.plot(x, u_post)
-plt.savefig('1d_bar_q1_F5_k1_N5', dpi=300)
 plt.show()

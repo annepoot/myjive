@@ -91,17 +91,17 @@ class XPoissonModel(PoissonModel):
 
 
     def _get_D_matrix(self, ipcoords):
-        kappa_ = pu.evaluate(self._kappa, {'x':ipcoords[0], 'y':ipcoords[0]})
+        kappa_ = pu.evaluate(self._kappa, {'x':ipcoords[0], 'y':ipcoords[1]})
         D = kappa_ * np.identity(self._rank)
         return D
 
     def _get_M_matrix(self, ipcoords):
-        rho_ = pu.evaluate(self._rho, {'x':ipcoords[0], 'y':ipcoords[0]})
+        rho_ = pu.evaluate(self._rho, {'x':ipcoords[0], 'y':ipcoords[1]})
         M = np.array([[rho_]])
         return M
 
     def _get_Q_vector(self, ipcoords):
-        q_ = pu.evaluate(self._q, {'x':ipcoords[0], 'y':ipcoords[0]})
+        q_ = pu.evaluate(self._q, {'x':ipcoords[0], 'y':ipcoords[1]})
         Q = np.array([q_])
         return Q
 

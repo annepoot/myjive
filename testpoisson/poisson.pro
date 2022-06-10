@@ -46,15 +46,15 @@ gpsampler =
 {
   type = GPSampler;
 
-  nsample = 10;
-  seed = None;
+  nsample = 3;
+  seed = 0;
 };
 
 model =
 {
   type = Multi;
 
-  models = [ poisson, gp, diri, neum ];
+  models = [ poisson, gp, diri ];
 
   poisson =
   {
@@ -64,6 +64,7 @@ model =
 
     kappa = 1.0;
     rho = 1;
+    q = (x<1)*1+(x>1)*-0.8;
 
     shape =
     {
@@ -76,7 +77,7 @@ model =
   {
      type = GP;
 
-     obsNoise = 1e-5;
+     obsNoise = 1e-4;
      alpha = opt;
 
      shape =

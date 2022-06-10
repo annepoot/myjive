@@ -1,7 +1,6 @@
 import numpy as np
 
-from model import Model, ModelFactory
-from module import Module, ModuleFactory
+from module import Module
 from node import Node
 from element import Element
 from dofspace import DofSpace
@@ -16,23 +15,21 @@ TYPE = 'type'
 FILE = 'file'
 
 class InitModule(Module):
+
+    # Predefine some parameters
+    _ctol = 1.e-5
+
     def init(self, props, globdat):
         myprops = props.get(self._name)
 
         if not myprops:
             raise KeyError('Properties for InitModule not found')
 
-        # Initialize some parameters
-        self._ctol = 1.e-5
-        modelfac = globdat[gn.MODELFACTORY]
-
-        # Get the appropriate model for this module
-        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
-        modelprops = props[self._modelname]
-
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
         globdat[gn.EGROUPS] = {}
+        modelfac = globdat[gn.MODELFACTORY]
+        modelprops = props[gn.MODEL]
 
         # Initialize DofSpace
         print('InitModule: Creating DofSpace...')
@@ -66,9 +63,9 @@ class InitModule(Module):
 
         # Initialize model
         print('InitModule: Creating model...')
-        m = modelfac.get_model(modelprops[prn.TYPE], self._modelname)
+        m = modelfac.get_model(modelprops[prn.TYPE], gn.MODEL)
         m.configure(modelprops, globdat)
-        globdat[self._modelname] = m
+        globdat[gn.MODEL] = m
 
     def run(self, globdat):
         return 'ok'

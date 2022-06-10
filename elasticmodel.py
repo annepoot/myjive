@@ -80,7 +80,7 @@ class ElasticModel(Model):
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
-        M = self._rho * np.identity(self._rank)
+        M = params.get(pn.RHO, self._rho) * np.identity(self._rank)
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])

@@ -102,11 +102,14 @@ class BarModel(Model):
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
-        const_rho = type(self._rho) is float
-        const_A = type(self._A) is float
+        rho = params.get(pn.RHO, self._rho)
+        area = params.get(pn.AREA, self._A)
+
+        const_rho = type(rho) is float
+        const_A = type(area) is float
 
         if const_rho and const_A:
-            M = np.array([[self._rho * self._A]])
+            M = np.array([[rho * area]])
 
         for elem in self._elems:
             inodes = elem.get_nodes()
@@ -123,10 +126,10 @@ class BarModel(Model):
                 if not const_rho or not const_A:
                     x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
 
-                rho_ = self._rho if const_rho else eval(self._rho)
-                A_ = self._A if const_A else eval(self._A)
+                rho = rho if const_rho else eval(rho)
+                area = area if const_A else eval(area)
 
-                M = np.array([[rho_ * A_]])
+                M = np.array([[rho * area]])
 
                 elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
 

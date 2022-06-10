@@ -56,9 +56,12 @@ class ParamNames:
     TABLE = 'table'
     TABLENAME = 'tableName'
     TABLEWEIGHTS = 'tableWeights'
+    RHO = 'rho'
+    AREA = 'area'
 
 
 class GPActions:
+    CONFIGUREFEM = 'configureFEM'
     GETPRIORMEAN = 'getPriorMean'
     GETPRIORCOVARIANCE = 'getPriorCovariance'
     GETPOSTERIORMEAN = 'getPosteriorMean'

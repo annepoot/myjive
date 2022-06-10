@@ -1,15 +1,20 @@
-init =
+gpinit =
 {
-  type = Init;
-  model = femodel;
-
-  nodeGroups = [ left, right, mid ];
+  type = GPInit;
 
   mesh =
   {
     type = manual;
     file = 2nodebar.mesh;
   };
+
+  coarseMesh =
+  {
+    type = manual;
+    file = 2nodebar_coarse.mesh;
+  };
+
+  nodeGroups = [ left, right, mid ];
 
   left =
   {
@@ -27,10 +32,9 @@ init =
   };
 };
 
-solver =
+gpsolver =
 {
-  type = Solver;
-  model = femodel;
+  type = GPSolver;
 
   nsteps = 1;
   storeMatrix = True;
@@ -38,10 +42,18 @@ solver =
   getUnitMassMatrix = True;
 };
 
-femodel =
+gpsampler =
+{
+  type = GPSampler;
+
+  nsample = 30;
+  seed = None;
+};
+
+model =
 {
   type = Multi;
-  models = [ bar, diri, neum ];
+  models = [ bar, gp, diri, neum ];
 
   bar =
   {
@@ -52,6 +64,20 @@ femodel =
     EA = 1.0;
     k = 1.0;
     q = 1.0;
+
+    shape =
+    {
+      type = Line2;
+      intScheme = Gauss2;
+    };
+  };
+
+  gp =
+  {
+    type = GP;
+
+    obsNoise = 1e-5;
+    alpha = opt;
 
     shape =
     {
@@ -78,63 +104,3 @@ femodel =
     values = [ 5.0 ];
   };
 };
-
-gpinit =
-{
-  type = GPInit;
-  model = gpmodel;
-
-  nodeGroups = [ left, right, mid ];
-
-  mesh =
-  {
-    type = manual;
-    file = 2nodebar_coarse.mesh;
-  };
-
-  left =
-  {
-    xtype = min;
-  };
-
-  right =
-  {
-    xtype = max;
-  };
-
-  mid =
-  {
-    xtype = mid;
-  };
-};
-
-gaussian =
-{
-  type = Gaussian;
-  model = gpmodel;
-
-  storeMatrix = True;
-  getUnitMassMatrix = True;
-};
-
-sampler =
-{
-  type = Sampler;
-  model = gpmodel;
-
-  nsample = 30;
-};
-
-gpmodel =
-{
-  type = GP;
-
-  obsNoise = 1e-5;
-  alpha = opt;
-
-  shape =
-  {
-    type = Line2;
-    intScheme = Gauss2;
-  };
-}

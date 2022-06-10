@@ -1,29 +1,46 @@
 import numpy as np
 
 from names import GlobNames as gn
-from names import GPParamNames as gppn
-from names import PropNames as prn
+from names import ParamNames as pn
+from names import Actions as act
 from names import GPActions as gpact
+from names import GPParamNames as gppn
 
-from module import Module
+from solvermodule import SolverModule
+from constrainer import Constrainer
 
-NOBS = 'nobs'
-OBSNOISE = 'obsNoise'
-ALPHA = 'alpha'
-STOREMATRIX = 'storeMatrix'
-RANDOMOBS = 'randomObs'
+GETUNITMASSMATRIX = 'getUnitMassMatrix'
 
-class GaussianModule(Module):
+class GPSolverModule(SolverModule):
 
     def init(self, props, globdat):
-        myprops = props[self._name]
-        self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
 
-        # Get the appropriate model for this module
-        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
+        # Initialize solvermodule first
+        super().init(props, globdat)
+
+        myprops = props[self._name]
+        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX,'False')))
 
     def run(self, globdat):
-        model = globdat[self._modelname]
+
+        # Run solvermodule first
+        output = super().run(globdat)
+
+        dc = globdat[gn.DOFSPACE].dof_count()
+        model = globdat[gn.MODEL]
+
+        # Optionally get the mass matrix
+        if self._get_unit_mass_matrix:
+            M = np.zeros((dc, dc))
+            params = {pn.MATRIX2: M, pn.RHO: 1.}
+            model.take_action(act.GETMATRIX2, params, globdat)
+
+            # Optionally store mass matrix in Globdat
+            if self._store_matrix:
+                globdat[gn.MATRIX2] = M
+
+        # Configure the GP based on the fine FEM results
+        model.take_action(gpact.CONFIGUREFEM, params, globdat)
 
         # Define a dictionary for the settings of u
         u_params = {}
@@ -58,7 +75,7 @@ class GaussianModule(Module):
             globdat['var_u_prior'] = u_params[gppn.PRIORCOVARIANCE]
             globdat['var_u_post'] = u_params[gppn.POSTERIORCOVARIANCE]
 
-        return 'exit'
+        return output
 
     def shutdown(self, globdat):
         pass
@@ -68,4 +85,4 @@ class GaussianModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Gaussian', GaussianModule)
+    factory.declare_module('GPSolver', GPSolverModule)

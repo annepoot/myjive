@@ -58,7 +58,7 @@ class PoissonModel(Model):
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
-        M = np.array([[self._rho]])
+        M = np.array([[params.get(pn.RHO, self._rho)]])
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])

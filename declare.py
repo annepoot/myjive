@@ -16,9 +16,9 @@ import gpmodel
 
 import initmodule
 import solvermodule
-import gaussianmodule
 import gpinitmodule
-import samplermodule
+import gpsolvermodule
+import gpsamplermodule
 import nonlinmodule
 import arclenmodule
 import outputmodule
@@ -52,9 +52,9 @@ def declare_modules(globdat):
 
     initmodule.declare(factory)
     solvermodule.declare(factory)
-    gaussianmodule.declare(factory)
     gpinitmodule.declare(factory)
-    samplermodule.declare(factory)
+    gpsolvermodule.declare(factory)
+    gpsamplermodule.declare(factory)
     nonlinmodule.declare(factory)
     arclenmodule.declare(factory)
     outputmodule.declare(factory)

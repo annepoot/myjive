@@ -25,10 +25,10 @@ def mesher_lin(L, n, fname='2nodebar_coarse'):
 props = pu.parse_file('tapered.pro')
 
 props_c = {}
-props_c['init'] = deepcopy(props['init'])
-props_c['solver'] = deepcopy(props['solver'])
-props_c['femodel'] = deepcopy(props['femodel'])
-props_c['init']['mesh']['file'] = '2nodebar_coarse.mesh'
+props_c['gpinit'] = deepcopy(props['gpinit'])
+props_c['gpsolver'] = deepcopy(props['gpsolver'])
+props_c['model'] = deepcopy(props['model'])
+props_c['gpinit']['mesh']['file'] = '2nodebar_coarse.mesh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']

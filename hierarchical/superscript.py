@@ -54,7 +54,7 @@ QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
 QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(dpi=450, fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', ''))
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
 plt.show()
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')

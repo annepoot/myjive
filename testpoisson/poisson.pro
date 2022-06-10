@@ -1,12 +1,17 @@
-init =
+gpinit =
 {
-  type = Init;
-  model = femodel;
+  type = GPInit;
 
   mesh =
   {
     type = gmsh;
     file = tri6mesh.msh;
+  };
+
+  coarseMesh =
+  {
+    type = gmsh;
+    file = mesh.msh;
   };
 
   nodeGroups = [ left, right, bottom ];
@@ -27,10 +32,9 @@ init =
   };
 };
 
-solver =
+gpsolver =
 {
-  type = Solver;
-  model = femodel;
+  type = GPSolver;
 
   nsteps = 1;
   storeMatrix = True;
@@ -38,15 +42,24 @@ solver =
   getUnitMassMatrix = True;
 };
 
-femodel =
+
+gpsampler =
+{
+  type = GPSampler;
+
+  nsample = 10;
+  seed = None;
+};
+
+model =
 {
   type = Multi;
 
-  models = [ poisson, diri, neum ];
+  models = [ poisson, gp, diri, neum ];
 
   poisson =
   {
-    type = Poisson;
+    type = XPoisson;
 
     elements = all;
 
@@ -58,6 +71,20 @@ femodel =
       type = Triangle6;
       intScheme = Gauss3;
     };
+  };
+
+  gp =
+  {
+     type = GP;
+
+     obsNoise = 1e-5;
+     alpha = opt;
+
+     shape =
+     {
+       type = Triangle3;
+       intScheme = Gauss1;
+     };
   };
 
   diri =
@@ -76,66 +103,5 @@ femodel =
     groups = [ right ];
     dofs   = [ u ];
     values = [ 0.4 ];
-  };
-};
-
-gpinit =
-{
-  type = GPInit;
-  model = gpmodel;
-
-  mesh =
-  {
-    type = gmsh;
-    file = tri3mesh.msh;
-  };
-
-  nodeGroups = [ left, right, bottom ];
-
-  left =
-  {
-    xtype = min;
-  };
-
-  right =
-  {
-    xtype = max;
-  };
-
-  bottom =
-  {
-    ytype = min;
-  };
-};
-
-gaussian =
-{
-  type = Gaussian;
-  model = gpmodel;
-
-  storeMatrix = True;
-  getUnitMassMatrix = True;
-};
-
-sampler =
-{
-  type = Sampler;
-  model = gpmodel;
-
-  nsample = 10;
-  seed = 0;
-};
-
-gpmodel =
-{
-  type = GP;
-
-  obsNoise = 1e-8;
-  alpha = 1;
-
-  shape =
-  {
-    type = Triangle3;
-    intScheme = Gauss3;
   };
 };

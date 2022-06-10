@@ -9,23 +9,17 @@ from module import Module
 NSAMPLE = 'nsample'
 SEED = 'seed'
 
-class SamplerModule(Module):
+class GPSamplerModule(Module):
 
     def init(self, props, globdat):
         myprops = props[self._name]
         self._nsample = int(myprops.get(NSAMPLE,1))
-        self._seed = myprops.get(SEED,None)
+        self._seed = eval(myprops.get(SEED,'None'))
         if not self._seed is None:
             self._seed = int(self._seed)
 
-        # Get the appropriate model for this module
-        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
-
     def run(self, globdat):
-        model = globdat[self._modelname]
-
-        # Configure the model again, to make sure K, M and f are stored there as well
-        model.configure_fem(globdat)
+        model = globdat[gn.MODEL]
 
         # Define a dictionary for the settings of u
         u_params = {}
@@ -62,4 +56,4 @@ class SamplerModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Sampler', SamplerModule)
+    factory.declare_module('GPSampler', GPSamplerModule)

@@ -109,3 +109,20 @@ def uncomment_line(line):
             break
 
     return clean_line
+
+
+def soft_cast(value, typ):
+    # This function attempts to convert value to typ
+    # If this conversion fails, it returns the original value
+    try:
+        return typ(value)
+    except:
+        return value
+
+
+def evaluate(value, eval_params):
+    # This function does a string evaluation of value, if possible
+    if type(value) is str:
+        return eval(value, {}, eval_params)
+    else:
+        return value

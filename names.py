@@ -36,6 +36,7 @@ class Actions:
     GETMATRIX0 = 'getMatrix0'
     GETMATRIX2 = 'getMatrix2'
     GETMATRIXLB = 'getMatrixLB'
+    GETUNITMATRIX2 = 'getUnitMatrix2'
     GETINTFORCE = 'getIntForce'
     GETEXTFORCE = 'getExtForce'
     GETUNITFORCE = 'getUnitForce'
@@ -56,9 +57,15 @@ class ParamNames:
     TABLE = 'table'
     TABLENAME = 'tableName'
     TABLEWEIGHTS = 'tableWeights'
+    RHO = 'rho'
+    AREA = 'area'
+    YOUNG = 'young'
+    SPRING = 'spring'
+    LOAD = 'load'
 
 
 class GPActions:
+    CONFIGUREFEM = 'configureFEM'
     GETPRIORMEAN = 'getPriorMean'
     GETPRIORCOVARIANCE = 'getPriorCovariance'
     GETPOSTERIORMEAN = 'getPosteriorMean'

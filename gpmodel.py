@@ -21,7 +21,9 @@ class GPModel(Model):
     def take_action(self, action, params, globdat):
         print('GPModel taking action', action)
 
-        if action == gpact.GETPRIORMEAN:
+        if action == gpact.CONFIGUREFEM:
+            self._configure_fem(params, globdat)
+        elif action == gpact.GETPRIORMEAN:
             self._get_prior_mean(params, globdat)
         elif action == gpact.GETPRIORCOVARIANCE:
             self._get_prior_covariance(params, globdat)
@@ -64,7 +66,7 @@ class GPModel(Model):
         # Get the number of observations (which is the number of dofs in the coarse mesh)
         self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
 
-    def configure_fem(self, globdat):
+    def _configure_fem(self, params, globdat):
 
         # Get K, M and f from globdat
         K = globdat.get(gn.MATRIX0)
@@ -93,7 +95,7 @@ class GPModel(Model):
         self._m = np.linalg.solve(Kc, mf)
 
         # Get the phi matrix, and constrain the Dirichlet BCs
-        phi = self._get_phi_lumped(globdat)
+        phi = self._get_phi(globdat)
 
         self._Phi = phi.copy()
         globdat['Phi'] = self._Phi
@@ -495,42 +497,7 @@ class GPModel(Model):
         return np.sqrt(alpha2)
 
 
-    def _get_phis(self):
-
-        # Store the number of dofs, and number of observatiosn
-        dc = self._dc
-        nobs = self._nobs
-
-        # Create an empty array
-        phi = np.zeros((dc, nobs))
-        phi_sub = np.zeros((dc, nobs))
-
-        # Get the indices of the nodes that will be observed
-        vec_obs = np.rint(np.linspace(0, dc-1, nobs))
-        vec_obs = vec_obs.astype(int)
-
-        for i in range(nobs):
-
-            phi[vec_obs[i], i] = 1
-            phi_sub[vec_obs[i], i] = 1
-
-        j = 0
-        j_old = 0
-
-        for i in range(nobs-1):
-            while j < dc:
-                if np.isclose(phi[j,i+1], 1):
-                    phi[j_old:j+1,i] = np.linspace(1, 0, j-j_old+1)
-                    phi[j_old:j+1,i+1] = np.linspace(0, 1, j-j_old+1)
-                    j_old = j
-                    break
-
-                j = j+1
-
-        return phi, phi_sub
-
-
-    def _get_phi_lumped(self, globdat):
+    def _get_phi(self, globdat):
 
         elems = globdat[gn.ESET]
         elemsc = globdat[gn.COARSEMESH][gn.ESET]

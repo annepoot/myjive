@@ -13,12 +13,15 @@ import elasticmodel
 import timoshenkomodel
 import framemodel
 import gpmodel
+import xbarmodel
+import xelasticmodel
+import xpoissonmodel
 
 import initmodule
 import solvermodule
-import gaussianmodule
 import gpinitmodule
-import samplermodule
+import gpsolvermodule
+import gpsamplermodule
 import nonlinmodule
 import arclenmodule
 import outputmodule
@@ -43,6 +46,9 @@ def declare_models(globdat):
     timoshenkomodel.declare(factory)
     framemodel.declare(factory)
     gpmodel.declare(factory)
+    xbarmodel.declare(factory)
+    xelasticmodel.declare(factory)
+    xpoissonmodel.declare(factory)
 
     globdat[gn.MODELFACTORY] = factory
 
@@ -52,9 +58,9 @@ def declare_modules(globdat):
 
     initmodule.declare(factory)
     solvermodule.declare(factory)
-    gaussianmodule.declare(factory)
     gpinitmodule.declare(factory)
-    samplermodule.declare(factory)
+    gpsolvermodule.declare(factory)
+    gpsamplermodule.declare(factory)
     nonlinmodule.declare(factory)
     arclenmodule.declare(factory)
     outputmodule.declare(factory)

@@ -8,12 +8,10 @@ from model import Model
 
 ELEMENTS = 'elements'
 EA = 'EA'
-E = 'E'
-A = 'A'
 k = 'k'
-q = 'q'
-RHO = 'rho'
+RHOA = 'rhoA'
 SHAPE = 'shape'
+TYPE = 'type'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['dx']
 
@@ -26,41 +24,35 @@ class BarModel(Model):
             self._get_matrix(params, globdat)
         elif action == act.GETMATRIX2:
             self._get_mass_matrix(params, globdat)
-        elif action == act.GETEXTFORCE:
-            self._get_body_force(params, globdat)
 
     def configure(self, props, globdat):
-        if EA in props:
-            self._E = props[EA]
-            self._A = 1.0
-        else:
-            self._E = props[E]
-            self._A = props[A]
+        # This function gets only the core values from props
 
-        try:
-            self._A = float(self._A)
-        except:
-            pass
-
-        try:
-            self._E = float(self._E)
-        except:
-            pass
-
+        # Get basic parameter values
+        self._EA = float(props[EA])
         self._k = float(props.get(k, 0))
-        self._rho = float(props.get(RHO,0))
-        self._q = float(props.get(q, 0))
+        self._rhoA = float(props.get(RHOA, 0))
 
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
+        # Get shape and element info
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = [globdat[gn.ESET][e] for e in egroup]
 
+        # The rest of the configuration happens in configure_noprops
+        self._configure_noprops(globdat)
+
+    def _configure_noprops(self, globdat):
+        # This function gets additional info from self and globdat
+        # It has been split off from configure() to allow it to be used in inherited classes as well.
+
+        # Get basic dimensionality info
         self._rank = self._shape.global_rank()
         self._ipcount = self._shape.ipoint_count()
         self._nodecount = self._shape.node_count()
         self._dofcount = self._rank * self._nodecount
-        self._strcount = self._rank * (self._rank + 1) // 2
+        self._strcount = self._rank * (self._rank + 1) // 2   # 1-->1, 2-->3, 3-->6
 
+        # Create a new dof for every node and dof type
         nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
         for doftype in DOFTYPES[0:self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
@@ -68,86 +60,83 @@ class BarModel(Model):
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def _get_matrix(self, params, globdat):
-        const_E = type(self._E) is float
-        const_A = type(self._A) is float
-        const_k = type(self._k) is float
 
         for elem in self._elems:
+            # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, gradients, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
 
+            # Reset the element stiffness matrix
             elmat = np.zeros((self._dofcount, self._dofcount))
+
             for ip in range(self._ipcount):
-                B = np.zeros((1, self._nodecount))
-                N = np.zeros((1, self._nodecount))
-                B = grads[:, :, ip].transpose()
-                N[0, :] = sfuncs[:, ip].transpose()
+                # Get the B, N, D and K matrices for each integration point
+                B = self._get_B_matrix(grads[:,:,ip])
+                N = self._get_N_matrix(sfuncs[:,ip])
+                D = self._get_D_matrix(ipcoords[:,ip])
+                K = self._get_K_matrix(ipcoords[:,ip])
 
-                if not const_E or not const_A or not const_k:
-                    x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
-
-                E_ = self._E if const_E else eval(self._E)
-                A_ = self._A if const_A else eval(self._A)
-                k_ = self._k if const_k else eval(self._k)
-
-                D = np.array([[E_ * A_]])
-                K = np.array([[k_]])
-
+                # Compute the element stiffness matrix
                 elmat += weights[ip] * (np.matmul(np.transpose(B), np.matmul(D, B))
                                         + np.matmul(np.transpose(N), np.matmul(K, N)))
 
+            # Add the element stiffness matrix to the global stiffness matrix
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
-        const_rho = type(self._rho) is float
-        const_A = type(self._A) is float
-
-        if const_rho and const_A:
-            M = np.array([[self._rho * self._A]])
 
         for elem in self._elems:
+            # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
             weights = self._shape.get_integration_weights(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
 
+            # Reset the element mass matrix
             elmat = np.zeros((self._dofcount, self._dofcount))
+
             for ip in range(self._ipcount):
-                N = np.zeros((1, self._nodecount))
-                N[0, :] = sfuncs[:, ip].transpose()
+                # Get the N and M matrices for each integration point
+                N = self._get_N_matrix(sfuncs[:,ip])
+                M = self._get_M_matrix(ipcoords[:,ip])
 
-                if not const_rho or not const_A:
-                    x = self._shape.get_global_point(self._shape.get_integration_points()[:,ip], coords)[0]
-
-                rho_ = self._rho if const_rho else eval(self._rho)
-                A_ = self._A if const_A else eval(self._A)
-
-                M = np.array([[rho_ * A_]])
-
+                # Compute the element mass matrix
                 elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
 
+            # Add the element mass matrix to the global mass matrix
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
-    def _get_body_force(self, params, globdat):
-        Q = np.array([self._q])
-        for elem in self._elems:
-            inodes = elem.get_nodes()
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
-            sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
+    def _get_N_matrix(self, sfuncs):
+        N = np.zeros((1, self._nodecount))
+        N[0,:] = sfuncs.transpose()
+        return N
 
-            elfor = np.zeros(self._dofcount)
-            for ip in range(self._ipcount):
-                N = np.zeros((1, self._dofcount * self._rank))
-                N[0, :] = sfuncs[:, ip].transpose()
-                elfor += weights[ip] * np.matmul(np.transpose(N), Q)
+    def _get_B_matrix(self, grads):
+        B = np.zeros((1, self._nodecount))
+        B[0,:] = grads.transpose()
+        return B
 
-            params[pn.EXTFORCE][idofs] += elfor
+    def _get_D_matrix(self, ipcoords):
+        D = np.array([[self._EA]])
+        return D
+
+    def _get_K_matrix(self, ipcoords):
+        K = np.array([[self._k]])
+        return K
+
+    def _get_M_matrix(self, ipcoords):
+        M = np.array([[self._rhoA]])
+        return M
 
 
 def declare(factory):

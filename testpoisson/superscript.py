@@ -30,9 +30,6 @@ props_c['model']['poisson']['shape']['type'] = 'Triangle3'
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
 
-QuickViewer(u_coarse, globdat_c, comp=0, title=r'Coarse displacement field ($u_c$)')
-QuickViewer(u_fine, globdat_f, comp=0, title=r'Fine displacement field ($u_f$)')
-
 globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
@@ -62,7 +59,7 @@ QuickViewer(globdat_c['state0'], globdat_c, 0, title=r'Coarse solution ($u_c$)')
 
 QuickViewer(Phi @ globdat_c['state0'], globdat, 0, title=r'Projected coarse solution ($u_c$)')
 
-QuickViewer(u, globdat, 0, title=r'Exact displacement ($u$)')
+QuickViewer(u, globdat, 0, title=r'Fine solution ($u_f$)')
 
 QuickViewer(err, globdat, 0, title=r'Discretization error ($|u_f - u_c|$)')
 

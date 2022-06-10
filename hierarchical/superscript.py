@@ -13,9 +13,12 @@ from copy import deepcopy
 props = pu.parse_file('beam.pro')
 
 props_c = {}
-props_c['init'] = deepcopy(props['init'])
-props_c['solver'] = deepcopy(props['solver'])
-props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init'] = deepcopy(props['gpinit'])
+props_c['init']['type'] = 'Init'
+props_c['solver'] = deepcopy(props['gpsolver'])
+props_c['solver']['type'] = 'Solver'
+props_c['model'] = deepcopy(props['model'])
+props_c['model']['models'] = '[ elastic, diri, neum ]'
 props_c['init']['mesh']['file'] = 'beam_coarse.msh'
 
 globdat_c = main.jive(props_c)
@@ -71,10 +74,7 @@ u_dict = {}
 for fineness in fine_list:
 
     if fineness != 'post':
-        pro = {}
-        pro['init'] = deepcopy(props['init'])
-        pro['femodel'] = deepcopy(props['femodel'])
-        pro['solver'] = deepcopy(props['solver'])
+        pro = deepcopy(props_c)
         pro['init']['mesh']['file'] = 'beam_' + fineness + '.msh'
 
         glob = main.jive(pro)

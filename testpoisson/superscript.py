@@ -13,16 +13,19 @@ from copy import deepcopy
 props = pu.parse_file('poisson.pro')
 
 props_f = {}
-props_f['init'] = deepcopy(props['init'])
-props_f['solver'] = deepcopy(props['solver'])
-props_f['femodel'] = deepcopy(props['femodel'])
+props_f['init'] = deepcopy(props['gpinit'])
+props_f['init']['type'] = 'Init'
+props_f['solver'] = deepcopy(props['gpsolver'])
+props_f['solver']['type'] = 'Solver'
+props_f['model'] = deepcopy(props['model'])
+props_f['model']['models'] = props['model']['models'].replace('gp,', '')
 
 globdat_f = main.jive(props_f)
 u_fine = globdat_f['state0']
 
 props_c = deepcopy(props_f)
 props_c['init']['mesh']['file'] = 'tri3mesh.msh'
-props_c['femodel']['poisson']['shape']['type'] = 'Triangle3'
+props_c['model']['poisson']['shape']['type'] = 'Triangle3'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']

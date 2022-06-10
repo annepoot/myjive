@@ -163,7 +163,7 @@ class ElasticModel(Model):
             pass
 
     def _get_stresses(self, params, globdat):
-        D = self._get_D_matrix()
+        D = self._get_D_matrix(0)
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 

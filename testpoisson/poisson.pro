@@ -11,13 +11,7 @@ gpinit =
   coarseMesh =
   {
     type = gmsh;
-    file = mesh.msh;
-  };
-
-  coarseMesh =
-  {
-    type = gmsh;
-    file = mesh.msh;
+    file = tri3mesh.msh;
   };
 
   nodeGroups = [ left, right, bottom ];
@@ -47,7 +41,6 @@ gpsolver =
   storeConstraints = True;
   getUnitMassMatrix = True;
 };
-
 
 gpsampler =
 {

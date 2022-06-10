@@ -13,9 +13,12 @@ from copy import deepcopy
 props = pu.parse_file('biax.pro')
 
 props_c = {}
-props_c['init'] = deepcopy(props['init'])
-props_c['solver'] = deepcopy(props['solver'])
-props_c['femodel'] = deepcopy(props['femodel'])
+props_c['init'] = deepcopy(props['gpinit'])
+props_c['init']['type'] = 'Init'
+props_c['solver'] = deepcopy(props['gpsolver'])
+props_c['solver']['type'] = 'Solver'
+props_c['model'] = deepcopy(props['model'])
+props_c['model']['models'] = '[ elastic, diri ]'
 props_c['init']['mesh']['file'] = 'biax_coarse.msh'
 
 globdat_c = main.jive(props_c)

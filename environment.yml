@@ -11,4 +11,4 @@ dependencies:
   - scipy=1.8.1
   - spyder=5.2.2
   - pip:
-    - pygmsh=7.1.17
+    - pygmsh==7.1.17

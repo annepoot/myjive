@@ -14,6 +14,12 @@ gpinit =
     file = mesh.msh;
   };
 
+  coarseMesh =
+  {
+    type = gmsh;
+    file = mesh.msh;
+  };
+
   nodeGroups = [ left, right, bottom ];
 
   left =

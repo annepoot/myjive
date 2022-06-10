@@ -86,6 +86,20 @@ model =
     };
   };
 
+  gp =
+  {
+    type = GP;
+
+    obsNoise = 1e-5;
+    alpha = opt;
+
+    shape =
+    {
+      type = Line2;
+      intScheme = Gauss2;
+    };
+  };
+
   diri =
   {
     type = Dirichlet;

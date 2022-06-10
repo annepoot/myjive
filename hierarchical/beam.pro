@@ -1,15 +1,20 @@
-init =
+gpinit =
 {
-  type = Init;
-  model = femodel;
-
-  nodeGroups = [ lb, rb, tm ];
+  type = GPInit;
 
   mesh =
   {
     type = gmsh;
     file = beam_fine2.msh;
   };
+
+  coarseMesh =
+  {
+    type = gmsh;
+    file = beam_coarse.msh;
+  };
+
+  nodeGroups = [ lb, rb, tm ];
 
   lb =
   {
@@ -30,26 +35,33 @@ init =
   };
 };
 
-solver =
+gpsolver =
 {
-  type = Solver;
-  model = femodel;
+  type = GPSolver;
 
   nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
-  getMassMatrix = True;
+  getUnitMassMatrix = True;
 };
 
-femodel =
+gpsampler =
+{
+  type = GPSampler;
+
+  nsample = 10;
+  seed = None;
+};
+
+model =
 {
   type = Multi;
 
-  models = [ elastic, diri, neum ];
+  models = [ elastic, gp, diri, neum ];
 
   elastic =
   {
-    type = Elastic;
+    type = XElastic;
 
     elements = all;
 
@@ -64,6 +76,20 @@ femodel =
       type = Triangle3;
       intScheme = Gauss1;
     };
+  };
+
+  gp =
+  {
+     type = GP;
+
+     obsNoise = 1e-10;
+     alpha = opt;
+
+     shape =
+     {
+       type = Triangle3;
+       intScheme = Gauss1;
+     };
   };
 
   diri =
@@ -82,69 +108,5 @@ femodel =
     groups = [ tm ];
     dofs   = [ dy ];
     values = [ -1. ];
-  };
-};
-
-gpinit =
-{
-  type = GPInit;
-  model = gpmodel;
-
-  nodeGroups = [ lb, rb, tm ];
-
-  mesh =
-  {
-    type = gmsh;
-    file = beam_coarse.msh;
-  };
-
-  lb =
-  {
-    xtype = min;
-    ytype = min;
-  };
-
-  rb =
-  {
-    xtype = max;
-    ytype = min;
-  };
-
-  tm =
-  {
-    ytype = max;
-    xtype = mid;
-  };
-};
-
-gaussian =
-{
-  type = Gaussian;
-  model = gpmodel;
-
-  storeMatrix = True;
-  getMassMatrix = True;
-};
-
-sampler =
-{
-  type = Sampler;
-  model = gpmodel;
-
-  nsample = 10;
-  seed=0;
-};
-
-gpmodel =
-{
-  type = GP;
-
-  obsNoise = 1e-10;
-  alpha = opt;
-
-  shape =
-  {
-    type = Triangle3;
-    intScheme = Gauss1;
   };
 };

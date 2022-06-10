@@ -61,7 +61,7 @@ model =
 
   elastic =
   {
-    type = Elastic;
+    type = XElastic;
 
     elements = all;
 

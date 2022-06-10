@@ -2,7 +2,7 @@ init =
 {
   nodeGroups = [ bot, top ];
 
-  mesh = 
+  mesh =
   {
     type = geo;
     file = column.geom;
@@ -41,14 +41,14 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ bot, bot, top ];
     dofs   = [ dx, dy, dx ];
     values = [ 0.0, 0.0, 0.0 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -64,11 +64,8 @@ solver =
   storeMatrix = False;
 };
 
-linbuck = 
+frameview =
 {
-};
-
-frameview = 
-{
+  type = FrameView;
   deform = 10.;
 };

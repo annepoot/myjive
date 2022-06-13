@@ -61,7 +61,7 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolo
           dy[n] += scale * du[1]
 
     if ax is None:
-        fig = plt.figure(figsize=(8,4))
+        fig = plt.figure()
         ax = plt.gca()
     else:
         fig = ax.get_figure()
@@ -82,13 +82,15 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, ncolo
     mappable = ax.tricontourf(triang,z,levels=np.linspace(z.min(),z.max(),ncolors))
     ticks = np.linspace(z.min(),z.max(),5,endpoint=True)
     plt.colorbar(mappable, ticks=ticks,ax=ax)
-    ax.triplot(triang,'k-',linewidth=linewidth, alpha=0.7)
+    ax.triplot(triang,'k-',linewidth=linewidth)
 
-    # Make sure the contour plot is rendered correctly as a pdf
-    for contour in [mappable]:
-        for c in contour.collections:
-            c.set_edgecolor("face")
-            c.set_linewidth(0.00000000000000001)
+    if not fname is None:
+        if fname[-4:] == '.pdf':
+            # Make sure the contour plot is rendered correctly as a pdf
+            for contour in [mappable]:
+                for c in contour.collections:
+                    c.set_edgecolor("face")
+                    c.set_linewidth(0.00000000000000001)
 
     if not title is None:
         ax.set_title(title)

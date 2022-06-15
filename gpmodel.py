@@ -35,6 +35,8 @@ class GPModel(Model):
             self._get_prior_samples(params, globdat)
         elif action == gpact.GETPOSTERIORSAMPLES:
             self._get_posterior_samples(params, globdat)
+        elif action == gpact.GETLOGLIKELIHOOD:
+            self._get_log_likelihood(params, globdat)
         elif action == act.GETTABLE:
             if 'var' in params[pn.TABLENAME]:
                 self._get_variances(params, globdat)
@@ -495,6 +497,31 @@ class GPModel(Model):
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)
+
+
+    def _get_log_likelihood(self, params, globdat):
+
+        # Get the observation covariance matrix
+        if not '_Sigma_obs' in vars(self):
+            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
+
+        # Do the cholesky decomposition of Sigma_obs only if necessary
+        if not '_sqrtObs' in vars(self):
+            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
+
+        # Solve the system for the observed forces
+        if not '_v0' in vars(self):
+            self._v0 = np.linalg.solve(self._sqrtObs, self._y)
+
+        ##################
+        # LOG LIKELIHOOD #
+        ##################
+
+        # l = - 1/2 * y * inv(Sigma + Sigma_e) * y - 1/2 * log|Sigma + Sigma_e| - n/2 * log(2*pi)
+
+        l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
+
+        params[gppn.LOGLIKELIHOOD] = l
 
 
     def _get_phi(self, globdat):

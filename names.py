@@ -72,6 +72,7 @@ class GPActions:
     GETPOSTERIORCOVARIANCE = 'getPosteriorCovariance'
     GETPRIORSAMPLES = 'getPriorSamples'
     GETPOSTERIORSAMPLES = 'getPosteriorSamples'
+    GETLOGLIKELIHOOD = 'getLogLikelihood'
 
 
 class GPParamNames:
@@ -81,6 +82,7 @@ class GPParamNames:
     POSTERIORCOVARIANCE = 'posteriorCovariance'
     PRIORSAMPLES = 'priorSamples'
     POSTERIORSAMPLES = 'posteriorSamples'
+    LOGLIKELIHOOD = 'logLikelihood'
     FIELD = 'field'
     FULLCOVARIANCE = 'fullCovariance'
     NSAMPLE = 'nsamples'

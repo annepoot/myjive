@@ -70,7 +70,7 @@ model =
     young = 10000.;
     thickness = 0.2;
     poisson = 0.2;
-    rho = 0.0;
+    rho = 1000;
     state = plane_stress;
 
     shape =
@@ -84,8 +84,8 @@ model =
   {
      type = GP;
 
-     obsNoise = 1e-10;
-     alpha = 1000;
+     obsNoise = 1e-5;
+     alpha = opt;
 
      shape =
      {
@@ -100,6 +100,6 @@ model =
 
     groups = [ top, bottom, left, right ];
     dofs   = [ dy, dy, dx, dx ];
-    values = [ 1., 0., 0., 1. ];
+    values = [ 0., 0., 0., 0. ];
   };
 };

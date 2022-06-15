@@ -77,7 +77,7 @@ model =
   {
      type = GP;
 
-     obsNoise = 1e-4;
+     obsNoise = 1e-5;
      alpha = opt;
 
      shape =

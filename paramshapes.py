@@ -106,8 +106,8 @@ class Tri6Shape(Shape):
         loc_coords[0, 4] = 0.5
         loc_coords[0, 5] = 0.0
         loc_coords[1, 0] = 0.0
-        loc_coords[1, 1] = 1.0
-        loc_coords[1, 2] = 0.0
+        loc_coords[1, 1] = 0.0
+        loc_coords[1, 2] = 1.0
         loc_coords[1, 3] = 0.0
         loc_coords[1, 4] = 0.5
         loc_coords[1, 5] = 0.5

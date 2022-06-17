@@ -19,7 +19,6 @@ gpinit =
   lb =
   {
     xtype = min;
-    ytype = min;
   };
 
   rb =
@@ -49,15 +48,15 @@ gpsampler =
 {
   type = GPSampler;
 
-  nsample = 10;
-  seed = None;
+  nsample = 50;
+  seed = 5; // 3, 5
 };
 
 model =
 {
   type = Multi;
 
-  models = [ elastic, gp, diri, neum ];
+  models = [ elastic, gp, diri ];
 
   elastic =
   {
@@ -83,7 +82,7 @@ model =
      type = GP;
 
      obsNoise = 1e-5;
-     alpha = opt;
+     alpha = 0.2;
 
      shape =
      {
@@ -96,9 +95,9 @@ model =
   {
     type = Dirichlet;
 
-    groups = [ lb, lb, rb ];
-    dofs   = [ dx, dy, dy ];
-    values = [ 0., 0., 0. ];
+    groups = [ lb, lb ];
+    dofs   = [ dx, dy ];
+    values = [ 0., 0. ];
   };
 
   neum =

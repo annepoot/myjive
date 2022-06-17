@@ -47,18 +47,30 @@ Phi = globdat['Phi']
 
 err = abs(u - Phi @ globdat_c['state0'])
 
-QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
+# QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
+# QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
 
-QuickViewer(err, globdat, 1, title=r'Discretization error ($|u_f - u_c|$)')
+# QuickViewer(err, globdat, 1, title=r'Discretization error ($|u_f - u_c|$)')
 
-QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
+fig, ax = plt.subplots()
+# ax.cla()
+ax.set_axis_off()
+# ax.set_aspect('equal', adjustable='datalim')
+
+insert_mean = int(samples_u_prior.shape[1] * 0.8)
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, 1, ax=ax, alpha=0.05, mincolor=np.min(samples_u_prior), maxcolor=np.max(samples_u_prior), scale=10.)
 
-for i, sample in enumerate(samples_u_post.T):
+    if i == insert_mean:
+        QuickViewer(u_prior, globdat, 1, ax=ax, line_fac=1, alpha_fac=1, mincolor=np.min(samples_u_prior), maxcolor=np.max(samples_u_prior), scale=10.)
 
-    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
+# plt.title(r'Prior samples from $u$')
+plt.show()
+
+# for i, sample in enumerate(samples_u_post.T):
+
+#     QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1))

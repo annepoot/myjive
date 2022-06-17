@@ -56,11 +56,13 @@ err = abs(u - Phi @ globdat_c['state0'])
 # QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
 fig, ax = plt.subplots()
+plt.tight_layout(pad=0.0)
+
 # ax.cla()
 ax.set_axis_off()
 # ax.set_aspect('equal', adjustable='datalim')
 
-insert_mean = int(samples_u_prior.shape[1] * 0.8)
+insert_mean = int(samples_u_prior.shape[1] * 0.7)
 for i, sample in enumerate(samples_u_prior.T):
 
     QuickViewer(sample, globdat, 1, ax=ax, alpha=0.05, mincolor=np.min(samples_u_prior), maxcolor=np.max(samples_u_prior), scale=10.)
@@ -69,6 +71,8 @@ for i, sample in enumerate(samples_u_prior.T):
         QuickViewer(u_prior, globdat, 1, ax=ax, line_fac=1, alpha_fac=1, mincolor=np.min(samples_u_prior), maxcolor=np.max(samples_u_prior), scale=10.)
 
 # plt.title(r'Prior samples from $u$')
+plt.savefig('img/overlapping_prior.pdf')
+plt.savefig('img/overlapping_prior.png', dpi=450)
 plt.show()
 
 # for i, sample in enumerate(samples_u_post.T):

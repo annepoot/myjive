@@ -15,7 +15,7 @@ DEFORM = 'deform'
 minimum = 0
 maximum = 0
 
-def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, alpha=1., alpha_fac=3., line_fac=5., ncolors=100, mincolor=None, maxcolor=None, title=None, fname=None):
+def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, alpha=1., alpha_fac=3., line_fac=3., ncolors=100, mincolor=None, maxcolor=None, title=None, fname=None):
 
     nodes = globdat[gn.NSET]
     elems = globdat[gn.ESET]
@@ -133,13 +133,13 @@ def QuickViewer(array, globdat, comp=1, ax=None, linewidth=0.2, scale=0.0, alpha
     ax.plot(rightx, righty, 'k-', linewidth=line_fac, alpha=alpha_fac)
     ax.plot(leftx, lefty, 'k-', linewidth=line_fac, alpha=alpha_fac)
 
-    if not fname is None:
-        if fname[-4:] == '.pdf':
-            # Make sure the contour plot is rendered correctly as a pdf
-            for contour in [mappable]:
-                for c in contour.collections:
-                    c.set_edgecolor("face")
-                    c.set_linewidth(0.00000000000000001)
+    # if not fname is None:
+    #     if fname[-4:] == '.pdf':
+    # Make sure the contour plot is rendered correctly as a pdf
+    for contour in [mappable]:
+        for c in contour.collections:
+            c.set_edgecolor("face")
+            c.set_linewidth(0)
 
     if not title is None:
         ax.set_title(title)

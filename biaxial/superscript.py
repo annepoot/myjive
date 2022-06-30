@@ -49,7 +49,7 @@ err = abs(u - Phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 1, title=r'Exact veritcal displacement ($u$)')
+QuickViewer(u, globdat, title=r'Exact veritcal displacement ($u$)')
 
 QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
@@ -57,8 +57,8 @@ QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\b
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Prior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 1, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, title=r'Posterior samples from $u$ (sample {})'.format(i+1))

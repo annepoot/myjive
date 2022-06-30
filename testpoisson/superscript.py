@@ -53,22 +53,22 @@ Phi = globdat['Phi']
 
 err = abs(u - Phi @ globdat_c['state0'])
 
-QuickViewer(u_post, globdat, 0, title=r'Posterior mean diplacement ($\bar u$)')
+QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(globdat_c['state0'], globdat_c, 0, title=r'Coarse solution ($u_c$)')
+QuickViewer(globdat_c['state0'], globdat_c, title=r'Coarse solution ($u_c$)')
 
-QuickViewer(Phi @ globdat_c['state0'], globdat, 0, title=r'Projected coarse solution ($u_c$)')
+QuickViewer(Phi @ globdat_c['state0'], globdat, title=r'Projected coarse solution ($u_c$)')
 
-QuickViewer(u, globdat, 0, title=r'Fine solution ($u_f$)')
+QuickViewer(u, globdat, title=r'Fine solution ($u_f$)')
 
-QuickViewer(err, globdat, 0, title=r'Discretization error ($|u_f - u_c|$)')
+QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
-QuickViewer(std_u_post, globdat, 0, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 0, title=r'Prior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 0, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, title=r'Posterior samples from $u$ (sample {})'.format(i+1))

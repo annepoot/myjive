@@ -81,7 +81,6 @@ class GPModel(Model):
         # The posterior mean force vector has to contain the Dirichlet BCs
         mf = np.zeros_like(f)
         Kc, mf = c.constrain(K, mf)
-        mf[714] = -1
 
         # Get the actual constrained stiffness matrix and force vector
         Kc, fc = c.constrain(K, f)

@@ -49,7 +49,7 @@ err = abs(u - Phi @ globdat_c['state0'])
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
-QuickViewer(u, globdat, 1, title=r'Exact displacement ($u$)')
+QuickViewer(u, globdat, title=r'Exact displacement ($u$)')
 
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
@@ -61,11 +61,11 @@ QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\b
 
 for i, sample in enumerate(samples_u_prior.T):
 
-    QuickViewer(sample, globdat, 1, scale=10.0, title=r'Prior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, scale=10.0, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
 for i, sample in enumerate(samples_u_post.T):
 
-    QuickViewer(sample, globdat, 1, scale=10.0, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
+    QuickViewer(sample, globdat, scale=10.0, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
 
 fine_list = ['post', 'coarse', 'medium', 'fine', 'fine2']
 x_dict = {}

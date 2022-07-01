@@ -1,4 +1,4 @@
-name: pfem
+name: bfem
 channels:
   - conda-forge
   - defaults

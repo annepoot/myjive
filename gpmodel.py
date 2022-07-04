@@ -152,6 +152,7 @@ class GPModel(Model):
             Sigma_f += self._pdnoise2 * np.identity(self._dc)
             if self._alpha == 'opt':
                 self._alpha = self._get_param_opt(Sigma_f)
+                print('Setting alpha to optimal value: {:.4f}'.format(self._alpha))
             Sigma_f *= self._alpha**2
 
         elif self._prior == 'K':
@@ -160,15 +161,13 @@ class GPModel(Model):
             Sigma_f += self._pdnoise2 * np.identity(self._dc)
             if self._beta == 'opt':
                 self._beta = self._get_param_opt(Sigma_f)
+                print('Setting beta to optimal value: {:.4f}'.format(self._beta))
             Sigma_f *= self._beta**2
 
         elif self._prior == 'M+K':
             Sigma_f = self._alpha**2 * M.copy() + self._beta**2 * K.copy()
             Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
             Sigma_f += self._pdnoise2 * np.identity(self._dc)
-
-        # # Add observational noise to the prior
-        # Sigma_f += 1e-10 * np.identity(self._nobs)
 
         # Store the prior covariance
         self._Sigma_f = Sigma_f
@@ -535,8 +534,8 @@ class GPModel(Model):
         # OPTIMAL ALPHA #
         #################
 
-        # If so, determine the optimal value of alpha (with a little bit of noise for positive definiteness
-        L = np.linalg.cholesky(self._Phic.T @ Sigma_fc @ self._Phic + 1e-20 * np.identity(self._nobs))
+        # If so, determine the optimal value of alpha
+        L = np.linalg.cholesky(self._Phic.T @ Sigma_fc @ self._Phic)
         v = np.linalg.solve(L, self._y)
         alpha2 = v.T @ v / self._nobs
 

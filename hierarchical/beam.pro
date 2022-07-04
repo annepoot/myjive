@@ -87,7 +87,7 @@ model =
 
     prior = M;
     alpha = opt;
-    beta = 0;
+    beta = opt;
 
     shape =
     {

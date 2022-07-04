@@ -49,8 +49,8 @@ gpsampler =
 {
   type = GPSampler;
 
-  nsample = 10;
-  seed = None;
+  nsample = 3;
+  seed = 0;
 };
 
 model =
@@ -80,16 +80,20 @@ model =
 
   gp =
   {
-     type = GP;
+    type = GP;
 
-     obsNoise = 1e-10;
-     alpha = opt;
+    obsNoise = 1e-10;
+    alpha = opt;
 
-     shape =
-     {
-       type = Triangle3;
-       intScheme = Gauss1;
-     };
+    prior = M;
+    alpha = opt;
+    beta = opt;
+
+    shape =
+    {
+      type = Triangle3;
+      intScheme = Gauss1;
+    };
   };
 
   diri =

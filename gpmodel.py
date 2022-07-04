@@ -11,9 +11,13 @@ from model import Model
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
 ALPHA = 'alpha'
+BETA = 'beta'
+PRIOR = 'prior'
 RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
+PDNOISE = 'pdNoise'
+
 # DOFTYPES = ['dx', 'dy']
 
 class GPModel(Model):
@@ -48,16 +52,39 @@ class GPModel(Model):
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         self._rank = self._shape.global_rank()
 
-        # Get the observational noise
+        # Get the observational noise, and pd noise
         self._noise2 = float(props.get(OBSNOISE))**2
+        self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
 
-        # Get the alpha parameter, or use the optimal alpha
-        self._alpha = props.get(ALPHA, 'opt')
-        if self._alpha != 'opt':
-            self._alpha = float(self._alpha)
+        # Get the prior type (M, K or M+K)
+        self._prior = props.get(PRIOR, 'K').replace(' ','')
+        assert self._prior == 'M' or self._prior == 'K' or self._prior == 'M+K'
+
+        # Get the alpha parameter and if possible use the optimal value as a default
+        if 'M' in self._prior:
+            if 'K' in self._prior:
+                self._alpha = props.get(ALPHA)
+                assert self._alpha != 'opt', 'cannot optimize alpha if the M+K prior is used'
+            else:
+                self._alpha = props.get(ALPHA, 'opt')
+
+            if self._alpha != 'opt':
+                self._alpha = float(self._alpha)
+
+        # Get the beta parameter and if possible use the optimal value as a default
+        if 'K' in self._prior:
+            if 'M' in self._prior:
+                self._beta = props.get(BETA)
+                assert self._beta != 'opt', 'cannot optimize beta if the M+K prior is used'
+            else:
+                self._beta = props.get(BETA, 'opt')
+
+            if self._beta != 'opt':
+                self._beta = float(self._beta)
 
         # Get the dofs of the fine mesh
         self._dof_types = globdat[gn.DOFSPACE].get_types()
+
         # Add the dofs to the coarse mesh
         nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
         for doftype in self._dof_types:
@@ -85,13 +112,7 @@ class GPModel(Model):
         # Get the actual constrained stiffness matrix and force vector
         Kc, fc = c.constrain(K, f)
 
-        # Get the mass matrix, and remove the Dirichlet BCs
-        Mc = M.copy()
-        Mc[cdofs,:] = Mc[:,cdofs] = 0.0
-        Mc += 1e-10 * np.identity(Mc.shape[0])
-
         # Store all constrained matrices and vectors
-        self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
         self._m = np.linalg.solve(Kc, mf)
@@ -124,10 +145,32 @@ class GPModel(Model):
         # Get the observed force vector
         self._y = self._Phic.T @ (self._fc - self._Kc @ self._m)
 
-        # Set alpha to the optimal value if necessary
-        if self._alpha == 'opt':
-            self._alpha = self._get_alpha_opt()
-            print('Setting alpha to optimal value: {:.4f}'.format(self._alpha))
+        # Get the covariance matrix of the force vector
+        if self._prior == 'M':
+            Sigma_f = M.copy()
+            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
+            Sigma_f += self._pdnoise2 * np.identity(self._dc)
+            if self._alpha == 'opt':
+                self._alpha = self._get_param_opt(Sigma_f)
+                print('Setting alpha to optimal value: {:.4f}'.format(self._alpha))
+            Sigma_f *= self._alpha**2
+
+        elif self._prior == 'K':
+            Sigma_f = K.copy()
+            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
+            Sigma_f += self._pdnoise2 * np.identity(self._dc)
+            if self._beta == 'opt':
+                self._beta = self._get_param_opt(Sigma_f)
+                print('Setting beta to optimal value: {:.4f}'.format(self._beta))
+            Sigma_f *= self._beta**2
+
+        elif self._prior == 'M+K':
+            Sigma_f = self._alpha**2 * M.copy() + self._beta**2 * K.copy()
+            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
+            Sigma_f += self._pdnoise2 * np.identity(self._dc)
+
+        # Store the prior covariance
+        self._Sigma_f = Sigma_f
 
 
     def _get_prior_mean(self, params, globdat):
@@ -162,7 +205,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -174,7 +217,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_f_post' in vars(self):
-            self._f_post = self._Kc @ self._m + self._alpha**2 * self._Mc @ self._Phic @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            self._f_post = self._Kc @ self._m + self._Sigma_f @ self._Phic @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
         # Check if the prior on u, eps or f should be obtained
         field = params.get(gppn.FIELD, 'u')
@@ -227,7 +270,7 @@ class GPModel(Model):
 
             # Do the cholesky decomposition of M only if necessary
             if not '_sqrtM' in vars(self):
-                self._sqrtM = np.linalg.cholesky(self._Mc)
+                self._sqrtM = np.linalg.cholesky(self._Sigma_f)
 
             # Solve the system for each dof
             if not '_V2' in vars(self):
@@ -237,14 +280,14 @@ class GPModel(Model):
             if fullSigma:
 
                 # If so, compute the full covariance matrix
-                Sigma_prior = self._alpha**2 * self._V2 @ self._V2.T
+                Sigma_prior = self._V2 @ self._V2.T
 
             else:
 
                 # Compute only the diagonal of the covariance matrix
                 var_prior = np.zeros(self._dc)
                 for i in range(self._dc):
-                    var_prior[i] = self._alpha**2 * self._V2[i,:] @ self._V2[i,:].T
+                    var_prior[i] = self._V2[i,:] @ self._V2[i,:].T
 
         elif field == 'f':
 
@@ -258,12 +301,12 @@ class GPModel(Model):
             if fullSigma:
 
                 # If so, compute the full covariance matrix
-                Sigma_prior = self._alpha**2 * self._Mc
+                Sigma_prior = self._Sigma_f
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
-                var_prior = self._alpha**2 * self._Mc.diagonal()
+                var_prior = self._Sigma_f.diagonal()
 
         else:
 
@@ -291,7 +334,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -299,7 +342,7 @@ class GPModel(Model):
 
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._Phic.T @ self._Mc)
+            self._V1 = np.linalg.solve(self._sqrtObs, self._Phic.T @ self._Sigma_f)
 
         if field == 'u':
 
@@ -318,14 +361,14 @@ class GPModel(Model):
 
                 # If so, compute the full covariance matrix
                 Sigma_post = var_prior.copy()
-                Sigma_post -= self._alpha**4 * self._V3 @ self._V3.T
+                Sigma_post -= self._V3 @ self._V3.T
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
                 var_post = var_prior.copy()
                 for i in range(self._dc):
-                    var_post[i] -= self._alpha**4 * self._V3[i,:] @ self._V3[i,:].T
+                    var_post[i] -= self._V3[i,:] @ self._V3[i,:].T
 
         elif field == 'f':
 
@@ -340,14 +383,14 @@ class GPModel(Model):
 
                 # If so, compute the full covariance matrix
                 Sigma_post = var_prior.copy()
-                Sigma_post -= self._alpha**4 * self._V1.T @ self._V1
+                Sigma_post -= self._V1.T @ self._V1
 
             else:
 
                 # If not, compute only the diagonal of the covariance matrix
                 var_post = var_prior.copy()
                 for i in range(self._dc):
-                    var_post[i] -= self._alpha**4 * self._V1[:,i].T @ self._V1[:,i]
+                    var_post[i] -= self._V1[:,i].T @ self._V1[:,i]
 
         else:
 
@@ -369,7 +412,7 @@ class GPModel(Model):
 
         # Do the cholesky decomposition of M only if necessary
         if not '_sqrtM' in vars(self):
-            self._sqrtM = np.linalg.cholesky(self._Mc)
+            self._sqrtM = np.linalg.cholesky(self._Sigma_f)
 
         # Define the array that stores the samples
         samples = np.zeros((self._dc, nsamples))
@@ -381,7 +424,7 @@ class GPModel(Model):
             z = rng.standard_normal(self._dc)
 
             # Get the sample of the force field
-            f = self._alpha * self._sqrtM @ z
+            f = self._sqrtM @ z
 
             if field == 'u':
 
@@ -419,11 +462,11 @@ class GPModel(Model):
 
         # Do the cholesky decomposition of M only if necessary
         if not '_sqrtM' in vars(self):
-            self._sqrtM = np.linalg.cholesky(self._Mc)
+            self._sqrtM = np.linalg.cholesky(self._Sigma_f)
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -444,7 +487,7 @@ class GPModel(Model):
             z2 = rng.standard_normal(self._nobs)
 
             # Get x1 ~ N(0, alpha^2 M) and x2 ~ N(0, Sigma_e)
-            x1 = self._alpha * self._sqrtM @ z1
+            x1 = self._sqrtM @ z1
             x2 = self._sqrtNoise @ z2
 
             # Compute the perturbed observation
@@ -453,7 +496,7 @@ class GPModel(Model):
             # Multiply the perturbed observation by the Kalman gain
             f = np.linalg.solve(self._sqrtObs, f_pert)
             f = np.linalg.solve(self._sqrtObs.T, f)
-            f = self._alpha**2 * self._Mc @ self._Phic @ f
+            f = self._Sigma_f @ self._Phic @ f
 
             # Add the prior sample
             f += x1
@@ -485,14 +528,14 @@ class GPModel(Model):
         params[gppn.POSTERIORSAMPLES] = samples
 
 
-    def _get_alpha_opt(self):
+    def _get_param_opt(self, Sigma_fc):
 
         #################
         # OPTIMAL ALPHA #
         #################
 
         # If so, determine the optimal value of alpha
-        L = np.linalg.cholesky(self._Phic.T @ self._Mc @ self._Phic)
+        L = np.linalg.cholesky(self._Phic.T @ Sigma_fc @ self._Phic)
         v = np.linalg.solve(L, self._y)
         alpha2 = v.T @ v / self._nobs
 
@@ -503,7 +546,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._alpha**2 * self._Phic.T @ self._Mc @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):

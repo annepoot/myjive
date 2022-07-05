@@ -32,6 +32,8 @@ class ElasticModel(Model):
         elif action == act.GETTABLE:
             if 'stress' in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
+            if 'strain' in params[pn.TABLENAME]:
+                self._get_strains(params, globdat)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
@@ -162,10 +164,16 @@ class ElasticModel(Model):
         else:
             pass
 
-    def _get_stresses(self, params, globdat):
-        D = self._get_D_matrix(0)
+
+    def _get_strains(self, params, globdat):
+
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
+
+        if pn.SOLUTION in params:
+            disp = params[pn.SOLUTION]
+        else:
+            disp = globdat[gn.STATE0]
 
         if 'xx' not in table:
             table['xx'] = np.zeros(len(globdat[gn.NSET]))
@@ -183,25 +191,111 @@ class ElasticModel(Model):
                 table['zx'] = np.zeros(len(globdat[gn.NSET]))
 
         for elem in self._elems:
+            # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
-            grads, weights = self._shape.get_shape_gradients(coords)
 
-            eldisp = globdat[gn.STATE0][idofs]
+            # Get the shape functions, gradients, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
 
+            # Get the nodal displacements
+            eldisp = disp[idofs]
+
+            # Reset the element stress matrix and weights
+            eleps = np.zeros((self._shape.node_count(), self._strcount))
+            elwts = np.zeros(self._shape.node_count())
+
+            for ip in range(self._ipcount):
+                # Get the B matrix for each integration point
+                B = self._get_B_matrix(grads[:,:,ip])
+
+                # Get the strain of the element in the integration point
+                strain = np.matmul(B, eldisp)
+
+                # Compute the element strain and weights
+                eleps += np.outer(sfuncs[:, ip], strain)
+                elwts += sfuncs[:, ip].flatten()
+
+            # Add the element weights to the global weights
+            tbwts[inodes] += elwts
+
+            # Add the element stresses to the global stresses
+            table['xx'][inodes] += eleps[:, 0]
+
+            if self._rank == 2:
+                table['yy'][inodes] += eleps[:, 1]
+                table['xy'][inodes] += eleps[:, 2]
+            elif self._rank == 3:
+                table['yy'][inodes] += eleps[:, 1]
+                table['zz'][inodes] += eleps[:, 2]
+                table['xy'][inodes] += eleps[:, 3]
+                table['yz'][inodes] += eleps[:, 4]
+                table['zx'][inodes] += eleps[:, 5]
+
+
+    def _get_stresses(self, params, globdat):
+
+        table = params[pn.TABLE]
+        tbwts = params[pn.TABLEWEIGHTS]
+
+        if pn.SOLUTION in params:
+            disp = params[pn.SOLUTION]
+        else:
+            disp = globdat[gn.STATE0]
+
+        if 'xx' not in table:
+            table['xx'] = np.zeros(len(globdat[gn.NSET]))
+        if self._rank > 1:
+            if 'yy' not in table:
+                table['yy'] = np.zeros(len(globdat[gn.NSET]))
+            if 'xy' not in table:
+                table['xy'] = np.zeros(len(globdat[gn.NSET]))
+        elif self._rank > 2:
+            if 'zz' not in table:
+                table['zz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'yz' not in table:
+                table['yz'] = np.zeros(len(globdat[gn.NSET]))
+            if 'zx' not in table:
+                table['zx'] = np.zeros(len(globdat[gn.NSET]))
+
+        for elem in self._elems:
+            # Get the nodal coordinates of each element
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, gradients, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
+
+            # Get the nodal displacements
+            eldisp = disp[idofs]
+
+            # Reset the element stress matrix and weights
             elsig = np.zeros((self._shape.node_count(), self._strcount))
             elwts = np.zeros(self._shape.node_count())
 
             for ip in range(self._ipcount):
-                B = self._get_B_matrix(grads[:, :, ip])
-                ptsig = np.matmul(D, np.matmul(B, eldisp))
-                elsig += np.outer(sfuncs[:, ip], ptsig)
+                # Get the B and D matrices for each integration point
+                B = self._get_B_matrix(grads[:,:,ip])
+                D = self._get_D_matrix(ipcoords[:,ip])
+
+                # Get the strain and stress of the element in the integration point
+                strain = np.matmul(B, eldisp)
+                stress = np.matmul(D, strain)
+
+                # Compute the element stress and weights
+                elsig += np.outer(sfuncs[:, ip], stress)
                 elwts += sfuncs[:, ip].flatten()
 
+            # Add the element weights to the global weights
             tbwts[inodes] += elwts
 
+            # Add the element stresses to the global stresses
             table['xx'][inodes] += elsig[:, 0]
 
             if self._rank == 2:
@@ -213,6 +307,7 @@ class ElasticModel(Model):
                 table['xy'][inodes] += elsig[:, 3]
                 table['yz'][inodes] += elsig[:, 4]
                 table['zx'][inodes] += elsig[:, 5]
+
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._rank, self._dofcount))

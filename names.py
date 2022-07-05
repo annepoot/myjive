@@ -57,6 +57,7 @@ class ParamNames:
     TABLE = 'table'
     TABLENAME = 'tableName'
     TABLEWEIGHTS = 'tableWeights'
+    SOLUTION = 'solution'
     RHO = 'rho'
     AREA = 'area'
     YOUNG = 'young'

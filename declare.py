@@ -27,6 +27,7 @@ import arclenmodule
 import outputmodule
 import vtkoutmodule
 import linbuckmodule
+import viewmodule
 import frameviewmodule
 import loaddispmodule
 import graphmodule
@@ -66,6 +67,7 @@ def declare_modules(globdat):
     outputmodule.declare(factory)
     vtkoutmodule.declare(factory)
     linbuckmodule.declare(factory)
+    viewmodule.declare(factory)
     frameviewmodule.declare(factory)
     loaddispmodule.declare(factory)
     graphmodule.declare(factory)

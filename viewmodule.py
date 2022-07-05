@@ -11,6 +11,7 @@ LINEWIDTH ='linewidth'
 PLOT = 'plot'
 NCOLORS = 'ncolors'
 DEFORM = 'deform'
+SOLUTIONNAME = 'solutionName'
 
 class ViewModule(Module):
 
@@ -18,6 +19,7 @@ class ViewModule(Module):
         self._scale = 0.0
         self._linewidth = 0.2
         self._pname = ''
+        self._solutionname = ''
         self._ncolors = 100
 
         if self._name in props:
@@ -27,6 +29,8 @@ class ViewModule(Module):
                 self._linewidth = float(myprops[LINEWIDTH])
             if PLOT in myprops:
                 self._pname = myprops[PLOT]
+            if SOLUTIONNAME in myprops:
+                self._solutionname = myprops[SOLUTIONNAME]
             if DEFORM in myprops:
                 self._scale = myprops[DEFORM]
             if NCOLORS in myprops:
@@ -38,7 +42,17 @@ class ViewModule(Module):
 
         nodes = globdat[gn.NSET]
         elems = globdat[gn.ESET]
-        disp = globdat[gn.STATE0]
+
+        if self._solutionname == '':
+            self._solution = globdat[gn.STATE0]
+        else:
+            if '[' in self._solutionname:
+                name = self._solutionname.split('[')[0]
+                comp = self._solutionname.split('[')[1].split(']')[0]
+                self._solution = globdat[name][comp]
+            else:
+                self._solution = globdat[self._solutionname]
+
         dofs = globdat[gn.DOFSPACE]
         types = dofs.get_types()
 
@@ -64,7 +78,7 @@ class ViewModule(Module):
 
         for n in range(len(nodes)):
             idofs = dofs.get_dofs([n], types)
-            du = disp[idofs]
+            du = self._solution[idofs]
 
             if len(idofs) == 2:
               dx[n] += self._scale * du[0]
@@ -86,7 +100,7 @@ class ViewModule(Module):
                 assert comp in types, 'Invalid DOF type: %s' % comp
 
                 for n in range(len(nodes)):
-                    z[n] = disp[dofs.get_dof(n,comp)]
+                    z[n] = self._solution[dofs.get_dof(n,comp)]
             else:
                 name = self._pname.split('[')[0]
                 comp = self._pname.split('[')[1].split(']')[0]
@@ -120,6 +134,7 @@ class ViewModule(Module):
         params[pn.TABLE] = {}
         params[pn.TABLENAME] = name
         params[pn.TABLEWEIGHTS] = np.zeros(len(nodes))
+        params[pn.SOLUTION]= self._solution
 
         model.take_action(act.GETTABLE, params, globdat)
 

@@ -166,7 +166,6 @@ class ElasticModel(Model):
 
 
     def _get_strains(self, params, globdat):
-
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
@@ -237,7 +236,6 @@ class ElasticModel(Model):
 
 
     def _get_stresses(self, params, globdat):
-
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 

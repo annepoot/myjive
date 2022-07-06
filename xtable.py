@@ -31,11 +31,12 @@ class XTable(Table):
         if self.find_column(name) < 0:
             self._header = np.append(self._header, name)
             self._data.resize((self.row_count(), self.column_count() + 1))
+        return self.find_column(name)
 
     def add_columns(self, names):
         for name in names:
             self.add_column(name)
-
+        return self.find_columns(names)
 
     def set_value(self, irow, jcol, value):
         self._data[irow, jcol] = value

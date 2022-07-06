@@ -277,6 +277,9 @@ class ElasticModel(Model):
                 B = self._get_B_matrix(grads[:,:,ip])
                 D = self._get_D_matrix(ipcoords[:,ip])
 
+                if self._rank == 2:
+                    D /= self._thickness
+
                 # Get the strain and stress of the element in the integration point
                 strain = np.matmul(B, eldisp)
                 stress = np.matmul(D, strain)

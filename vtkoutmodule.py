@@ -4,6 +4,7 @@ from module import Module
 from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
+import proputils as pu
 from table import Table
 
 FILENAME = 'file'
@@ -22,7 +23,7 @@ class VTKOutModule(Module):
             if FILENAME in myprops:
                 self._fname = myprops[FILENAME]
             if TABLES in myprops:
-                self._tnames = myprops[TABLES].strip('[').strip(']').split(',')
+                self._tnames = pu.parse_list(myprops[TABLES])
 
         self._modelname = myprops.get(gn.MODEL, gn.MODEL)
 
@@ -75,10 +76,10 @@ class VTKOutModule(Module):
                     out.write(' '.join(map(str, disp[idofs])))
                     out.write((3 - len(idofs)) * ' 0.0' + '\n')
                 out.write('</DataArray>\n')
-                for table in globdat[gn.TABLES].values():
+                for name, table in globdat[gn.TABLES].items():
                     for comp in table:
                         out.write(
-                            '<DataArray type="Float64" Name="' + comp + '" NumberOfComponents="1" format="ascii">\n')
+                            '<DataArray type="Float64" Name="' + name + '_' + comp + '" NumberOfComponents="1" format="ascii">\n')
                         for inode in range(len(nodes)):
                             out.write(str(table[comp][inode]) + '\n')
                         out.write('</DataArray>\n')

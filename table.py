@@ -13,6 +13,12 @@ class Table():
         jcol = self.find_column(name)
         return self.get_col_values(None, jcol)
 
+    def __iter__(self):
+        return iter(self._header)
+
+    def __next__(self):
+        return next(self._header)
+
 
     def size(self):
         return self.row_count() * self.column_count()

@@ -39,20 +39,23 @@ class XTable(Table):
         return self.find_columns(names)
 
     def set_value(self, irow, jcol, value):
+        self.reserve(irow+1)
         self._data[irow, jcol] = value
 
     def add_value(self, irow, jcol, value):
         self.reserve(irow+1)
-        self.set_value(irow, jcol, value)
+        self._data[irow, jcol] += value
 
     def set_block(self, irows, jcols, block):
+        self.reserve(max(irows)+1)
         self._data[np.ix_(irows, jcols)] = block
 
     def add_block(self, irows, jcols, block):
         self.reserve(max(irows)+1)
-        self.set_block(irows, jcols, block)
+        self._data[np.ix_(irows, jcols)] += block
 
     def set_row_values(self, irow, jcols, values):
+        self.reserve(irow+1)
         if jcols is None:
             self._data[irow, :] = values
         else:
@@ -60,17 +63,24 @@ class XTable(Table):
 
     def add_row_values(self, irow, jcols, values):
         self.reserve(irow+1)
-        self.set_row_values(irow, jcols, values)
+        if jcols is None:
+            self._data[irow, :] += values
+        else:
+            self._data[irow, jcols] += values
 
     def set_col_values(self, irows, jcol, values):
         if irows is None:
             self._data[:, jcol] = values
         else:
+            self.reserve(max(irows)+1)
             self._data[irows, jcol] = values
 
     def add_col_values(self, irows, jcol, values):
-        self.reserve(max(irows)+1)
-        self.set_col_values(irows, jcol, values)
+        if irows is None:
+            self._data[:, jcol] += values
+        else:
+            self.reserve(max(irows)+1)
+            self._data[irows, jcol] += values
 
 
     def to_table(self):

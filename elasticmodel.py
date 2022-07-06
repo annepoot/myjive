@@ -4,6 +4,7 @@ from names import Actions as act
 from names import ParamNames as pn
 from names import GlobNames as gn
 from model import Model
+from xtable import XTable
 
 ELEMENTS = 'elements'
 YOUNG = 'young'
@@ -166,28 +167,26 @@ class ElasticModel(Model):
 
 
     def _get_strains(self, params, globdat):
-        table = params[pn.TABLE]
+        xtable = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
+        # Convert the table to an XTable and store the original class
+        cls_ = xtable.__class__
+        xtable.__class__ = XTable
+
+        # Get the STATE0 vector if no custom displacemnet field is provided
         if pn.SOLUTION in params:
             disp = params[pn.SOLUTION]
         else:
             disp = globdat[gn.STATE0]
 
-        if 'xx' not in table:
-            table['xx'] = np.zeros(len(globdat[gn.NSET]))
-        if self._rank > 1:
-            if 'yy' not in table:
-                table['yy'] = np.zeros(len(globdat[gn.NSET]))
-            if 'xy' not in table:
-                table['xy'] = np.zeros(len(globdat[gn.NSET]))
-        elif self._rank > 2:
-            if 'zz' not in table:
-                table['zz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'yz' not in table:
-                table['yz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'zx' not in table:
-                table['zx'] = np.zeros(len(globdat[gn.NSET]))
+        # Add the columns of all stress components to the table
+        if self._rank == 1:
+            jcols = xtable.add_columns(['xx'])
+        elif self._rank == 2:
+            jcols = xtable.add_columns(['xx', 'yy', 'xy'])
+        elif self._rank == 3:
+            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zz'])
 
         for elem in self._elems:
             # Get the nodal coordinates of each element
@@ -222,42 +221,38 @@ class ElasticModel(Model):
             tbwts[inodes] += elwts
 
             # Add the element stresses to the global stresses
-            table['xx'][inodes] += eleps[:, 0]
+            xtable.add_block(inodes, jcols, eleps)
 
-            if self._rank == 2:
-                table['yy'][inodes] += eleps[:, 1]
-                table['xy'][inodes] += eleps[:, 2]
-            elif self._rank == 3:
-                table['yy'][inodes] += eleps[:, 1]
-                table['zz'][inodes] += eleps[:, 2]
-                table['xy'][inodes] += eleps[:, 3]
-                table['yz'][inodes] += eleps[:, 4]
-                table['zx'][inodes] += eleps[:, 5]
+        # Divide the strains by the shape function weights
+        for jcol in jcols:
+            values = xtable.get_col_values(None, jcol)
+            xtable.set_col_values(None, jcol, values/tbwts)
+
+        # Convert the table back to the original class
+        xtable.__class__ = cls_
 
 
     def _get_stresses(self, params, globdat):
-        table = params[pn.TABLE]
+        xtable = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
+        # Convert the table to an XTable and store the original class
+        cls_ = xtable.__class__
+        xtable.__class__ = XTable
+
+        # Get the STATE0 vector if no custom displacemnet field is provided
         if pn.SOLUTION in params:
             disp = params[pn.SOLUTION]
         else:
             disp = globdat[gn.STATE0]
 
-        if 'xx' not in table:
-            table['xx'] = np.zeros(len(globdat[gn.NSET]))
-        if self._rank > 1:
-            if 'yy' not in table:
-                table['yy'] = np.zeros(len(globdat[gn.NSET]))
-            if 'xy' not in table:
-                table['xy'] = np.zeros(len(globdat[gn.NSET]))
-        elif self._rank > 2:
-            if 'zz' not in table:
-                table['zz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'yz' not in table:
-                table['yz'] = np.zeros(len(globdat[gn.NSET]))
-            if 'zx' not in table:
-                table['zx'] = np.zeros(len(globdat[gn.NSET]))
+        # Add the columns of all stress components to the table
+        if self._rank == 1:
+            jcols = xtable.add_columns(['xx'])
+        elif self._rank == 2:
+            jcols = xtable.add_columns(['xx', 'yy', 'xy'])
+        elif self._rank == 3:
+            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zx'])
 
         for elem in self._elems:
             # Get the nodal coordinates of each element
@@ -294,17 +289,15 @@ class ElasticModel(Model):
             tbwts[inodes] += elwts
 
             # Add the element stresses to the global stresses
-            table['xx'][inodes] += elsig[:, 0]
+            xtable.add_block(inodes, jcols, elsig)
 
-            if self._rank == 2:
-                table['yy'][inodes] += elsig[:, 1]
-                table['xy'][inodes] += elsig[:, 2]
-            elif self._rank == 3:
-                table['yy'][inodes] += elsig[:, 1]
-                table['zz'][inodes] += elsig[:, 2]
-                table['xy'][inodes] += elsig[:, 3]
-                table['yz'][inodes] += elsig[:, 4]
-                table['zx'][inodes] += elsig[:, 5]
+        # Divide the stresses by the shape function weights
+        for jcol in jcols:
+            values = xtable.get_col_values(None, jcol)
+            xtable.set_col_values(None, jcol, values/tbwts)
+
+        # Convert the table back to the original class
+        xtable.__class__ = cls_
 
 
     def _get_N_matrix(self, sfuncs):

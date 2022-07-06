@@ -2,16 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
-from module import *
+from module import Module
 from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
+from table import Table
 
 LINEWIDTH ='linewidth'
 PLOT = 'plot'
 NCOLORS = 'ncolors'
 DEFORM = 'deform'
-SOLUTIONNAME = 'solutionName'
+SOLUTION = 'solution'
 
 class ViewModule(Module):
 
@@ -29,8 +30,8 @@ class ViewModule(Module):
                 self._linewidth = float(myprops[LINEWIDTH])
             if PLOT in myprops:
                 self._pname = myprops[PLOT]
-            if SOLUTIONNAME in myprops:
-                self._solutionname = myprops[SOLUTIONNAME]
+            if SOLUTION in myprops:
+                self._solutionname = myprops[SOLUTION]
             if DEFORM in myprops:
                 self._scale = myprops[DEFORM]
             if NCOLORS in myprops:
@@ -48,8 +49,8 @@ class ViewModule(Module):
         else:
             if '[' in self._solutionname:
                 name = self._solutionname.split('[')[0]
-                comp = self._solutionname.split('[')[1].split(']')[0]
-                self._solution = globdat[name][comp]
+                comp = int(self._solutionname.split('[')[1].split(']')[0])
+                self._solution = globdat[name][:,comp]
             else:
                 self._solution = globdat[self._solutionname]
 
@@ -131,18 +132,12 @@ class ViewModule(Module):
         globdat[gn.TABLES] = {}
 
         params = {}
-        params[pn.TABLE] = {}
+        params[pn.TABLE] = Table()
         params[pn.TABLENAME] = name
         params[pn.TABLEWEIGHTS] = np.zeros(len(nodes))
         params[pn.SOLUTION]= self._solution
 
         model.take_action(act.GETTABLE, params, globdat)
-
-        table = params[pn.TABLE]
-        tbwts = params[pn.TABLEWEIGHTS]
-
-        for col in table.values():
-            col /= params[pn.TABLEWEIGHTS]
 
         globdat[gn.TABLES][name] = params[pn.TABLE]
 

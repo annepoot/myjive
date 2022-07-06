@@ -43,6 +43,7 @@ gpsolver =
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
+  tables = [ stress, strain ];
 };
 
 gpsampler =

@@ -23,11 +23,17 @@ props_c['init']['mesh']['file'] = 'beam_coarse.msh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
+strain_xx_c = globdat_c['tables']['strain']['xx']
+strain_yy_c = globdat_c['tables']['strain']['yy']
+strain_c = np.append(strain_xx_c, strain_yy_c)
 
 globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
+strain_xx = globdat['tables']['strain']['xx']
+strain_yy = globdat['tables']['strain']['yy']
+strain = np.append(strain_xx, strain_yy)
 
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
@@ -45,7 +51,8 @@ samples_f_post = globdat['samples_f_post']
 
 Phi = globdat['Phi']
 
-err = abs(u - Phi @ globdat_c['state0'])
+err = abs(u - Phi @ u_coarse)
+err_grad = abs(strain - Phi @ strain_c)
 
 QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
@@ -53,6 +60,18 @@ QuickViewer(u, globdat, title=r'Exact displacement ($u$)')
 
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
+plt.show()
+
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err_grad, globdat, ax=ax1, comp=0, title=r'Discretization error ($|\varepsilon_f^{xx} - \varepsilon_c^{xx}|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
+plt.show()
+
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err_grad, globdat, ax=ax1, comp=1, title=r'Discretization error ($|\varepsilon_f^{yy} - \varepsilon_c^{yy}|$)')
 QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 # plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
 plt.show()

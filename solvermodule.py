@@ -5,15 +5,17 @@ import scipy.sparse.linalg as linalg
 from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
-
+import proputils as pu
 from module import Module
 from constrainer import Constrainer
+from table import Table
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
+TABLES = 'tables'
 
 class SolverModule(Module):
 
@@ -25,6 +27,7 @@ class SolverModule(Module):
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
+        self._tnames = pu.parse_list(myprops.get(TABLES, '[]'))
 
     def run(self, globdat):
 
@@ -78,6 +81,19 @@ class SolverModule(Module):
         # Optionally store the constrainer in Globdat
         if self._store_constraints:
             globdat[gn.CONSTRAINTS] = c
+
+        # Compute stresses, strains, etc.
+        globdat[gn.TABLES] = {}
+
+        for name in self._tnames:
+            params = {}
+            params[pn.TABLE] = Table()
+            params[pn.TABLENAME] = name
+            params[pn.TABLEWEIGHTS] = np.zeros(len(globdat[gn.NSET]))
+
+            model.take_action(act.GETTABLE, params, globdat)
+
+            globdat[gn.TABLES][name] = params[pn.TABLE]
 
         if self._step >= self._nsteps:
             return 'exit'

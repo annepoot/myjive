@@ -174,7 +174,7 @@ class ElasticModel(Model):
         cls_ = xtable.__class__
         xtable.__class__ = XTable
 
-        # Get the STATE0 vector if no custom displacemnet field is provided
+        # Get the STATE0 vector if no custom displacement field is provided
         if pn.SOLUTION in params:
             disp = params[pn.SOLUTION]
         else:
@@ -186,7 +186,7 @@ class ElasticModel(Model):
         elif self._rank == 2:
             jcols = xtable.add_columns(['xx', 'yy', 'xy'])
         elif self._rank == 3:
-            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zz'])
+            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zx'])
 
         for elem in self._elems:
             # Get the nodal coordinates of each element
@@ -240,7 +240,7 @@ class ElasticModel(Model):
         cls_ = xtable.__class__
         xtable.__class__ = XTable
 
-        # Get the STATE0 vector if no custom displacemnet field is provided
+        # Get the STATE0 vector if no custom displacement field is provided
         if pn.SOLUTION in params:
             disp = params[pn.SOLUTION]
         else:

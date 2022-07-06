@@ -1,9 +1,10 @@
 import numpy as np
 
-from module import *
+from module import Module
 from names import GlobNames as gn
 from names import ParamNames as pn
 from names import Actions as act
+from table import Table
 
 FILENAME = 'file'
 TABLES = 'tables'
@@ -98,17 +99,11 @@ class VTKOutModule(Module):
 
         for name in table_names:
             params = {}
-            params[pn.TABLE] = {}
+            params[pn.TABLE] = Table()
             params[pn.TABLENAME] = name
             params[pn.TABLEWEIGHTS] = np.zeros(len(nodes))
 
             model.take_action(act.GETTABLE, params, globdat)
-
-            table = params[pn.TABLE]
-            tbwts = params[pn.TABLEWEIGHTS]
-
-            for col in table.values():
-                col /= params[pn.TABLEWEIGHTS]
 
             globdat[gn.TABLES][name] = params[pn.TABLE]
 

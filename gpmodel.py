@@ -30,6 +30,8 @@ class GPModel(Model):
 
         if action == gpact.CONFIGUREFEM:
             self._configure_fem(params, globdat)
+        elif action == gpact.CONFIGUREPRIOR:
+            self._configure_prior(params, globdat)
         elif action == gpact.GETPRIORMEAN:
             self._get_prior_mean(params, globdat)
         elif action == gpact.GETPRIORCOVARIANCE:
@@ -49,6 +51,7 @@ class GPModel(Model):
                 self._get_variances(params, globdat)
             elif 'std' in params[pn.TABLENAME]:
                 self._get_standard_deviations(params, globdat)
+
 
     def configure(self, props, globdat):
         self._dc = globdat[gn.DOFSPACE].dof_count()
@@ -70,7 +73,10 @@ class GPModel(Model):
 
         self._hyperparams = {}
         for key, value in props[PRIOR][HYPERPARAMS].items():
-            self._hyperparams[key] = float(value)
+            if value != 'opt':
+                self._hyperparams[key] = float(value)
+            else:
+                self._hyperparams[key] = 'opt'
 
         # Get the dofs of the fine mesh
         self._dof_types = globdat[gn.DOFSPACE].get_types()
@@ -84,6 +90,7 @@ class GPModel(Model):
 
         # Get the number of observations (which is the number of dofs in the coarse mesh)
         self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
+
 
     def _configure_fem(self, params, globdat):
 
@@ -100,13 +107,15 @@ class GPModel(Model):
         Kc, mf = c.constrain(K, mf)
 
         # Get the actual constrained stiffness matrix and force vector
-        Kc, fc = c.constrain(K, f)
         Mc, fc = c.constrain(M, f)
+        Kc, fc = c.constrain(K, f)
 
         # Store all constrained matrices and vectors
+        self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
         self._m = np.linalg.solve(Kc, mf)
+        self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi(globdat)
@@ -133,8 +142,14 @@ class GPModel(Model):
         self._Phic = phi
         globdat['Phic'] = self._Phic
 
+        # Get the observation operator
+        self._H = self._Phic.T @ self._Kc
+
         # Get the observed force vector
         self._y = self._Phic.T @ (self._fc - self._Kc @ self._m)
+
+
+    def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
         eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm}
@@ -164,22 +179,17 @@ class GPModel(Model):
         else:
 
             # Add the mass and stiffness matrices to the dictionary
-            eval_dict['M'] = Mc
-            eval_dict['K'] = Kc
+            eval_dict['M'] = self._Mc
+            eval_dict['K'] = self._Kc
 
             # Get the covariance matrix by 1 matrix evaluation
             self._Sigma = eval(self._covariance, eval_dict)
 
         # Set the covariance of the DBCs to 0
-        self._Sigma[cdofs,:] = self._Sigma[:,cdofs] = 0.0
+        self._Sigma[self._cdofs,:] = self._Sigma[:,self._cdofs] = 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         self._Sigma += self._pdnoise2 * np.identity(self._dc)
-
-        # Get the observation operator
-        self._H = self._Phic.T @ self._Kc
-
-        print('_configure_fem finished')
 
 
     def _get_prior_mean(self, params, globdat):
@@ -482,22 +492,9 @@ class GPModel(Model):
                 table[dof_type] = np.zeros(len(globdat[gn.NSET]))
 
         # Define a dictionary for the settings of u
-        u_params = {}
-        u_params[gppn.FIELD] = 'u'
-        u_params[gppn.FULLCOVARIANCE] = False
+        u_params = {gppn.FULLCOVARIANCE:False}
 
-        # Define a dictionary for the settings of f
-        f_params = {}
-        f_params[gppn.FIELD] = 'f'
-        f_params[gppn.FULLCOVARIANCE] = False
-
-        if name == 'var_f_prior':
-            self._get_prior_covariance(f_params, globdat)
-            var = f_params[gppn.PRIORCOVARIANCE]
-        elif name == 'var_f_post':
-            self._get_posterior_covariance(f_params, globdat)
-            var = f_params[gppn.POSTERIORCOVARIANCE]
-        elif name == 'var_u_prior':
+        if name == 'var_u_prior':
             self._get_prior_covariance(u_params, globdat)
             var = u_params[gppn.PRIORCOVARIANCE]
         elif name == 'var_u_post':
@@ -517,10 +514,7 @@ class GPModel(Model):
                 for i, dof_type in enumerate(self._dof_types):
                     table[dof_type][inode] = var[idofs[i]]
 
-                if any(idof in cdofs for idof in idofs):
-                    tbwts[inode] = np.inf
-                else:
-                    tbwts[inode] = 1
+                tbwts[inode] = 1
 
 
     def _get_standard_deviations(self, params, globdat):

@@ -5,7 +5,7 @@ gpinit =
   mesh =
   {
     type = gmsh;
-    file = beam_fine2.msh;
+    file = beam_fine.msh;
   };
 
   coarseMesh =
@@ -43,6 +43,7 @@ gpsolver =
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
+  getForceResults = True;
   tables = [ stress, strain ];
 };
 
@@ -81,14 +82,19 @@ model =
 
   gp =
   {
-    type = GP;
+    type = GPf;
+
+    prior =
+    {
+      type = SPDE;
+      func = alpha**2 * M;
+      hyperparams =
+      {
+        alpha = opt;
+      };
+    };
 
     obsNoise = 1e-10;
-    alpha = opt;
-
-    prior = M;
-    alpha = opt;
-    beta = opt;
 
     shape =
     {

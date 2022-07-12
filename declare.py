@@ -13,6 +13,7 @@ import elasticmodel
 import timoshenkomodel
 import framemodel
 import gpmodel
+import gpfmodel
 import xbarmodel
 import xelasticmodel
 import xpoissonmodel
@@ -47,6 +48,7 @@ def declare_models(globdat):
     timoshenkomodel.declare(factory)
     framemodel.declare(factory)
     gpmodel.declare(factory)
+    gpfmodel.declare(factory)
     xbarmodel.declare(factory)
     xelasticmodel.declare(factory)
     xpoissonmodel.declare(factory)

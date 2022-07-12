@@ -47,38 +47,21 @@ class GPSolverModule(SolverModule):
         u_params[gppn.FIELD] = 'u'
         u_params[gppn.FULLCOVARIANCE] = False
 
-        # Define a dictionary for the settings of f
-        f_params = {}
-        f_params[gppn.FIELD] = 'f'
-        f_params[gppn.FULLCOVARIANCE] = False
-
         # Take the appropriate actions for u
         model.take_action(gpact.GETPRIORMEAN, u_params, globdat)
         model.take_action(gpact.GETPOSTERIORMEAN, u_params, globdat)
         model.take_action(gpact.GETPRIORCOVARIANCE, u_params, globdat)
         model.take_action(gpact.GETPOSTERIORCOVARIANCE, u_params, globdat)
 
-        # Take the appropriate actions for f
-        model.take_action(gpact.GETPRIORMEAN, f_params, globdat)
-        model.take_action(gpact.GETPOSTERIORMEAN, f_params, globdat)
-        model.take_action(gpact.GETPRIORCOVARIANCE, f_params, globdat)
-        model.take_action(gpact.GETPOSTERIORCOVARIANCE, f_params, globdat)
-
         # Get the log likelihood
         model.take_action(gpact.GETLOGLIKELIHOOD, u_params, globdat)
-        model.take_action(gpact.GETLOGLIKELIHOOD, f_params, globdat)
 
         # Optionally store stiffness matrix in Globdat
         if ( self._store_matrix ):
-            globdat['f_prior'] = f_params[gppn.PRIORMEAN]
             globdat['u_prior'] = u_params[gppn.PRIORMEAN]
-            globdat['f_post'] = f_params[gppn.POSTERIORMEAN]
             globdat['u_post'] = u_params[gppn.POSTERIORMEAN]
-            globdat['var_f_prior'] = f_params[gppn.PRIORCOVARIANCE]
-            globdat['var_f_post'] = f_params[gppn.POSTERIORCOVARIANCE]
             globdat['var_u_prior'] = u_params[gppn.PRIORCOVARIANCE]
             globdat['var_u_post'] = u_params[gppn.POSTERIORCOVARIANCE]
-            assert u_params[gppn.LOGLIKELIHOOD] == f_params[gppn.LOGLIKELIHOOD]
             globdat['logLikelihood'] = u_params[gppn.LOGLIKELIHOOD]
 
         return output

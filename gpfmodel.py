@@ -20,10 +20,10 @@ PDNOISE = 'pdNoise'
 
 # DOFTYPES = ['dx', 'dy']
 
-class GPModel(Model):
+class GPfModel(Model):
 
     def take_action(self, action, params, globdat):
-        print('GPModel taking action', action)
+        print('GPfModel taking action', action)
 
         if action == gpact.CONFIGUREFEM:
             self._configure_fem(params, globdat)
@@ -723,4 +723,4 @@ class GPModel(Model):
         params[pn.TABLENAME] = name
 
 def declare(factory):
-    factory.declare_model('GP', GPModel)
+    factory.declare_model('GPf', GPfModel)

@@ -23,8 +23,8 @@ for b in beta:
     likelihood = np.zeros_like(alpha)
 
     for i, a in enumerate(alpha):
-        props['model']['gp']['alpha'] = a
-        props['model']['gp']['beta'] = b
+        props['model']['gp']['prior']['hyperparams']['alpha'] = a
+        props['model']['gp']['prior']['hyperparams']['beta'] = b
         globdat = main.jive(props)
         likelihood[i] = globdat['logLikelihood']
 

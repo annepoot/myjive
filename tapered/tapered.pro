@@ -40,6 +40,7 @@ gpsolver =
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
+  getForceResults = True;
 };
 
 gpsampler =
@@ -74,10 +75,19 @@ model =
 
   gp =
   {
-    type = GP;
+    type = GPf;
+
+    prior =
+    {
+      type = SPDE;
+      func = alpha**2 * M;
+      hyperparams =
+      {
+        alpha = opt;
+      };
+    };
 
     obsNoise = 1e-5;
-    alpha = opt;
 
     shape =
     {

@@ -55,7 +55,7 @@ for i in range(len(ns)):
     globdat = main.jive(props)
     K = globdat['matrix0']
     u = globdat['state0']
-    E1[i] = 0.5*np.dot(u,np.matmul(K,u))
+    E1[i] = 0.5 * u @ K @ u
 
     props['model']['bar']['shape']['type'] = 'Line3'
     props['model']['bar']['shape']['intScheme'] = 'Gauss3'
@@ -63,7 +63,7 @@ for i in range(len(ns)):
     globdat = main.jive(props)
     K = globdat['matrix0']
     u = globdat['state0']
-    E2[i] = 0.5*np.dot(u,np.matmul(K,u))
+    E2[i] = 0.5 * u @ K @ u
 
 plt.figure()
 ref = energy

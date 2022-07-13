@@ -46,7 +46,7 @@ props['model']['elastic']['rho'] = str(rho)
 globdat = main.jive(props)
 K = globdat['matrix0']
 u = globdat['state0']
-f = np.matmul(K, u)
+f = K @ u
 bodyforces_y = f[715:]
 reactions_y = f[713:715]
 

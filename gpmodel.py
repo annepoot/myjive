@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.linalg import solve, solve_triangular
+from scipy.linalg import solve_triangular
+from scipy.sparse.linalg import spsolve, inv
 
 from names import Actions as act
 from names import GPActions as gpact
@@ -9,18 +10,14 @@ from names import GlobNames as gn
 from names import PropNames as prn
 from model import Model
 
-NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
-ALPHA = 'alpha'
-BETA = 'beta'
+PDNOISE = 'pdNoise'
 PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
 HYPERPARAMS = 'hyperparams'
-RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
-PDNOISE = 'pdNoise'
 
 
 class GPModel(Model):
@@ -114,7 +111,7 @@ class GPModel(Model):
         self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
-        self._m = np.linalg.solve(Kc, mf)
+        self._m = spsolve(Kc, mf)
         self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -152,7 +149,7 @@ class GPModel(Model):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict = {'inv':inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Check if we have a kernel or SPDE covariance
@@ -537,7 +534,6 @@ class GPModel(Model):
 
         if not '_V1' in vars(self):
             self._get_sqrtObs()
-            # self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
             self._V1 = self._postmul_Sigma(solve_triangular(self._sqrtObs, self._H, lower=True))
 
     def _premul_Sigma(self, X):

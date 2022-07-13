@@ -11,8 +11,8 @@ class Constrainer:
         self._vals.append(val)
 
     def constrain(self, k, f):
-        kc = np.copy(k)
-        fc = np.copy(f)
+        kc = k.copy()
+        fc = f.copy()
 
         for dof, val in zip(self._dofs, self._vals):
             for i in range(kc.shape[0]):

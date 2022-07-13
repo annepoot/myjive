@@ -1,6 +1,6 @@
 import numpy as np
-import scipy.sparse as sparse
-import scipy.sparse.linalg as linalg
+from scipy.sparse import csr_array
+from scipy.sparse.linalg import spsolve
 
 from names import GlobNames as gn
 from names import ParamNames as pn
@@ -38,7 +38,7 @@ class SolverModule(Module):
         print('Running time step', self._step)
         globdat[gn.TIMESTEP] = self._step
 
-        K = sparse.csr_array((dc, dc))
+        K = csr_array((dc, dc))
         f = np.zeros(dc)
         c = Constrainer()
 
@@ -58,13 +58,12 @@ class SolverModule(Module):
 
         # Optionally get the mass matrix
         if self._get_mass_matrix:
-            M = sparse.csr_array((dc, dc))
+            M = csr_array((dc, dc))
             params[pn.MATRIX2] = M
             model.take_action(act.GETMATRIX2, params, globdat)
 
-        # Sparsify and solve
-        smat = sparse.csr_matrix(Kc)
-        u = linalg.spsolve(smat, fc)
+        # Solve the system
+        u = spsolve(Kc, fc)
 
         # Store rhs and solution in Globdat
         globdat[gn.EXTFORCE] = f

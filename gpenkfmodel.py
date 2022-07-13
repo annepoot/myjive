@@ -1,26 +1,8 @@
 import numpy as np
-from scipy.linalg import solve, solve_triangular
 
-from names import Actions as act
-from names import GPActions as gpact
-from names import ParamNames as pn
 from names import GPParamNames as gppn
-from names import GlobNames as gn
-from names import PropNames as prn
 from gpmodel import GPModel
 
-NOBS = 'nobs'
-OBSNOISE = 'obsNoise'
-ALPHA = 'alpha'
-BETA = 'beta'
-PRIOR = 'prior'
-TYPE = 'type'
-FUNC = 'func'
-HYPERPARAMS = 'hyperparams'
-RANDOMOBS = 'randomObs'
-SHAPE = 'shape'
-INTSCHEME = 'intScheme'
-PDNOISE = 'pdNoise'
 ENSEMBLE = 'ensemble'
 
 

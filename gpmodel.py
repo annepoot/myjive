@@ -10,18 +10,14 @@ from names import GlobNames as gn
 from names import PropNames as prn
 from model import Model
 
-NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
-ALPHA = 'alpha'
-BETA = 'beta'
+PDNOISE = 'pdNoise'
 PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
 HYPERPARAMS = 'hyperparams'
-RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
-PDNOISE = 'pdNoise'
 
 
 class GPModel(Model):

@@ -18,7 +18,6 @@ SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 PDNOISE = 'pdNoise'
 
-# DOFTYPES = ['dx', 'dy']
 
 class GPfModel(GPModel):
 

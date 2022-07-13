@@ -6,7 +6,7 @@ from names import ParamNames as pn
 from names import GPParamNames as gppn
 from names import GlobNames as gn
 from names import PropNames as prn
-from model import Model
+from gpmodel import GPModel
 
 NOBS = 'nobs'
 OBSNOISE = 'obsNoise'
@@ -22,7 +22,7 @@ INTSCHEME = 'intScheme'
 PDNOISE = 'pdNoise'
 
 
-class GPModel(Model):
+class GPEnKfModel(GPModel):
 
     def take_action(self, action, params, globdat):
         print('GPModel taking action', action)
@@ -538,4 +538,4 @@ class GPModel(Model):
 
 
 def declare(factory):
-    factory.declare_model('GP', GPModel)
+    factory.declare_model('GPEnKf', GPEnKfModel)

@@ -13,6 +13,9 @@ OBSNOISE = 'obsNoise'
 ALPHA = 'alpha'
 BETA = 'beta'
 PRIOR = 'prior'
+TYPE = 'type'
+FUNC = 'func'
+HYPERPARAMS = 'hyperparams'
 RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
@@ -27,6 +30,8 @@ class GPModel(Model):
 
         if action == gpact.CONFIGUREFEM:
             self._configure_fem(params, globdat)
+        elif action == gpact.CONFIGUREPRIOR:
+            self._configure_prior(params, globdat)
         elif action == gpact.GETPRIORMEAN:
             self._get_prior_mean(params, globdat)
         elif action == gpact.GETPRIORCOVARIANCE:
@@ -47,6 +52,7 @@ class GPModel(Model):
             elif 'std' in params[pn.TABLENAME]:
                 self._get_standard_deviations(params, globdat)
 
+
     def configure(self, props, globdat):
         self._dc = globdat[gn.DOFSPACE].dof_count()
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
@@ -56,31 +62,21 @@ class GPModel(Model):
         self._noise2 = float(props.get(OBSNOISE))**2
         self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
 
-        # Get the prior type (M, K or M+K)
-        self._prior = props.get(PRIOR, 'K').replace(' ','')
-        assert self._prior == 'M' or self._prior == 'K' or self._prior == 'M+K'
+        # Get the prior properties
+        self._prior = props[PRIOR][TYPE]
+        if self._prior == 'kernel':
+            self._kernel = props[PRIOR][FUNC]
+        elif self._prior == 'SPDE':
+            self._covariance = props[PRIOR][FUNC]
+        else:
+            raise ValueError('prior has to be "kernel" or "SPDE"')
 
-        # Get the alpha parameter and if possible use the optimal value as a default
-        if 'M' in self._prior:
-            if 'K' in self._prior:
-                self._alpha = props.get(ALPHA)
-                assert self._alpha != 'opt', 'cannot optimize alpha if the M+K prior is used'
+        self._hyperparams = {}
+        for key, value in props[PRIOR][HYPERPARAMS].items():
+            if value != 'opt':
+                self._hyperparams[key] = float(value)
             else:
-                self._alpha = props.get(ALPHA, 'opt')
-
-            if self._alpha != 'opt':
-                self._alpha = float(self._alpha)
-
-        # Get the beta parameter and if possible use the optimal value as a default
-        if 'K' in self._prior:
-            if 'M' in self._prior:
-                self._beta = props.get(BETA)
-                assert self._beta != 'opt', 'cannot optimize beta if the M+K prior is used'
-            else:
-                self._beta = props.get(BETA, 'opt')
-
-            if self._beta != 'opt':
-                self._beta = float(self._beta)
+                self._hyperparams[key] = 'opt'
 
         # Get the dofs of the fine mesh
         self._dof_types = globdat[gn.DOFSPACE].get_types()
@@ -94,6 +90,7 @@ class GPModel(Model):
 
         # Get the number of observations (which is the number of dofs in the coarse mesh)
         self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
+
 
     def _configure_fem(self, params, globdat):
 
@@ -110,12 +107,15 @@ class GPModel(Model):
         Kc, mf = c.constrain(K, mf)
 
         # Get the actual constrained stiffness matrix and force vector
+        Mc, fc = c.constrain(M, f)
         Kc, fc = c.constrain(K, f)
 
         # Store all constrained matrices and vectors
+        self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
         self._m = np.linalg.solve(Kc, mf)
+        self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi(globdat)
@@ -142,70 +142,73 @@ class GPModel(Model):
         self._Phic = phi
         globdat['Phic'] = self._Phic
 
-        # Get the observed force vector
-        self._y = self._Phic.T @ (self._fc - self._Kc @ self._m)
+        # Get the observation operator
+        self._H = self._Phic.T @ self._Kc
 
-        # Get the covariance matrix of the force vector
-        if self._prior == 'M':
-            Sigma_f = M.copy()
-            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
-            Sigma_f += self._pdnoise2 * np.identity(self._dc)
-            if self._alpha == 'opt':
-                self._alpha = self._get_param_opt(Sigma_f)
-                print('Setting alpha to optimal value: {:.4f}'.format(self._alpha))
-            Sigma_f *= self._alpha**2
+        # Get the observed force vector (as a deviation from the prior mean)
+        self._y = self._Phic.T @ self._fc - self._H @ self._m
 
-        elif self._prior == 'K':
-            Sigma_f = K.copy()
-            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
-            Sigma_f += self._pdnoise2 * np.identity(self._dc)
-            if self._beta == 'opt':
-                self._beta = self._get_param_opt(Sigma_f)
-                print('Setting beta to optimal value: {:.4f}'.format(self._beta))
-            Sigma_f *= self._beta**2
 
-        elif self._prior == 'M+K':
-            Sigma_f = self._alpha**2 * M.copy() + self._beta**2 * K.copy()
-            Sigma_f[cdofs,:] = Sigma_f[:,cdofs] = 0.0
-            Sigma_f += self._pdnoise2 * np.identity(self._dc)
+    def _configure_prior(self, params, globdat):
 
-        # Store the prior covariance
-        self._Sigma_f = Sigma_f
+        # Define a dictionary with relevant functions
+        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm}
+        eval_dict.update(self._hyperparams)
+
+        # Check if we have a kernel or SPDE covariance
+        if self._prior == 'kernel':
+
+            # Get the covariance matrix by looping over all dofs
+            self._Sigma = np.zeros((self._dc, self._dc))
+
+            nodes = globdat[gn.NSET]
+            dofspace = globdat[gn.DOFSPACE]
+
+            for i in range(len(nodes)):
+                icoords = nodes[i].get_coords()
+                idofs = dofspace.get_dofs([i], dofspace.get_types())
+                eval_dict['x0'] = icoords
+
+                for j in range(len(nodes)):
+                    jcoords = globdat[gn.NSET][j].get_coords()
+                    jdofs = dofspace.get_dofs([j], dofspace.get_types())
+                    eval_dict['x1'] = jcoords
+
+                    self._Sigma[np.ix_(idofs, jdofs)] = eval(self._kernel, eval_dict)
+
+        else:
+
+            # Add the mass and stiffness matrices to the dictionary
+            eval_dict['M'] = self._Mc
+            eval_dict['K'] = self._Kc
+
+            # Get the covariance matrix by 1 matrix evaluation
+            self._Sigma = eval(self._covariance, eval_dict)
+
+        # Set the covariance of the DBCs to 0
+        self._Sigma[self._cdofs,:] = self._Sigma[:,self._cdofs] = 0.0
+
+        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
+        self._Sigma += self._pdnoise2 * np.identity(self._dc)
 
 
     def _get_prior_mean(self, params, globdat):
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-
-        if field == 'u':
-
-            ###################
-            # PRIOR MEAN ON u #
-            ###################
-
-            # Return the prior of the displacement field
-            params[gppn.PRIORMEAN] = self._m
-
-        elif field == 'f':
-
-            ###################
-            # PRIOR MEAN ON f #
-            ###################
-
-            # Return the prior of the force field
-            params[gppn.PRIORMEAN] = self._Kc @ self._m
-
-        else:
-
-            raise ValueError(field)
+        # Return the prior of the displacement field
+        params[gppn.PRIORMEAN] = self._m
 
 
     def _get_posterior_mean(self, params, globdat):
 
+        ##################
+        # POSTERIOR MEAN #
+        ##################
+
+        # u_bar = Sigma * H.T * inv(H * Sigma * H.T + Sigma_e) * y
+
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -216,114 +219,44 @@ class GPModel(Model):
             self._v0 = np.linalg.solve(self._sqrtObs, self._y)
 
         # Get the posterior of the force field
-        if not '_f_post' in vars(self):
-            self._f_post = self._Kc @ self._m + self._Sigma_f @ self._Phic @ np.linalg.solve(self._sqrtObs.T, self._v0)
+        if not '_u_post' in vars(self):
+            self._u_post = self._m + self._Sigma @ self._H.T @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-
-        if field == 'u':
-
-            #######################
-            # POSTERIOR MEAN ON u #
-            #######################
-
-            # u_bar = alpha2 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
-
-            if not '_u_post' in vars(self):
-
-                # Solve to get the posterior of the displacement field
-                self._u_post = np.linalg.solve(self._Kc, self._f_post)
-
-            # Return the posterior of the displacement field
-            params[gppn.POSTERIORMEAN] = self._u_post
-
-        elif field == 'f':
-
-            #######################
-            # POSTERIOR MEAN ON f #
-            #######################
-
-            # f_bar = alpha2 * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
-
-            # Return the posterior of the force field
-            params[gppn.POSTERIORMEAN] = self._f_post
-
-        else:
-
-            raise ValueError(field)
+        # Return the posterior of the displacement field
+        params[gppn.POSTERIORMEAN] = self._u_post
 
 
     def _get_prior_covariance(self, params, globdat):
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
         fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
-        if field == 'u':
+        ####################
+        # PRIOR COVARIANCE #
+        ####################
 
-            #########################
-            # PRIOR COVARIANCE ON u #
-            #########################
-
-            # Sigma = alpha2 * inv(K) * M * inv(K)
-
-            # Do the cholesky decomposition of M only if necessary
-            if not '_sqrtM' in vars(self):
-                self._sqrtM = np.linalg.cholesky(self._Sigma_f)
-
-            # Solve the system for each dof
-            if not '_V2' in vars(self):
-                self._V2 = np.linalg.solve(self._Kc, self._sqrtM)
-
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_prior = self._V2 @ self._V2.T
-
-            else:
-
-                # Compute only the diagonal of the covariance matrix
-                var_prior = np.zeros(self._dc)
-                for i in range(self._dc):
-                    var_prior[i] = self._V2[i,:] @ self._V2[i,:].T
-
-        elif field == 'f':
-
-            #########################
-            # PRIOR COVARIANCE ON f #
-            #########################
-
-            # Sigma = alpha2 * M
-
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_prior = self._Sigma_f
-
-            else:
-
-                # If not, compute only the diagonal of the covariance matrix
-                var_prior = self._Sigma_f.diagonal()
-
-        else:
-
-            raise ValueError(field)
-
-        # Return either the full covariance matrix, or only its diagonal
+        # Check if the full covariance matrix should be returned
         if fullSigma:
+
+            # If so, compute the full covariance matrix
+            Sigma_prior = self._Sigma
             params[gppn.PRIORCOVARIANCE] = Sigma_prior
+
         else:
+
+            # If not, compute only the diagonal of the covariance matrix
+            var_prior = self._Sigma.diagonal()
             params[gppn.PRIORCOVARIANCE] = var_prior
 
 
     def _get_posterior_covariance(self, params, globdat):
 
-        # Check if the posterior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
         fullSigma = params.get(gppn.FULLCOVARIANCE, False)
+
+        ########################
+        # POSTERIOR COVARIANCE #
+        ########################
+
+        # Sigma_bar = Sigma - Sigma * H.T * inv(H * Sigma * H.T + Sigma_e) * H * Sigma
 
         # Check if the prior variance is given in the params, otherwise, take an action to obtain it
         if not gppn.PRIORCOVARIANCE in params:
@@ -334,7 +267,7 @@ class GPModel(Model):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -342,77 +275,40 @@ class GPModel(Model):
 
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._Phic.T @ self._Sigma_f)
+            self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
 
-        if field == 'u':
-
-            #############################
-            # POSTERIOR COVARIANCE ON u #
-            #############################
-
-            # Sigma = alpha2 * inv(K) * M * inv(K) - alpha4 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * phi.T * M * inv(K)
-
-            # Solve the system for each dof
-            if not '_V3' in vars(self):
-                self._V3 = np.linalg.solve(self._Kc, self._V1.T)
-
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_post = var_prior.copy()
-                Sigma_post -= self._V3 @ self._V3.T
-
-            else:
-
-                # If not, compute only the diagonal of the covariance matrix
-                var_post = var_prior.copy()
-                for i in range(self._dc):
-                    var_post[i] -= self._V3[i,:] @ self._V3[i,:].T
-
-        elif field == 'f':
-
-            #############################
-            # POSTERIOR COVARIANCE ON f #
-            #############################
-
-            # Sigma = alpha2 * M - alpha4 * M * phi * inv(alpha2 * phi.T * M * phi + Sigma_e) * phi.T * M
-
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_post = var_prior.copy()
-                Sigma_post -= self._V1.T @ self._V1
-
-            else:
-
-                # If not, compute only the diagonal of the covariance matrix
-                var_post = var_prior.copy()
-                for i in range(self._dc):
-                    var_post[i] -= self._V1[:,i].T @ self._V1[:,i]
-
-        else:
-
-            raise ValueError(field)
-
-        # Return either the full covariance matrix, or only its diagonal
+        # Check if the full covariance matrix should be returned
         if fullSigma:
+
+            # If so, compute the full covariance matrix
+            Sigma_post = var_prior.copy()
+            Sigma_post -= self._V1.T @ self._V1
             params[gppn.POSTERIORCOVARIANCE] = Sigma_post
+
         else:
+
+            # If not, compute only the diagonal of the covariance matrix
+            var_post = var_prior.copy()
+            for i in range(self._dc):
+                var_post[i] -= self._V1[:,i].T @ self._V1[:,i]
+
             params[gppn.POSTERIORCOVARIANCE] = var_post
 
 
     def _get_prior_samples(self, params, globdat):
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
 
-        # Do the cholesky decomposition of M only if necessary
-        if not '_sqrtM' in vars(self):
-            self._sqrtM = np.linalg.cholesky(self._Sigma_f)
+        #################
+        # PRIOR SAMPLES #
+        #################
+
+        # u = m + sqrt(Sigma) * z
+
+        # Do the cholesky decomposition of Sigma only if necessary
+        if not '_sqrtSig' in vars(self):
+            self._sqrtSig = np.linalg.cholesky(self._Sigma)
 
         # Define the array that stores the samples
         samples = np.zeros((self._dc, nsamples))
@@ -424,30 +320,9 @@ class GPModel(Model):
             z = rng.standard_normal(self._dc)
 
             # Get the sample of the force field
-            f = self._sqrtM @ z
+            u = self._sqrtSig @ z + self._m
 
-            if field == 'u':
-
-                #####################
-                # PRIOR SAMPLE ON u #
-                #####################
-
-                # Compute the corresponding displacement field
-                u = np.linalg.solve(self._Kc, f) + self._m
-
-                samples[:,i] = u
-
-            elif field == 'f':
-
-                #####################
-                # PRIOR SAMPLE ON f #
-                #####################
-
-                samples[:,i] = f + self._Kc @ self._m
-
-            else:
-
-                raise ValueError(field)
+            samples[:,i] = u
 
         # Return the array of samples
         params[gppn.PRIORSAMPLES] = samples
@@ -455,18 +330,22 @@ class GPModel(Model):
 
     def _get_posterior_samples(self, params, globdat):
 
-        # Check if the posterior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
 
-        # Do the cholesky decomposition of M only if necessary
-        if not '_sqrtM' in vars(self):
-            self._sqrtM = np.linalg.cholesky(self._Sigma_f)
+        #####################
+        # POSTERIOR SAMPLES #
+        #####################
+
+        # u = m + sqrt(Sigma) * z1 + Sigma * H.T * inv(H * Sigma * H + Sigma_e) * (y - H * sqrt(Sigma) * z1 + sqrt(Sigma_e) * z2)
+
+        # Do the cholesky decomposition of Sigma only if necessary
+        if not '_sqrtSig' in vars(self):
+            self._sqrtSig = np.linalg.cholesky(self._Sigma)
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -487,66 +366,37 @@ class GPModel(Model):
             z2 = rng.standard_normal(self._nobs)
 
             # Get x1 ~ N(0, alpha^2 M) and x2 ~ N(0, Sigma_e)
-            x1 = self._sqrtM @ z1
+            x1 = self._sqrtSig @ z1
             x2 = self._sqrtNoise @ z2
 
             # Compute the perturbed observation
-            f_pert = self._y - self._Phic.T @ x1 + x2
+            u_pert = self._y - self._H @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
-            f = np.linalg.solve(self._sqrtObs, f_pert)
-            f = np.linalg.solve(self._sqrtObs.T, f)
-            f = self._Sigma_f @ self._Phic @ f
+            u = np.linalg.solve(self._sqrtObs, u_pert)
+            u = np.linalg.solve(self._sqrtObs.T, u)
+            u = self._Sigma @ self._H.T @ u
 
-            # Add the prior sample
-            f += x1
+            # Add the prior sample and mean
+            u += x1 + self._m
 
-            if field == 'u':
-
-                #########################
-                # POSTERIOR SAMPLE ON u #
-                #########################
-
-                # Compute the corresponding displacement field
-                u = np.linalg.solve(self._Kc, f) + self._m
-
-                samples[:,i] = u
-
-            elif field == 'f':
-
-                #########################
-                # POSTERIOR SAMPLE ON f #
-                #########################
-
-                samples[:,i] = f + self._Kc @ self._m
-
-            else:
-
-                raise ValueError(field)
+            samples[:,i] = u
 
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples
 
 
-    def _get_param_opt(self, Sigma_fc):
-
-        #################
-        # OPTIMAL ALPHA #
-        #################
-
-        # If so, determine the optimal value of alpha
-        L = np.linalg.cholesky(self._Phic.T @ Sigma_fc @ self._Phic)
-        v = np.linalg.solve(L, self._y)
-        alpha2 = v.T @ v / self._nobs
-
-        return np.sqrt(alpha2)
-
-
     def _get_log_likelihood(self, params, globdat):
+
+        ##################
+        # LOG LIKELIHOOD #
+        ##################
+
+        # l = - 1/2 * y * inv(H * Sigma * H.T + Sigma_e) * y - 1/2 * log|H * Sigma * H.T + Sigma_e| - n/2 * log(2*pi)
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._Phic.T @ self._Sigma_f @ self._Phic + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -555,12 +405,6 @@ class GPModel(Model):
         # Solve the system for the observed forces
         if not '_v0' in vars(self):
             self._v0 = np.linalg.solve(self._sqrtObs, self._y)
-
-        ##################
-        # LOG LIKELIHOOD #
-        ##################
-
-        # l = - 1/2 * y * inv(Sigma + Sigma_e) * y - 1/2 * log|Sigma + Sigma_e| - n/2 * log(2*pi)
 
         l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
 
@@ -641,6 +485,7 @@ class GPModel(Model):
 
         return phi
 
+
     def _get_variances(self, params, globdat):
 
         table = params[pn.TABLE]
@@ -652,32 +497,10 @@ class GPModel(Model):
             if dof_type not in table:
                 table[dof_type] = np.zeros(len(globdat[gn.NSET]))
 
-        # if 'dx' not in table:
-        #     table['dx'] = np.zeros(len(globdat[gn.NSET]))
-        # if len(self._dof_types) > 1:
-        #     if 'dy' not in table:
-        #         table['dy'] = np.zeros(len(globdat[gn.NSET]))
-        # if len(self._dof_types) > 2:
-        #     if 'dz' not in table:
-        #         table['dz'] = np.zeros(len(globdat[gn.NSET]))
-
         # Define a dictionary for the settings of u
-        u_params = {}
-        u_params[gppn.FIELD] = 'u'
-        u_params[gppn.FULLCOVARIANCE] = False
+        u_params = {gppn.FULLCOVARIANCE:False}
 
-        # Define a dictionary for the settings of f
-        f_params = {}
-        f_params[gppn.FIELD] = 'f'
-        f_params[gppn.FULLCOVARIANCE] = False
-
-        if name == 'var_f_prior':
-            self._get_prior_covariance(f_params, globdat)
-            var = f_params[gppn.PRIORCOVARIANCE]
-        elif name == 'var_f_post':
-            self._get_posterior_covariance(f_params, globdat)
-            var = f_params[gppn.POSTERIORCOVARIANCE]
-        elif name == 'var_u_prior':
+        if name == 'var_u_prior':
             self._get_prior_covariance(u_params, globdat)
             var = u_params[gppn.PRIORCOVARIANCE]
         elif name == 'var_u_post':
@@ -697,16 +520,8 @@ class GPModel(Model):
                 for i, dof_type in enumerate(self._dof_types):
                     table[dof_type][inode] = var[idofs[i]]
 
-                # table['dx'][inode] = var[idofs[0]]
-                # if len(self._dof_types) > 1:
-                #     table['dy'][inode] = var[idofs[1]]
-                # if len(self._dof_types) > 2:
-                #     table['dz'][inode] = var[idofs[2]]
+                tbwts[inode] = 1
 
-                if any(idof in cdofs for idof in idofs):
-                    tbwts[inode] = np.inf
-                else:
-                    tbwts[inode] = 1
 
     def _get_standard_deviations(self, params, globdat):
         table = params[pn.TABLE]
@@ -721,6 +536,7 @@ class GPModel(Model):
             table[comp] = np.sqrt(table[comp])
 
         params[pn.TABLENAME] = name
+
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

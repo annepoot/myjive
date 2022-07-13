@@ -67,6 +67,7 @@ class ParamNames:
 
 class GPActions:
     CONFIGUREFEM = 'configureFEM'
+    CONFIGUREPRIOR = 'configurePrior'
     GETPRIORMEAN = 'getPriorMean'
     GETPRIORCOVARIANCE = 'getPriorCovariance'
     GETPOSTERIORMEAN = 'getPosteriorMean'

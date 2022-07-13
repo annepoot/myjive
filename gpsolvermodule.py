@@ -10,6 +10,7 @@ from solvermodule import SolverModule
 from constrainer import Constrainer
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
+GETFORCERESULTS = 'getForceResults'
 
 class GPSolverModule(SolverModule):
 
@@ -19,7 +20,9 @@ class GPSolverModule(SolverModule):
         super().init(props, globdat)
 
         myprops = props[self._name]
-        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX,'False')))
+        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'False')))
+        self._get_force_results = bool(eval(myprops.get(GETFORCERESULTS, 'False')))
+
 
     def run(self, globdat):
 
@@ -41,45 +44,36 @@ class GPSolverModule(SolverModule):
 
         # Configure the GP based on the fine FEM results
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
+        model.take_action(gpact.CONFIGUREPRIOR, params, globdat)
 
-        # Define a dictionary for the settings of u
-        u_params = {}
-        u_params[gppn.FIELD] = 'u'
-        u_params[gppn.FULLCOVARIANCE] = False
+        if self._get_force_results:
+            fields = ['u', 'f']
+        else:
+            fields = ['u']
 
-        # Define a dictionary for the settings of f
-        f_params = {}
-        f_params[gppn.FIELD] = 'f'
-        f_params[gppn.FULLCOVARIANCE] = False
+        for field in fields:
 
-        # Take the appropriate actions for u
-        model.take_action(gpact.GETPRIORMEAN, u_params, globdat)
-        model.take_action(gpact.GETPOSTERIORMEAN, u_params, globdat)
-        model.take_action(gpact.GETPRIORCOVARIANCE, u_params, globdat)
-        model.take_action(gpact.GETPOSTERIORCOVARIANCE, u_params, globdat)
+            # Define a dictionary for the settings of u
+            params = {}
+            params[gppn.FIELD] = field
+            params[gppn.FULLCOVARIANCE] = False
 
-        # Take the appropriate actions for f
-        model.take_action(gpact.GETPRIORMEAN, f_params, globdat)
-        model.take_action(gpact.GETPOSTERIORMEAN, f_params, globdat)
-        model.take_action(gpact.GETPRIORCOVARIANCE, f_params, globdat)
-        model.take_action(gpact.GETPOSTERIORCOVARIANCE, f_params, globdat)
+            # Take the appropriate actions for u
+            model.take_action(gpact.GETPRIORMEAN, params, globdat)
+            model.take_action(gpact.GETPOSTERIORMEAN, params, globdat)
+            model.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
+            model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
 
-        # Get the log likelihood
-        model.take_action(gpact.GETLOGLIKELIHOOD, u_params, globdat)
-        model.take_action(gpact.GETLOGLIKELIHOOD, f_params, globdat)
+            # Get the log likelihood
+            model.take_action(gpact.GETLOGLIKELIHOOD, params, globdat)
 
-        # Optionally store stiffness matrix in Globdat
-        if ( self._store_matrix ):
-            globdat['f_prior'] = f_params[gppn.PRIORMEAN]
-            globdat['u_prior'] = u_params[gppn.PRIORMEAN]
-            globdat['f_post'] = f_params[gppn.POSTERIORMEAN]
-            globdat['u_post'] = u_params[gppn.POSTERIORMEAN]
-            globdat['var_f_prior'] = f_params[gppn.PRIORCOVARIANCE]
-            globdat['var_f_post'] = f_params[gppn.POSTERIORCOVARIANCE]
-            globdat['var_u_prior'] = u_params[gppn.PRIORCOVARIANCE]
-            globdat['var_u_post'] = u_params[gppn.POSTERIORCOVARIANCE]
-            assert u_params[gppn.LOGLIKELIHOOD] == f_params[gppn.LOGLIKELIHOOD]
-            globdat['logLikelihood'] = u_params[gppn.LOGLIKELIHOOD]
+            # Optionally store stiffness matrix in Globdat
+            if self._store_matrix:
+                globdat[field+'_prior'] = params[gppn.PRIORMEAN]
+                globdat[field+'_post'] = params[gppn.POSTERIORMEAN]
+                globdat['var_'+field+'_prior'] = params[gppn.PRIORCOVARIANCE]
+                globdat['var_'+field+'_post'] = params[gppn.POSTERIORCOVARIANCE]
+                globdat['logLikelihood'] = params[gppn.LOGLIKELIHOOD]
 
         return output
 

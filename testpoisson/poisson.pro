@@ -40,6 +40,7 @@ gpsolver =
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
+  getForceResults = True;
 };
 
 gpsampler =
@@ -73,18 +74,28 @@ model =
     };
   };
 
+
   gp =
   {
-     type = GP;
+    type = GPf;
 
-     obsNoise = 1e-5;
-     alpha = opt;
+    prior =
+    {
+      type = SPDE;
+      func = alpha**2 * M;
+      hyperparams =
+      {
+        alpha = opt;
+      };
+    };
 
-     shape =
-     {
-       type = Triangle3;
-       intScheme = Gauss1;
-     };
+    obsNoise = 1e-5;
+
+    shape =
+    {
+      type = Triangle3;
+      intScheme = Gauss1;
+    };
   };
 
   diri =

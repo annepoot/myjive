@@ -80,14 +80,21 @@ model =
 
   gp =
   {
-    type = GP;
+    type = GPf;
 
     obsNoise = 1e-10;
     alpha = opt;
 
-    prior = M+K;
-    alpha = 1;
-    beta = 1;
+    prior =
+    {
+      type = SPDE;
+      func = alpha**2 * M + beta**2 * K;
+      hyperparams =
+      {
+        alpha = 1;
+        beta = 1;
+      };
+    };
 
     shape =
     {

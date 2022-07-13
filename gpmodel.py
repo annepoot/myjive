@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import solve, solve_triangular
 
 from names import Actions as act
 from names import GPActions as gpact
@@ -21,7 +22,6 @@ SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 PDNOISE = 'pdNoise'
 
-# DOFTYPES = ['dx', 'dy']
 
 class GPModel(Model):
 
@@ -152,7 +152,7 @@ class GPModel(Model):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm}
+        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Check if we have a kernel or SPDE covariance
@@ -206,21 +206,13 @@ class GPModel(Model):
 
         # u_bar = Sigma * H.T * inv(H * Sigma * H.T + Sigma_e) * y
 
-        # Get the observation covariance matrix
-        if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
-
-        # Do the cholesky decomposition of Sigma_obs only if necessary
-        if not '_sqrtObs' in vars(self):
-            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
-
-        # Solve the system for the observed forces
-        if not '_v0' in vars(self):
-            self._v0 = np.linalg.solve(self._sqrtObs, self._y)
+        # Get the relevant matrices
+        self._get_sqrtObs()
+        self._get_v0()
 
         # Get the posterior of the force field
         if not '_u_post' in vars(self):
-            self._u_post = self._m + self._Sigma @ self._H.T @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            self._u_post = self._m + self._premul_Sigma(self._H.T @ solve_triangular(self._sqrtObs.T, self._v0, lower=False))
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
@@ -265,17 +257,8 @@ class GPModel(Model):
         # Get the prior variance from the params
         var_prior = params[gppn.PRIORCOVARIANCE]
 
-        # Get the observation covariance matrix
-        if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
-
-        # Do the cholesky decomposition of Sigma_obs only if necessary
-        if not '_sqrtObs' in vars(self):
-            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
-
-        # Solve the inverse observation covariance once for each observation
-        if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
+        # Get the relevant matrices
+        self._get_V1()
 
         # Check if the full covariance matrix should be returned
         if fullSigma:
@@ -306,9 +289,8 @@ class GPModel(Model):
 
         # u = m + sqrt(Sigma) * z
 
-        # Do the cholesky decomposition of Sigma only if necessary
-        if not '_sqrtSig' in vars(self):
-            self._sqrtSig = np.linalg.cholesky(self._Sigma)
+        # Get the relevant matrices
+        self._get_sqrtSigma()
 
         # Define the array that stores the samples
         samples = np.zeros((self._dc, nsamples))
@@ -317,10 +299,12 @@ class GPModel(Model):
         for i in range(nsamples):
 
             # Get a sample from the standard normal distribution
-            z = rng.standard_normal(self._dc)
+            # NOTE: self._sqrtSigma.shape[1] does not have to be the same as self._dc
+            # For example, if Ensemble Kalman is used, it is equal to self._nens instead.
+            z = rng.standard_normal(self._sqrtSigma.shape[1])
 
             # Get the sample of the force field
-            u = self._sqrtSig @ z + self._m
+            u = self._sqrtSigma @ z + self._m
 
             samples[:,i] = u
 
@@ -339,21 +323,10 @@ class GPModel(Model):
 
         # u = m + sqrt(Sigma) * z1 + Sigma * H.T * inv(H * Sigma * H + Sigma_e) * (y - H * sqrt(Sigma) * z1 + sqrt(Sigma_e) * z2)
 
-        # Do the cholesky decomposition of Sigma only if necessary
-        if not '_sqrtSig' in vars(self):
-            self._sqrtSig = np.linalg.cholesky(self._Sigma)
-
-        # Get the observation covariance matrix
-        if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
-
-        # Do the cholesky decomposition of Sigma_obs only if necessary
-        if not '_sqrtObs' in vars(self):
-            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
-
-        # Do the cholesky decomposion of the noise only if necesary
-        if not '_sqrtNoise' in vars(self):
-            self._sqrtNoise = np.sqrt(self._noise2) * np.identity(self._nobs)
+        # Get the relevant matrices
+        self._get_sqrtObs()
+        self._get_sqrtSigma()
+        self._get_sqrtNoise()
 
         # Define the array that stores the samples
         samples = np.zeros((self._dc, nsamples))
@@ -362,20 +335,23 @@ class GPModel(Model):
         for i in range(nsamples):
 
             # Get two samples from the standard normal distribution
-            z1 = rng.standard_normal(self._dc)
+            # Get a sample from the standard normal distribution
+            # NOTE: self._sqrtSigma.shape[1] does not have to be the same as self._dc
+            # For example, if Ensemble Kalman is used, it is equal to self._nens instead.
+            z1 = rng.standard_normal(self._sqrtSigma.shape[1])
             z2 = rng.standard_normal(self._nobs)
 
             # Get x1 ~ N(0, alpha^2 M) and x2 ~ N(0, Sigma_e)
-            x1 = self._sqrtSig @ z1
+            x1 = self._sqrtSigma @ z1
             x2 = self._sqrtNoise @ z2
 
             # Compute the perturbed observation
             u_pert = self._y - self._H @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
-            u = np.linalg.solve(self._sqrtObs, u_pert)
-            u = np.linalg.solve(self._sqrtObs.T, u)
-            u = self._Sigma @ self._H.T @ u
+            u = solve_triangular(self._sqrtObs, u_pert, lower=True)
+            u = solve_triangular(self._sqrtObs.T, u, lower=False)
+            u = self._premul_Sigma(self._H.T @ u)
 
             # Add the prior sample and mean
             u += x1 + self._m
@@ -394,17 +370,9 @@ class GPModel(Model):
 
         # l = - 1/2 * y * inv(H * Sigma * H.T + Sigma_e) * y - 1/2 * log|H * Sigma * H.T + Sigma_e| - n/2 * log(2*pi)
 
-        # Get the observation covariance matrix
-        if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
-
-        # Do the cholesky decomposition of Sigma_obs only if necessary
-        if not '_sqrtObs' in vars(self):
-            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
-
-        # Solve the system for the observed forces
-        if not '_v0' in vars(self):
-            self._v0 = np.linalg.solve(self._sqrtObs, self._y)
+        # Get the relevant matrices
+        self._get_sqrtObs()
+        self._get_v0()
 
         l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
 
@@ -537,6 +505,48 @@ class GPModel(Model):
 
         params[pn.TABLENAME] = name
 
+
+    def _get_Sigma_obs(self):
+
+        if not '_Sigma_obs' in vars(self):
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
+
+    def _get_sqrtObs(self):
+
+        if not '_sqrtObs' in vars(self):
+            self._get_Sigma_obs()
+            self._sqrtObs = np.linalg.cholesky(self._Sigma_obs)
+
+    def _get_sqrtSigma(self):
+
+        if not '_sqrtSigma' in vars(self):
+            self._sqrtSigma = np.linalg.cholesky(self._Sigma)
+
+    def _get_sqrtNoise(self):
+
+        if not '_sqrtNoise' in vars(self):
+            self._sqrtNoise = np.sqrt(self._noise2) * np.identity(self._nobs)
+
+    def _get_v0(self):
+
+        if not '_v0' in vars(self):
+            self._get_sqrtObs()
+            self._v0 = solve_triangular(self._sqrtObs, self._y, lower=True)
+
+    def _get_V1(self):
+
+        if not '_V1' in vars(self):
+            self._get_sqrtObs()
+            # self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
+            self._V1 = self._postmul_Sigma(solve_triangular(self._sqrtObs, self._H, lower=True))
+
+    def _premul_Sigma(self, X):
+
+        return self._Sigma @ X
+
+    def _postmul_Sigma(self, X):
+
+        return X @ self._Sigma
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

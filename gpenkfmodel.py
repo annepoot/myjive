@@ -20,175 +20,41 @@ RANDOMOBS = 'randomObs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 PDNOISE = 'pdNoise'
+ENSEMBLE = 'ensemble'
 
 
-class GPEnKfModel(GPModel):
-
-    def take_action(self, action, params, globdat):
-        print('GPModel taking action', action)
-
-        if action == gpact.CONFIGUREFEM:
-            self._configure_fem(params, globdat)
-        elif action == gpact.CONFIGUREPRIOR:
-            self._configure_prior(params, globdat)
-        elif action == gpact.GETPRIORMEAN:
-            self._get_prior_mean(params, globdat)
-        elif action == gpact.GETPRIORCOVARIANCE:
-            self._get_prior_covariance(params, globdat)
-        elif action == gpact.GETPOSTERIORMEAN:
-            self._get_posterior_mean(params, globdat)
-        elif action == gpact.GETPOSTERIORCOVARIANCE:
-            self._get_posterior_covariance(params, globdat)
-        elif action == gpact.GETPRIORSAMPLES:
-            self._get_prior_samples(params, globdat)
-        elif action == gpact.GETPOSTERIORSAMPLES:
-            self._get_posterior_samples(params, globdat)
-        elif action == gpact.GETLOGLIKELIHOOD:
-            self._get_log_likelihood(params, globdat)
-        elif action == act.GETTABLE:
-            if 'var' in params[pn.TABLENAME]:
-                self._get_variances(params, globdat)
-            elif 'std' in params[pn.TABLENAME]:
-                self._get_standard_deviations(params, globdat)
-
+class GPEnKFModel(GPModel):
 
     def configure(self, props, globdat):
-        self._dc = globdat[gn.DOFSPACE].dof_count()
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
-        self._rank = self._shape.global_rank()
 
-        # Get the observational noise, and pd noise
-        self._noise2 = float(props.get(OBSNOISE))**2
-        self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
+        super().configure(props, globdat)
 
-        # Get the prior properties
-        self._prior = props[PRIOR][TYPE]
-        if self._prior == 'kernel':
-            self._kernel = props[PRIOR][FUNC]
-        elif self._prior == 'SPDE':
-            self._covariance = props[PRIOR][FUNC]
-        else:
-            raise ValueError('prior has to be "kernel" or "SPDE"')
-
-        self._hyperparams = {}
-        for key, value in props[PRIOR][HYPERPARAMS].items():
-            if value != 'opt':
-                self._hyperparams[key] = float(value)
-            else:
-                self._hyperparams[key] = 'opt'
-
-        # Get the dofs of the fine mesh
-        self._dof_types = globdat[gn.DOFSPACE].get_types()
-
-        # Add the dofs to the coarse mesh
-        nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
-        for doftype in self._dof_types:
-            globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
-                globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
-
-        # Get the number of observations (which is the number of dofs in the coarse mesh)
-        self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
-
-
-    def _configure_fem(self, params, globdat):
-
-        # Get K, M and f from globdat
-        K = globdat.get(gn.MATRIX0)
-        M = globdat.get(gn.MATRIX2)
-        f = globdat.get(gn.EXTFORCE)
-        c = globdat.get(gn.CONSTRAINTS)
-
-        cdofs, cvals = c.get_constraints()
-
-        # The posterior mean force vector has to contain the Dirichlet BCs
-        mf = np.zeros_like(f)
-        Kc, mf = c.constrain(K, mf)
-
-        # Get the actual constrained stiffness matrix and force vector
-        Mc, fc = c.constrain(M, f)
-        Kc, fc = c.constrain(K, f)
-
-        # Store all constrained matrices and vectors
-        self._Mc = Mc
-        self._Kc = Kc
-        self._fc = fc
-        self._m = np.linalg.solve(Kc, mf)
-        self._cdofs = cdofs
-
-        # Get the phi matrix, and constrain the Dirichlet BCs
-        phi = self._get_phi(globdat)
-
-        self._Phi = phi.copy()
-        globdat['Phi'] = self._Phi
-
-        for i in range(phi.shape[1]):
-            for cdof in cdofs:
-                if np.isclose(phi[cdof,i], 1):
-                    for j in range(phi.shape[0]):
-
-                        # Note: this construction is here, because the entries of phi that belong to other DBCs should not be set to 0
-                        # This specifically happens if DBCs are applied along an edge.
-                        if j == cdof:
-                            assert np.isclose(phi[j,:i], 0).all()
-                            assert np.isclose(phi[j,i+1:], 0).all()
-
-                            phi[j,i] = 1.0
-
-                        elif not j in cdofs:
-                            phi[j,i] = 0.0
-
-        self._Phic = phi
-        globdat['Phic'] = self._Phic
-
-        # Get the observation operator
-        self._H = self._Phic.T @ self._Kc
-
-        # Get the observed force vector (as a deviation from the prior mean)
-        self._y = self._Phic.T @ self._fc - self._H @ self._m
+        self._nens = props.get(ENSEMBLE, 100)
 
 
     def _configure_prior(self, params, globdat):
 
-        # Define a dictionary with relevant functions
-        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
-        eval_dict.update(self._hyperparams)
+        # !!! Note: here, Sigma is still being assembled.
+        # How to get the ensemble without sampling from the prior?
+        super()._configure_prior(params, globdat)
 
-        # Check if we have a kernel or SPDE covariance
-        if self._prior == 'kernel':
+        # Get the ensemble from the prior distribution
+        params = {gppn.NSAMPLE:self._nens}
 
-            # Get the covariance matrix by looping over all dofs
-            self._Sigma = np.zeros((self._dc, self._dc))
+        super()._get_prior_samples(params, globdat)
 
-            nodes = globdat[gn.NSET]
-            dofspace = globdat[gn.DOFSPACE]
+        # Get the ensemble back from the array
+        self._X = params[gppn.PRIORSAMPLES]
 
-            for i in range(len(nodes)):
-                icoords = nodes[i].get_coords()
-                idofs = dofspace.get_dofs([i], dofspace.get_types())
-                eval_dict['x0'] = icoords
+        # Get the mean of X, and the deviation from the mean
+        EX = np.mean(self._X, axis=1)
+        self._A = self._X - np.tile(EX, (self._nens,1)).T
 
-                for j in range(len(nodes)):
-                    jcoords = globdat[gn.NSET][j].get_coords()
-                    jdofs = dofspace.get_dofs([j], dofspace.get_types())
-                    eval_dict['x1'] = jcoords
+        # Compute the product of H and A (which is nobs x nens)
+        self._HA = self._H @ self._A
 
-                    self._Sigma[np.ix_(idofs, jdofs)] = eval(self._kernel, eval_dict)
-
-        else:
-
-            # Add the mass and stiffness matrices to the dictionary
-            eval_dict['M'] = self._Mc
-            eval_dict['K'] = self._Kc
-
-            # Get the covariance matrix by 1 matrix evaluation
-            self._Sigma = eval(self._covariance, eval_dict)
-
-        # Set the covariance of the DBCs to 0
-        self._Sigma[self._cdofs,:] = self._Sigma[:,self._cdofs] = 0.0
-
-        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        self._Sigma += self._pdnoise2 * np.identity(self._dc)
+        # Delete Sigma altogether, to make sure it's never used
+        del self._Sigma
 
 
     def _get_prior_mean(self, params, globdat):
@@ -207,7 +73,7 @@ class GPEnKfModel(GPModel):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._HA @ self._HA.T / (self._nens-1) + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -219,7 +85,7 @@ class GPEnKfModel(GPModel):
 
         # Get the posterior of the force field
         if not '_u_post' in vars(self):
-            self._u_post = self._m + self._Sigma @ self._H.T @ np.linalg.solve(self._sqrtObs.T, self._v0)
+            self._u_post = self._m + self._A @ self._HA.T @ np.linalg.solve(self._sqrtObs.T, self._v0) / (self._nens-1)
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
@@ -237,13 +103,16 @@ class GPEnKfModel(GPModel):
         if fullSigma:
 
             # If so, compute the full covariance matrix
-            Sigma_prior = self._Sigma
+            Sigma_prior = self._A @ self._A.T / (self._nens - 1)
             params[gppn.PRIORCOVARIANCE] = Sigma_prior
 
         else:
 
             # If not, compute only the diagonal of the covariance matrix
-            var_prior = self._Sigma.diagonal()
+            var_prior = np.zeros(self._dc)
+            for i in range(self._dc):
+                var_prior[i] = self._A[i,:] @ self._A[i,:].T / (self._nens - 1)
+
             params[gppn.PRIORCOVARIANCE] = var_prior
 
 
@@ -266,7 +135,7 @@ class GPEnKfModel(GPModel):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._HA @ self._HA.T / (self._nens-1) + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -274,7 +143,7 @@ class GPEnKfModel(GPModel):
 
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
-            self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
+            self._V1 = np.linalg.solve(self._sqrtObs, self._HA @ self._A.T / (self._nens-1))
 
         # Check if the full covariance matrix should be returned
         if fullSigma:
@@ -307,7 +176,7 @@ class GPEnKfModel(GPModel):
 
         # Do the cholesky decomposition of Sigma only if necessary
         if not '_sqrtSig' in vars(self):
-            self._sqrtSig = np.linalg.cholesky(self._Sigma)
+            self._sqrtSig = self._A / np.sqrt(self._nens-1)
 
         # Define the array that stores the samples
         samples = np.zeros((self._dc, nsamples))
@@ -340,11 +209,11 @@ class GPEnKfModel(GPModel):
 
         # Do the cholesky decomposition of Sigma only if necessary
         if not '_sqrtSig' in vars(self):
-            self._sqrtSig = np.linalg.cholesky(self._Sigma)
+            self._sqrtSig = self._A / np.sqrt(self._nens-1)
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._HA @ self._HA.T / (self._nens-1) + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -374,7 +243,7 @@ class GPEnKfModel(GPModel):
             # Multiply the perturbed observation by the Kalman gain
             u = np.linalg.solve(self._sqrtObs, u_pert)
             u = np.linalg.solve(self._sqrtObs.T, u)
-            u = self._Sigma @ self._H.T @ u
+            u = self._A @ self._HA.T @ u / (self._nens-1)
 
             # Add the prior sample and mean
             u += x1 + self._m
@@ -395,7 +264,7 @@ class GPEnKfModel(GPModel):
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
-            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
+            self._Sigma_obs = self._HA @ self._HA.T / (self._nens-1) + np.identity(self._nobs) * self._noise2
 
         # Do the cholesky decomposition of Sigma_obs only if necessary
         if not '_sqrtObs' in vars(self):
@@ -538,4 +407,4 @@ class GPEnKfModel(GPModel):
 
 
 def declare(factory):
-    factory.declare_model('GPEnKf', GPEnKfModel)
+    factory.declare_model('GPEnKF', GPEnKFModel)

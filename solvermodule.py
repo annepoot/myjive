@@ -38,7 +38,7 @@ class SolverModule(Module):
         print('Running time step', self._step)
         globdat[gn.TIMESTEP] = self._step
 
-        K = np.zeros((dc, dc))
+        K = sparse.csr_array((dc, dc))
         f = np.zeros(dc)
         c = Constrainer()
 
@@ -58,7 +58,7 @@ class SolverModule(Module):
 
         # Optionally get the mass matrix
         if self._get_mass_matrix:
-            M = np.zeros((dc, dc))
+            M = sparse.csr_array((dc, dc))
             params[pn.MATRIX2] = M
             model.take_action(act.GETMATRIX2, params, globdat)
 

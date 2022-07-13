@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.linalg import solve, solve_triangular
+from scipy.linalg import spsolve, solve_triangular
 
 from names import Actions as act
 from names import GPActions as gpact
@@ -114,7 +114,7 @@ class GPModel(Model):
         self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
-        self._m = np.linalg.solve(Kc, mf)
+        self._m = spsolve(Kc, mf)
         self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -537,7 +537,6 @@ class GPModel(Model):
 
         if not '_V1' in vars(self):
             self._get_sqrtObs()
-            # self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
             self._V1 = self._postmul_Sigma(solve_triangular(self._sqrtObs, self._H, lower=True))
 
     def _premul_Sigma(self, X):

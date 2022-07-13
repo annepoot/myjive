@@ -145,8 +145,8 @@ class GPModel(Model):
         # Get the observation operator
         self._H = self._Phic.T @ self._Kc
 
-        # Get the observed force vector
-        self._y = self._Phic.T @ (self._fc - self._Kc @ self._m)
+        # Get the observed force vector (as a deviation from the prior mean)
+        self._y = self._Phic.T @ self._fc - self._H @ self._m
 
 
     def _configure_prior(self, params, globdat):
@@ -200,6 +200,12 @@ class GPModel(Model):
 
     def _get_posterior_mean(self, params, globdat):
 
+        ##################
+        # POSTERIOR MEAN #
+        ##################
+
+        # u_bar = Sigma * H.T * inv(H * Sigma * H.T + Sigma_e) * y
+
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
             self._Sigma_obs = self._H @ self._Sigma @ self._H.T + np.identity(self._nobs) * self._noise2
@@ -216,12 +222,6 @@ class GPModel(Model):
         if not '_u_post' in vars(self):
             self._u_post = self._m + self._Sigma @ self._H.T @ np.linalg.solve(self._sqrtObs.T, self._v0)
 
-        #######################
-        # POSTERIOR MEAN ON u #
-        #######################
-
-        # u_bar = alpha2 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * f_obs
-
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
 
@@ -230,11 +230,9 @@ class GPModel(Model):
 
         fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
-        #########################
-        # PRIOR COVARIANCE ON u #
-        #########################
-
-        # Sigma = alpha2 * inv(K) * M * inv(K)
+        ####################
+        # PRIOR COVARIANCE #
+        ####################
 
         # Check if the full covariance matrix should be returned
         if fullSigma:
@@ -254,6 +252,12 @@ class GPModel(Model):
 
         fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
+        ########################
+        # POSTERIOR COVARIANCE #
+        ########################
+
+        # Sigma_bar = Sigma - Sigma * H.T * inv(H * Sigma * H.T + Sigma_e) * H * Sigma
+
         # Check if the prior variance is given in the params, otherwise, take an action to obtain it
         if not gppn.PRIORCOVARIANCE in params:
             self.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
@@ -272,12 +276,6 @@ class GPModel(Model):
         # Solve the inverse observation covariance once for each observation
         if not '_V1' in vars(self):
             self._V1 = np.linalg.solve(self._sqrtObs, self._H @ self._Sigma)
-
-        #############################
-        # POSTERIOR COVARIANCE ON u #
-        #############################
-
-        # Sigma = alpha2 * inv(K) * M * inv(K) - alpha4 * inv(K) * M * phi * inv(alpha2 * phi.T * M * phi.T + Sigma_e) * phi.T * M * inv(K)
 
         # Check if the full covariance matrix should be returned
         if fullSigma:
@@ -301,6 +299,12 @@ class GPModel(Model):
 
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
+
+        #################
+        # PRIOR SAMPLES #
+        #################
+
+        # u = m + sqrt(Sigma) * z
 
         # Do the cholesky decomposition of Sigma only if necessary
         if not '_sqrtSig' in vars(self):
@@ -328,6 +332,12 @@ class GPModel(Model):
 
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
+
+        #####################
+        # POSTERIOR SAMPLES #
+        #####################
+
+        # u = m + sqrt(Sigma) * z1 + Sigma * H.T * inv(H * Sigma * H + Sigma_e) * (y - H * sqrt(Sigma) * z1 + sqrt(Sigma_e) * z2)
 
         # Do the cholesky decomposition of Sigma only if necessary
         if not '_sqrtSig' in vars(self):
@@ -370,10 +380,6 @@ class GPModel(Model):
             # Add the prior sample and mean
             u += x1 + self._m
 
-            #########################
-            # POSTERIOR SAMPLE ON u #
-            #########################
-
             samples[:,i] = u
 
         # Return the array of samples
@@ -381,6 +387,12 @@ class GPModel(Model):
 
 
     def _get_log_likelihood(self, params, globdat):
+
+        ##################
+        # LOG LIKELIHOOD #
+        ##################
+
+        # l = - 1/2 * y * inv(H * Sigma * H.T + Sigma_e) * y - 1/2 * log|H * Sigma * H.T + Sigma_e| - n/2 * log(2*pi)
 
         # Get the observation covariance matrix
         if not '_Sigma_obs' in vars(self):
@@ -393,12 +405,6 @@ class GPModel(Model):
         # Solve the system for the observed forces
         if not '_v0' in vars(self):
             self._v0 = np.linalg.solve(self._sqrtObs, self._y)
-
-        ##################
-        # LOG LIKELIHOOD #
-        ##################
-
-        # l = - 1/2 * y * inv(Sigma + Sigma_e) * y - 1/2 * log|Sigma + Sigma_e| - n/2 * log(2*pi)
 
         l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
 

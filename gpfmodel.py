@@ -59,18 +59,10 @@ class GPfModel(GPModel):
 
         if field == 'u':
 
-            ###################
-            # PRIOR MEAN ON u #
-            ###################
-
             # Return the prior of the displacement field
             params[gppn.PRIORMEAN] = np.linalg.solve(self._Kc, self._m)
 
         elif field == 'f':
-
-            ###################
-            # PRIOR MEAN ON f #
-            ###################
 
             # Return the prior of the force field
             params[gppn.PRIORMEAN] = self._m
@@ -240,11 +232,7 @@ class GPfModel(GPModel):
 
     def _get_param_opt(self, Sigma_fc):
 
-        #################
-        # OPTIMAL ALPHA #
-        #################
-
-        # If so, determine the optimal value of alpha
+        # Determine the optimal value of alpha
         L = np.linalg.cholesky(self._H @ Sigma_fc @ self._H.T)
         v = np.linalg.solve(L, self._y)
         alpha2 = v.T @ v / self._nobs

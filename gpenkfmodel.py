@@ -42,8 +42,7 @@ class GPEnKFModel(GPModel):
         # u = m + sqrt(Sigma) * z
 
         # Get the relevant matrices
-        # self._get_sqrtSigma()
-        sqrtSigma = 0.1 * np.diag(np.sqrt(self._Mc.diagonal()))
+        sqrtSigma = np.linalg.cholesky(self._Sigma)
 
         rng = params.get(gppn.RNG, np.random.default_rng())
 
@@ -57,9 +56,9 @@ class GPEnKFModel(GPModel):
             z = rng.standard_normal(self._dc)
 
             # Get the sample of the force field
-            f = sqrtSigma @ z + self._m
+            u = sqrtSigma @ z + self._m
 
-            self._X[:,i] = solve(self._Kc, f)
+            self._X[:,i] = u
 
         # Get the mean of X, and the deviation from the mean
         EX = np.mean(self._X, axis=1)

@@ -82,9 +82,6 @@ model =
   {
     type = GPf;
 
-    obsNoise = 1e-10;
-    alpha = opt;
-
     prior =
     {
       type = SPDE;
@@ -95,6 +92,8 @@ model =
         beta = 1;
       };
     };
+
+    obsNoise = 1e-10;
 
     shape =
     {

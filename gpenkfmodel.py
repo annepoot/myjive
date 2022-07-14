@@ -1,9 +1,14 @@
 import numpy as np
+import scipy.sparse as spsp
+import scipy.sparse.linalg as spspla
 
 from names import GPParamNames as gppn
 from gpmodel import GPModel
 
 ENSEMBLE = 'ensemble'
+PRIOR = 'prior'
+PREMULTIPLIER = 'premultiplier'
+DIAGONALIZED = 'diagonalized'
 
 
 class GPEnKFModel(GPModel):
@@ -12,19 +17,40 @@ class GPEnKFModel(GPModel):
 
         super().configure(props, globdat)
 
-        self._nens = props.get(ENSEMBLE, 100)
-
+        self._nens = int(props.get(ENSEMBLE, 100))
+        self._premultiplier = props[PRIOR].get(PREMULTIPLIER, None)
+        self._diagonalized = props[PRIOR].get(DIAGONALIZED, not self._premultiplier is None)
 
     def _configure_prior(self, params, globdat):
 
-        # !!! Note: here, Sigma is still being assembled.
-        # How to get the ensemble without sampling from the prior?
-        super()._configure_prior(params, globdat)
+        # Define a dictionary with relevant functions
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict.update(self._hyperparams)
 
-        # u = m + sqrt(Sigma) * z
+        # Add the mass and stiffness matrices to the dictionary
+        eval_dict['M'] = self._Mc
+        eval_dict['K'] = self._Kc
 
-        # Get the relevant matrices
-        sqrtSigma = np.linalg.cholesky(self._Sigma)
+        # Get the covariance matrix
+        Sigma = eval(self._covariance, eval_dict)
+
+        # Get the premultiplier matrix (if necessary)
+        if not self._premultiplier is None:
+            preK = eval(self._premultiplier, eval_dict)
+
+        # Apply boundary conditions to the prior
+        Sigma = self._apply_covariance_bcs(Sigma)
+
+        # Check if we have a diagonalizable prior
+        if self._diagonalized:
+
+            # If so, get the cholesky root from the diagonal
+            sqrtSigma = spsp.diags(np.sqrt(Sigma.sum(axis=1)), format='csr')
+
+        else:
+
+            # If not, do a full Cholesky decomposition
+            sqrtSigma = np.linalg.cholesky(Sigma)
 
         rng = params.get(gppn.RNG, np.random.default_rng())
 
@@ -40,6 +66,11 @@ class GPEnKFModel(GPModel):
             # Get the sample of the force field
             u = sqrtSigma @ z + self._m
 
+            # Apply the premultiplier matrix to each sample (if necessary)
+            if not self._premultiplier is None:
+                u = spspla.spsolve(preK, u)
+
+            # Add the sample to the ensemble
             self._X[:,i] = u
 
         # Get the mean of X, and the deviation from the mean
@@ -48,9 +79,6 @@ class GPEnKFModel(GPModel):
 
         # Compute the product of H and A (which is nobs x nens)
         self._HA = self._H @ self._A
-
-        # Delete Sigma altogether, to make sure it's never used
-        del self._Sigma
 
 
     def _get_prior_covariance(self, params, globdat):

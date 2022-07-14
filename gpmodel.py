@@ -1,6 +1,7 @@
 import numpy as np
-from scipy.linalg import solve_triangular
-from scipy.sparse.linalg import spsolve, inv
+import scipy.sparse as spsp
+import scipy.linalg as spla
+import scipy.sparse.linalg as spspla
 
 from names import Actions as act
 from names import GPActions as gpact
@@ -60,16 +61,17 @@ class GPModel(Model):
         self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
 
         # Get the prior properties
-        self._prior = props[PRIOR][TYPE]
+        priorprops = props[PRIOR]
+        self._prior = priorprops[TYPE]
         if self._prior == 'kernel':
-            self._kernel = props[PRIOR][FUNC]
+            self._kernel = priorprops[FUNC]
         elif self._prior == 'SPDE':
-            self._covariance = props[PRIOR][FUNC]
+            self._covariance = priorprops[FUNC]
         else:
             raise ValueError('prior has to be "kernel" or "SPDE"')
 
         self._hyperparams = {}
-        for key, value in props[PRIOR][HYPERPARAMS].items():
+        for key, value in priorprops[HYPERPARAMS].items():
             if value != 'opt':
                 self._hyperparams[key] = float(value)
             else:
@@ -111,7 +113,7 @@ class GPModel(Model):
         self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
-        self._m = spsolve(Kc, mf)
+        self._m = spspla.spsolve(Kc, mf)
         self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -149,7 +151,7 @@ class GPModel(Model):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Check if we have a kernel or SPDE covariance
@@ -182,12 +184,8 @@ class GPModel(Model):
             # Get the covariance matrix by 1 matrix evaluation
             self._Sigma = eval(self._covariance, eval_dict)
 
-        # Set the covariance of the DBCs to 0
-        self._Sigma[self._cdofs,:] = self._Sigma[:,self._cdofs] = 0.0
-
-        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        self._Sigma += self._pdnoise2 * np.identity(self._dc)
-
+        # Apply boundary conditions to the prior
+        self._Sigma = self._apply_covariance_bcs(self._Sigma)
 
     def _get_prior_mean(self, params, globdat):
 
@@ -209,7 +207,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_u_post' in vars(self):
-            self._u_post = self._m + self._premul_Sigma(self._H.T @ solve_triangular(self._sqrtObs.T, self._v0, lower=False))
+            self._u_post = self._m + self._premul_Sigma(self._H.T @ spla.solve_triangular(self._sqrtObs.T, self._v0, lower=False))
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
@@ -346,8 +344,8 @@ class GPModel(Model):
             u_pert = self._y - self._H @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
-            u = solve_triangular(self._sqrtObs, u_pert, lower=True)
-            u = solve_triangular(self._sqrtObs.T, u, lower=False)
+            u = spla.solve_triangular(self._sqrtObs, u_pert, lower=True)
+            u = spla.solve_triangular(self._sqrtObs.T, u, lower=False)
             u = self._premul_Sigma(self._H.T @ u)
 
             # Add the prior sample and mean
@@ -451,6 +449,21 @@ class GPModel(Model):
         return phi
 
 
+    def _apply_covariance_bcs(self, Sigma):
+        Sigmac = Sigma.copy()
+
+        # Set the covariance of the DBCs to 0
+        Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
+
+        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
+        if hasattr(Sigma, 'todense'):
+            Sigmac += self._pdnoise2 * spsp.identity(self._dc, format='csr')
+        else:
+            Sigmac += self._pdnoise2 * np.identity(self._dc)
+
+        return Sigmac
+
+
     def _get_variances(self, params, globdat):
 
         table = params[pn.TABLE]
@@ -517,7 +530,10 @@ class GPModel(Model):
     def _get_sqrtSigma(self):
 
         if not '_sqrtSigma' in vars(self):
-            self._sqrtSigma = np.linalg.cholesky(self._Sigma)
+            if hasattr(self._Sigma, 'todense'):
+                self._sqrtSigma = spsp.csr_array(np.linalg.cholesky(self._Sigma.todense()))
+            else:
+                self._sqrtSigma = np.linalg.cholesky(self._Sigma)
 
     def _get_sqrtNoise(self):
 
@@ -528,13 +544,13 @@ class GPModel(Model):
 
         if not '_v0' in vars(self):
             self._get_sqrtObs()
-            self._v0 = solve_triangular(self._sqrtObs, self._y, lower=True)
+            self._v0 = spla.solve_triangular(self._sqrtObs, self._y, lower=True)
 
     def _get_V1(self):
 
         if not '_V1' in vars(self):
             self._get_sqrtObs()
-            self._V1 = self._postmul_Sigma(solve_triangular(self._sqrtObs, self._H, lower=True))
+            self._V1 = self._postmul_Sigma(spla.solve_triangular(self._sqrtObs, self._H, lower=True))
 
     def _premul_Sigma(self, X):
 

@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.linalg import solve_triangular
-from scipy.sparse.linalg import spsolve, inv
+import scipy.linalg as spla
+import scipy.sparse.linalg as spspla
 
 from names import Actions as act
 from names import GPActions as gpact
@@ -111,7 +111,7 @@ class GPModel(Model):
         self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
-        self._m = spsolve(Kc, mf)
+        self._m = spspla.spsolve(Kc, mf)
         self._cdofs = cdofs
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -149,7 +149,7 @@ class GPModel(Model):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Check if we have a kernel or SPDE covariance
@@ -209,7 +209,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_u_post' in vars(self):
-            self._u_post = self._m + self._premul_Sigma(self._H.T @ solve_triangular(self._sqrtObs.T, self._v0, lower=False))
+            self._u_post = self._m + self._premul_Sigma(self._H.T @ spla.solve_triangular(self._sqrtObs.T, self._v0, lower=False))
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
@@ -346,8 +346,8 @@ class GPModel(Model):
             u_pert = self._y - self._H @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
-            u = solve_triangular(self._sqrtObs, u_pert, lower=True)
-            u = solve_triangular(self._sqrtObs.T, u, lower=False)
+            u = spla.solve_triangular(self._sqrtObs, u_pert, lower=True)
+            u = spla.solve_triangular(self._sqrtObs.T, u, lower=False)
             u = self._premul_Sigma(self._H.T @ u)
 
             # Add the prior sample and mean
@@ -528,13 +528,13 @@ class GPModel(Model):
 
         if not '_v0' in vars(self):
             self._get_sqrtObs()
-            self._v0 = solve_triangular(self._sqrtObs, self._y, lower=True)
+            self._v0 = spla.solve_triangular(self._sqrtObs, self._y, lower=True)
 
     def _get_V1(self):
 
         if not '_V1' in vars(self):
             self._get_sqrtObs()
-            self._V1 = self._postmul_Sigma(solve_triangular(self._sqrtObs, self._H, lower=True))
+            self._V1 = self._postmul_Sigma(spla.solve_triangular(self._sqrtObs, self._H, lower=True))
 
     def _premul_Sigma(self, X):
 

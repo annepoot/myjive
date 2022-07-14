@@ -1,6 +1,6 @@
 import numpy as np
-from scipy.sparse import diags, identity
-from scipy.sparse.linalg import spsolve, inv
+import scipy.sparse as spsp
+import scipy.sparse.linalg as spspla
 
 from names import GPParamNames as gppn
 from gpmodel import GPModel
@@ -25,7 +25,7 @@ class GPEnKFModel(GPModel):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Add the mass and stiffness matrices to the dictionary
@@ -39,7 +39,7 @@ class GPEnKFModel(GPModel):
         Sigma[self._cdofs,:] = Sigma[:,self._cdofs] = 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        Sigma += self._pdnoise2 * identity(self._dc)
+        Sigma += self._pdnoise2 * spsp.identity(self._dc)
 
         # Get the premultiplier matrix (if necessary)
         if not self._premultiplier is None:
@@ -49,7 +49,7 @@ class GPEnKFModel(GPModel):
         if self._diagonalized:
 
             # If so, get the cholesky root from the diagonal
-            sqrtSigma = diags(np.sqrt(Sigma.diagonal()), format='csr')
+            sqrtSigma = spsp.diags(np.sqrt(Sigma.diagonal()), format='csr')
 
         else:
 
@@ -72,7 +72,7 @@ class GPEnKFModel(GPModel):
 
             # Apply the premultiplier matrix to each sample (if necessary)
             if not self._premultiplier is None:
-                u = spsolve(preK, u)
+                u = spspla.spsolve(preK, u)
 
             # Add the sample to the ensemble
             self._X[:,i] = u

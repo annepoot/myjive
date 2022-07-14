@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.sparse import csr_array
+import scipy.sparse as spsp
 
 from names import GlobNames as gn
 from names import ParamNames as pn
@@ -35,7 +35,7 @@ class GPSolverModule(SolverModule):
 
         # Optionally get the mass matrix
         if self._get_unit_mass_matrix:
-            M = csr_array((dc, dc))
+            M = spsp.csr_array((dc, dc))
             params = {pn.MATRIX2: M}
             model.take_action(act.GETUNITMATRIX2, params, globdat)
 

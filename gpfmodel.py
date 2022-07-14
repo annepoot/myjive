@@ -1,24 +1,11 @@
 import numpy as np
-from scipy.linalg import solve_triangular
-from scipy.sparse.linalg import spsolve
+import scipy.linalg as spla
+import scipy.sparse.linalg as spspla
 
-from names import Actions as act
 from names import GPActions as gpact
-from names import ParamNames as pn
 from names import GPParamNames as gppn
 from names import GlobNames as gn
-from names import PropNames as prn
 from gpmodel import GPModel
-
-NOBS = 'nobs'
-OBSNOISE = 'obsNoise'
-ALPHA = 'alpha'
-BETA = 'beta'
-PRIOR = 'prior'
-RANDOMOBS = 'randomObs'
-SHAPE = 'shape'
-INTSCHEME = 'intScheme'
-PDNOISE = 'pdNoise'
 
 
 class GPfModel(GPModel):
@@ -61,7 +48,7 @@ class GPfModel(GPModel):
         if field == 'u':
 
             # Return the prior of the displacement field
-            params[gppn.PRIORMEAN] = spsolve(self._Kc, self._m)
+            params[gppn.PRIORMEAN] = spspla.spsolve(self._Kc, self._m)
 
         elif field == 'f':
 
@@ -84,7 +71,7 @@ class GPfModel(GPModel):
         if field == 'u':
 
             # Solve to get the posterior of the displacement field
-            params[gppn.POSTERIORMEAN] = spsolve(self._Kc, params[gppn.POSTERIORMEAN])
+            params[gppn.POSTERIORMEAN] = spspla.spsolve(self._Kc, params[gppn.POSTERIORMEAN])
 
         elif field == 'f':
 
@@ -111,7 +98,7 @@ class GPfModel(GPModel):
 
             # Solve the system for each dof
             if not '_V2' in vars(self):
-                self._V2 = spsolve(self._Kc, self._sqrtSigma)
+                self._V2 = spspla.spsolve(self._Kc, self._sqrtSigma)
 
             # Check if the full covariance matrix should be returned
             if fullSigma:
@@ -161,7 +148,7 @@ class GPfModel(GPModel):
 
             # Solve the system for each coarse dof
             if not '_V3' in vars(self):
-                self._V3 = spsolve(self._Kc, self._V1.T)
+                self._V3 = spspla.spsolve(self._Kc, self._V1.T)
 
             # Check if the full covariance matrix should be returned
             if fullSigma:
@@ -200,7 +187,7 @@ class GPfModel(GPModel):
         if field == 'u':
 
             # Compute the corresponding displacement field for each sample
-            params[gppn.PRIORSAMPLES] = spsolve(self._Kc, params[gppn.PRIORSAMPLES])
+            params[gppn.PRIORSAMPLES] = spspla.spsolve(self._Kc, params[gppn.PRIORSAMPLES])
 
         elif field == 'f':
 
@@ -222,7 +209,7 @@ class GPfModel(GPModel):
         if field == 'u':
 
             # Compute the corresponding displacement field for each sample
-            params[gppn.POSTERIORSAMPLES] = spsolve(self._Kc, params[gppn.POSTERIORSAMPLES])
+            params[gppn.POSTERIORSAMPLES] = spspla.spsolve(self._Kc, params[gppn.POSTERIORSAMPLES])
 
         elif field == 'f':
 
@@ -237,7 +224,7 @@ class GPfModel(GPModel):
 
         # Determine the optimal value of alpha
         L = np.linalg.cholesky(self._H @ Sigma_fc @ self._H.T)
-        v = solve_triangular(L, self._y)
+        v = spla.solve_triangular(L, self._y)
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)

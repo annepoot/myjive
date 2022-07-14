@@ -80,13 +80,17 @@ model =
     prior =
     {
       type = SPDE;
-      func = alpha**2 * inv(K) @ M @ inv(K);
+      func = alpha**2 * M;
       hyperparams =
       {
-        alpha = 0.1;
+        alpha = 1;
+        beta = 3;
       };
+      premultiplier = M + beta**2 * K;
+      diagonalized = True;
     };
 
+    ensemble = 1000;
     obsNoise = 1e-5;
 
     shape =

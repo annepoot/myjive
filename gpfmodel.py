@@ -164,6 +164,10 @@ class GPfModel(GPModel):
             if not '_V3' in vars(self):
                 self._V3 = spspla.spsolve(self._Kc, self._V1.T)
 
+            # Convert to dense if necessary
+            if hasattr(self._V3, 'todense'):
+                self._V3 = self._V3.todense()
+
             # Check if the full covariance matrix should be returned
             if fullSigma:
 

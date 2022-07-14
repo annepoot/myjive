@@ -17,8 +17,6 @@ PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
 HYPERPARAMS = 'hyperparams'
-DIAGONALIZED = 'diagonalized'
-SPARSE = 'sparse'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 
@@ -459,7 +457,7 @@ class GPModel(Model):
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         if hasattr(Sigma, 'todense'):
-            Sigmac += self._pdnoise2 * spsp.identity(self._dc)
+            Sigmac += self._pdnoise2 * spsp.identity(self._dc, format='csr')
         else:
             Sigmac += self._pdnoise2 * np.identity(self._dc)
 

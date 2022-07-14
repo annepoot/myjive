@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as spsp
 import scipy.linalg as spla
 import scipy.sparse.linalg as spspla
 
@@ -7,8 +8,17 @@ from names import GPParamNames as gppn
 from names import GlobNames as gn
 from gpmodel import GPModel
 
+PRIOR = 'prior'
+DIAGONALIZED = 'diagonalized'
+
 
 class GPfModel(GPModel):
+
+    def configure(self, props, globdat):
+
+        super().configure(props, globdat)
+
+        self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
 
 
     def _configure_prior(self, params, globdat):
@@ -32,8 +42,8 @@ class GPfModel(GPModel):
                 else:
                     raise ValueError('cannot find optimal value for ' + key)
 
-                Sigma[self._cdofs,:] = Sigma[:,self._cdofs] = 0.0
-                Sigma += self._pdnoise2 * np.identity(self._dc)
+                # Apply boundary conditions to the prior
+                Sigma = self._apply_covariance_bcs(Sigma)
 
                 self._hyperparams[key] = self._get_param_opt(Sigma)
 
@@ -99,6 +109,10 @@ class GPfModel(GPModel):
             # Solve the system for each dof
             if not '_V2' in vars(self):
                 self._V2 = spspla.spsolve(self._Kc, self._sqrtSigma)
+
+            # Convert to dense if necessary
+            if hasattr(self._V2, 'todense'):
+                self._V2 = self._V2.todense()
 
             # Check if the full covariance matrix should be returned
             if fullSigma:
@@ -228,6 +242,18 @@ class GPfModel(GPModel):
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)
+
+
+    def _get_sqrtSigma(self):
+
+        if not '_sqrtSigma' in vars(self):
+            if self._diagonalized:
+                self._sqrtSigma = spsp.diags(np.sqrt(self._Sigma.sum(axis=1)), format='csr')
+            else:
+                if hasattr(self._Sigma, 'todense'):
+                    self._sqrtSigma = spsp.csr_array(np.linalg.cholesky(self._Sigma.todense()))
+                else:
+                    self._sqrtSigma = np.linalg.cholesky(self._Sigma)
 
 
 def declare(factory):

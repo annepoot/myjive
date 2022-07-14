@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as spsp
 import scipy.linalg as spla
 import scipy.sparse.linalg as spspla
 
@@ -16,6 +17,8 @@ PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
 HYPERPARAMS = 'hyperparams'
+DIAGONALIZED = 'diagonalized'
+SPARSE = 'sparse'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 
@@ -60,16 +63,17 @@ class GPModel(Model):
         self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
 
         # Get the prior properties
-        self._prior = props[PRIOR][TYPE]
+        priorprops = props[PRIOR]
+        self._prior = priorprops[TYPE]
         if self._prior == 'kernel':
-            self._kernel = props[PRIOR][FUNC]
+            self._kernel = priorprops[FUNC]
         elif self._prior == 'SPDE':
-            self._covariance = props[PRIOR][FUNC]
+            self._covariance = priorprops[FUNC]
         else:
             raise ValueError('prior has to be "kernel" or "SPDE"')
 
         self._hyperparams = {}
-        for key, value in props[PRIOR][HYPERPARAMS].items():
+        for key, value in priorprops[HYPERPARAMS].items():
             if value != 'opt':
                 self._hyperparams[key] = float(value)
             else:
@@ -182,12 +186,8 @@ class GPModel(Model):
             # Get the covariance matrix by 1 matrix evaluation
             self._Sigma = eval(self._covariance, eval_dict)
 
-        # Set the covariance of the DBCs to 0
-        self._Sigma[self._cdofs,:] = self._Sigma[:,self._cdofs] = 0.0
-
-        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        self._Sigma += self._pdnoise2 * np.identity(self._dc)
-
+        # Apply boundary conditions to the prior
+        self._Sigma = self._apply_covariance_bcs(self._Sigma)
 
     def _get_prior_mean(self, params, globdat):
 
@@ -451,6 +451,21 @@ class GPModel(Model):
         return phi
 
 
+    def _apply_covariance_bcs(self, Sigma):
+        Sigmac = Sigma.copy()
+
+        # Set the covariance of the DBCs to 0
+        Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
+
+        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
+        if hasattr(Sigma, 'todense'):
+            Sigmac += self._pdnoise2 * spsp.identity(self._dc)
+        else:
+            Sigmac += self._pdnoise2 * np.identity(self._dc)
+
+        return Sigmac
+
+
     def _get_variances(self, params, globdat):
 
         table = params[pn.TABLE]
@@ -517,7 +532,10 @@ class GPModel(Model):
     def _get_sqrtSigma(self):
 
         if not '_sqrtSigma' in vars(self):
-            self._sqrtSigma = np.linalg.cholesky(self._Sigma)
+            if hasattr(self._Sigma, 'todense'):
+                self._sqrtSigma = spsp.csr_array(np.linalg.cholesky(self._Sigma.todense()))
+            else:
+                self._sqrtSigma = np.linalg.cholesky(self._Sigma)
 
     def _get_sqrtNoise(self):
 

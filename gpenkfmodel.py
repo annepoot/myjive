@@ -21,7 +21,6 @@ class GPEnKFModel(GPModel):
         self._premultiplier = props[PRIOR].get(PREMULTIPLIER, None)
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, not self._premultiplier is None)
 
-
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
@@ -35,21 +34,18 @@ class GPEnKFModel(GPModel):
         # Get the covariance matrix
         Sigma = eval(self._covariance, eval_dict)
 
-        # Set the covariance of the DBCs to 0
-        Sigma[self._cdofs,:] = Sigma[:,self._cdofs] = 0.0
-
-        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        Sigma += self._pdnoise2 * spsp.identity(self._dc)
-
         # Get the premultiplier matrix (if necessary)
         if not self._premultiplier is None:
             preK = eval(self._premultiplier, eval_dict)
+
+        # Apply boundary conditions to the prior
+        Sigma = self._apply_covariance_bcs(Sigma)
 
         # Check if we have a diagonalizable prior
         if self._diagonalized:
 
             # If so, get the cholesky root from the diagonal
-            sqrtSigma = spsp.diags(np.sqrt(Sigma.diagonal()), format='csr')
+            sqrtSigma = spsp.diags(np.sqrt(Sigma.sum(axis=1)), format='csr')
 
         else:
 

@@ -83,11 +83,9 @@ model =
       func = alpha**2 * M;
       hyperparams =
       {
-        alpha = 1;
-        beta = 3;
+        alpha = 0.1;
       };
-      premultiplier = M + beta**2 * K;
-      diagonalized = True;
+      premultiplier = K;
     };
 
     ensemble = 1000;

@@ -7,6 +7,7 @@ import numpy as np
 import main
 import proputils as pu
 import testutils as tu
+import plotutils as plu
 from copy import deepcopy
 
 def mesher_lin(L, n, fname='2nodebar_coarse'):
@@ -69,14 +70,33 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
+folder = '/home/anne/Storage/owncloud/phd/latex/go-no-go/img/1d-bar/'
+
 plt.figure()
 plt.plot(xf, u_post, label='posterior mean')
 plt.plot(xf, u_prior, label='prior mean')
-plt.plot(xf, samples_u_post, color='gray', linewidth=0.2)
-plt.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
+plt.plot(xf, samples_u_post, color='gray', linewidth=0.2, alpha=0.3)
+plt.plot(xf, samples_u_prior, color='gray', linewidth=0.2, alpha=0.3)
 plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
 plt.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
 plt.plot(xc, u_coarse, label='coarse solution')
 plt.plot(xf, u, label='fine solution')
 plt.legend()
+# plt.savefig(fname=folder+'1d-bar-results.pdf')
 plt.show()
+
+plu.create_dat(data=xf,
+                headers='x',
+                fname=folder+'mesh')
+
+plu.create_dat(data=[u_prior, u_post, std_u_prior, std_u_post, Phi @ u_coarse, u],
+               headers=['u_prior', 'u_posterior', 'std_u_prior', 'std_u_posterior', 'u_coarse', 'u_fine'],
+               fname=folder+'results')
+
+plu.create_dat(data=samples_u_prior,
+               headers='prior_sample_{}',
+               fname=folder+'samples_prior')
+
+plu.create_dat(data=samples_u_post,
+               headers='posterior_sample_{}',
+               fname=folder+'samples_posterior')

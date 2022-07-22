@@ -1,6 +1,6 @@
 # BFEM
 A Bayesian Finite Element Method.
-The fundamental ideas setup of BFEM can be found [here](https://hal.archives-ouvertes.fr/hal-03719275/).
+An explanation of the fundamental setup of BFEM can be found [here](https://hal.archives-ouvertes.fr/hal-03719275/).
 
 ## Contributors
 Anne Poot (a.poot-1@tudelft.nl), Pierre Kerfriden (pierre.kerfriden@minesparis.psl.eu), Iuri Rocha (i.rocha@tudeft.nl), Frans van der Meer (f.p.vandermeer@tudelft.nl)

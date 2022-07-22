@@ -121,3 +121,10 @@ model =
     values = [ -1. ];
   };
 };
+
+vtkout =
+{
+  file = results;
+  type = VTKOut;
+  tables = [ stress, strain ];
+};

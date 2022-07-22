@@ -14,24 +14,16 @@ gpinit =
     file = beam_coarse.msh;
   };
 
-  nodeGroups = [ lb, rb, tm ];
+  nodeGroups = [ l, r ];
 
-  lb =
+  l =
   {
     xtype = min;
-    ytype = min;
   };
 
-  rb =
+  r =
   {
     xtype = max;
-    ytype = min;
-  };
-
-  tm =
-  {
-    ytype = max;
-    xtype = mid;
   };
 };
 
@@ -59,7 +51,7 @@ model =
 {
   type = Multi;
 
-  models = [ elastic, gp, diri, neum ];
+  models = [ elastic, gp, diri ];
 
   elastic =
   {
@@ -107,18 +99,9 @@ model =
   {
     type = Dirichlet;
 
-    groups = [ lb, lb, rb ];
-    dofs   = [ dx, dy, dy ];
-    values = [ 0., 0., 0. ];
-  };
-
-  neum =
-  {
-    type = Neumann;
-
-    groups = [ tm ];
-    dofs   = [ dy ];
-    values = [ -1. ];
+    groups = [ l,  l ];
+    dofs   = [ dx, dy ];
+    values = [ 0., 0. ];
   };
 };
 

@@ -10,7 +10,7 @@ import testutils as tu
 from quickviewer import QuickViewer
 from copy import deepcopy
 
-props = pu.parse_file('beam.pro')
+props = pu.parse_file('cantilever.pro')
 
 props_c = {}
 props_c['init'] = deepcopy(props['gpinit'])
@@ -18,7 +18,7 @@ props_c['init']['type'] = 'Init'
 props_c['solver'] = deepcopy(props['gpsolver'])
 props_c['solver']['type'] = 'Solver'
 props_c['model'] = deepcopy(props['model'])
-props_c['model']['models'] = '[ elastic, diri, neum ]'
+props_c['model']['models'] = '[ elastic, diri ]'
 props_c['init']['mesh']['file'] = 'beam_coarse.msh'
 
 globdat_c = main.jive(props_c)

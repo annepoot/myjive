@@ -1,5 +1,6 @@
 # BFEM
 A Bayesian Finite Element Method.
+https://hal.archives-ouvertes.fr/hal-03719275/
 
 ## Contributors
 Anne Poot (a.poot-1@tudelft.nl)

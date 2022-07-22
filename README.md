@@ -1,3 +1,30 @@
+# BFEM
+A Bayesian Finite Element Method.
+
+## Contributors
+Anne Poot (a.poot-1@tudelft.nl)
+Pierre Kerfriden (pierre.kerfriden@minesparis.psl.eu)
+Iuri Rocha (i.rocha@tudeft.nl)
+Frans van der Meer (f.p.vandermeer@tudelft.nl)
+
+## Examples
+All BFEM-related examples are stored in a directory that starts with `gp`.
+- `gpbeam`: BFEM applied to a three-point bending problem (similar to `beam`)
+- `gpbar`: BFEM applied to an axially loaded bar problem (similar to `bar`)
+- `gppoisson`: BFEM applied to a poisson problem
+- `gptapered`: similar to `gpbar`, but the bar is tapered, and inhomogeneous Dirichlet boundary conditions have been applied
+- `gpensemble`: similar to `gptapered`, but unlike the other examples an Ensemble Kalman Filter is used instead of an exact Kalman update
+
+## GP Modules
+- `gpinitmodule`: initializes coarse mesh (child class of `initmodule`)
+- `gpsolvermodule`: assembles the prior and performs the Kalman update to obtain the posterior (child class of `solvermodule`)
+- `gpsamplermodule`: draws samples from the prior and posterior
+
+## GP Models
+- `gpmodel`: fundamental BFEM model, performing all calculations exactly and making no assumptions on the prior
+- `gpfmodel`: assumes that the prior can be defined on $`K u`$ (i.e. $`f`$) instead of $`u`$ (child class of `gpmodel`)
+- `gpenkfmodel`: implements the posterior update using an Ensemble Kalman Filter instead of the exact Kalman update (child class of `gpmodel`)
+
 # pyJive
 A python Finite Element library inspired by jive
 

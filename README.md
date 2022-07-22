@@ -1,12 +1,9 @@
 # BFEM
 A Bayesian Finite Element Method.
-https://hal.archives-ouvertes.fr/hal-03719275/
+The fundamental ideas setup of BFEM can be found [here](https://hal.archives-ouvertes.fr/hal-03719275/).
 
 ## Contributors
-Anne Poot (a.poot-1@tudelft.nl)
-Pierre Kerfriden (pierre.kerfriden@minesparis.psl.eu)
-Iuri Rocha (i.rocha@tudeft.nl)
-Frans van der Meer (f.p.vandermeer@tudelft.nl)
+Anne Poot (a.poot-1@tudelft.nl), Pierre Kerfriden (pierre.kerfriden@minesparis.psl.eu), Iuri Rocha (i.rocha@tudeft.nl), Frans van der Meer (f.p.vandermeer@tudelft.nl)
 
 ## Examples
 All BFEM-related examples are stored in a directory that starts with `gp`.
@@ -30,9 +27,7 @@ All BFEM-related examples are stored in a directory that starts with `gp`.
 A python Finite Element library inspired by jive
 
 ## Contributors
-Iuri Rocha (i.rocha@tudelft.nl)
-Frans van der Meer (f.p.vandermeer@tudelft.nl)
-Andres Martinez Colan
+Iuri Rocha (i.rocha@tudelft.nl), Frans van der Meer (f.p.vandermeer@tudelft.nl), Andres Martinez Colan
 
 ## Philosophy
 The library works with *modules* and *models*. Modules define the flow of the program, e.g. the `solvermodule` defines that a matrix and RHS vector need to be assembled after which a linear system of equation is solved. Models define how the main task are implemented, e.g. the `elasticmodel` that assembles the stiffness matrix for an elasticity problem.

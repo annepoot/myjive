@@ -13,7 +13,7 @@ nsamples = 10
 rng = np.random.default_rng(0)
 
 with open('damaged_beams.dat', 'w') as f:
-    f.write('sample E_pure nu deteriorations risk node x y dx dy E_true')
+    f.write('sample E_pure nu deteriorations intervention node x y dx dy E_true\n')
 
     for sample in range(nsamples):
         E = np.exp(rng.normal(np.log(10000), 0.1))
@@ -26,7 +26,7 @@ with open('damaged_beams.dat', 'w') as f:
         elif n_det > 4:
             risk = 'maintenance'
         else:
-            risk = 'none'
+            risk = 'unnecessary'
 
         props['model']['solid']['material']['E'] = E
         props['model']['solid']['material']['nu'] = nu
@@ -42,9 +42,9 @@ with open('damaged_beams.dat', 'w') as f:
         for i, node in enumerate(nodes):
             coords = node.get_coords()
 
-            f.write('{sample:d} {E_pure:f} {nu:f} {n_det:d} {risk:s} {node} {x:f} {y:f} {dx:f} {dy:f} {E_true:f}'.format(
+            f.write('{sample:d} {E_pure:f} {nu:f} {n_det:d} {risk:s} {node} {x:f} {y:f} {dx:f} {dy:f} {E_true:f}\n'.format(
                 sample=sample,
-                E_pure=E_pure,
+                E_pure=E,
                 nu=nu,
                 n_det=n_det,
                 risk=risk,

@@ -25,11 +25,11 @@ with open('damaged_beams.dat', 'w') as f:
         E = np.exp(rng.normal(np.log(10000), 0.1))
         nu = np.exp(rng.normal(np.log(0.2), 0.1))
 
-        n_det = int(10 * sample / nsamples)
+        n_det = int(20 * sample / nsamples)
 
-        if n_det > 8:
+        if n_det > 15:
             risk = 'demolition'
-        elif n_det > 4:
+        elif n_det > 7:
             risk = 'maintenance'
         else:
             risk = 'unnecessary'

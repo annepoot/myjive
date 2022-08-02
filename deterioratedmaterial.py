@@ -7,6 +7,7 @@ DETER_PROP = 'deteriorations'
 SCALE_PROP = 'scale'
 SEED_PROP = 'seed'
 MAXSTD_PROP = 'stdMax'
+MINSTD_PROP = 'stdMin'
 SHAPE = 'shape'
 TYPE = 'type'
 INTSCHEME = 'intScheme'
@@ -20,6 +21,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         self._ndet = int(props[DETER_PROP])
         self._detscale = float(props.get(SCALE_PROP, 1.0))
         self._maxstd = float(props.get(MAXSTD_PROP, 1.0))
+        self._minstd = float(props.get(MINSTD_PROP, 0.0))
 
         self._seed = None
         if SEED_PROP in props:
@@ -69,5 +71,5 @@ class DeterioratedMaterial(HeterogeneousMaterial):
             self._detlocs[1, i] = np.mean(coords[1, :])
 
             # Generate a random standard deviation in two directions
-            self._detrads[0, i] = np.random.uniform(0, self._maxstd)
-            self._detrads[1, i] = np.random.uniform(0, self._maxstd)
+            self._detrads[0, i] = np.random.uniform(self._minstd, self._maxstd)
+            self._detrads[1, i] = np.random.uniform(self._minstd, self._maxstd)

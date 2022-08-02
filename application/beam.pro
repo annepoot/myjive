@@ -83,3 +83,10 @@ solver =
 {
   nsteps = 1;
 };
+
+vtkout =
+{
+  type = VTKOut;
+  tables = [stiffness];
+  file = stiffness;
+};

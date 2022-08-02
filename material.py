@@ -1,24 +1,21 @@
-from isotropicmaterial import IsotropicMaterial
-from heterogeneousmaterial import HeterogeneousMaterial
 
 MATERIAL = 'material'
 TYPE = 'type'
 RANK = 'rank'
 
 
-def new_material(name, props):
-    myprops = props.get(MATERIAL)
-    typ = myprops[TYPE]
-    rank = myprops[RANK]
+def new_material(props):
+    typ = props[TYPE]
+    rank = int(props[RANK])
 
     if typ == 'Isotropic':
+        from isotropicmaterial import IsotropicMaterial
         mat = IsotropicMaterial(rank)
     elif typ == 'Heterogeneous':
+        from heterogeneousmaterial import HeterogeneousMaterial
         mat = HeterogeneousMaterial(rank)
     else:
         raise ValueError(typ + ' is not a valid material')
-
-    mat.configure(props)
 
     return mat
 

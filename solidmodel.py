@@ -116,7 +116,7 @@ class SolidModel(Model):
 
     def _get_body_force(self, params, globdat):
         if self._rank == 2:
-            gravity = np.array([0, 1])
+            gravity = np.array([0, -1])
 
             for elem in self._elems:
                 # Get the nodal coordinates of each element

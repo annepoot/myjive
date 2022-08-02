@@ -78,8 +78,10 @@ class VTKOutModule(Module):
                 out.write('</DataArray>\n')
                 for name, table in globdat[gn.TABLES].items():
                     for comp in table:
-                        out.write(
-                            '<DataArray type="Float64" Name="' + name + '_' + comp + '" NumberOfComponents="1" format="ascii">\n')
+                        if comp == '':
+                            out.write('<DataArray type="Float64" Name="' + name + '" NumberOfComponents="1" format="ascii">\n')
+                        else:
+                            out.write('<DataArray type="Float64" Name="' + name + '_' + comp + '" NumberOfComponents="1" format="ascii">\n')
                         for inode in range(len(nodes)):
                             out.write(str(table[comp][inode]) + '\n')
                         out.write('</DataArray>\n')

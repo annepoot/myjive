@@ -288,7 +288,7 @@ class SolidModel(Model):
         xtable.__class__ = XTable
 
         # Add the column of the Young's modulus to the table
-        jcol = xtable.add_column('E')
+        jcol = xtable.add_column('')
 
         for elem in self._elems:
             # Get the nodal coordinates of each element

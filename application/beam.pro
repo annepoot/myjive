@@ -76,6 +76,7 @@ solver =
 {
   nsteps = 1;
   storeMatrix = True;
+  tables = [stiffness];
 };
 
 vtkout =

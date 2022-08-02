@@ -16,6 +16,11 @@ with open('damaged_beams.dat', 'w') as f:
     f.write('sample E_pure nu deteriorations intervention node x y dx dy E_true\n')
 
     for sample in range(nsamples):
+
+        print('\n' + 50 * '=')
+        print('\tSAMPLE {} OUT OF {}'.format(sample+1, nsamples))
+        print(50 * '=' + '\n')
+
         E = np.exp(rng.normal(np.log(10000), 0.1))
         nu = np.exp(rng.normal(np.log(0.2), 0.1))
 
@@ -31,6 +36,7 @@ with open('damaged_beams.dat', 'w') as f:
         props['model']['solid']['material']['E'] = E
         props['model']['solid']['material']['nu'] = nu
         props['model']['solid']['material']['deteriorations'] = n_det
+        props['model']['solid']['material']['seed'] = sample
 
         globdat = main.jive(props)
         nodes = globdat[gn.NSET]

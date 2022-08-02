@@ -10,6 +10,7 @@ import dirimodel
 import neumannmodel
 import poissonmodel
 import elasticmodel
+import solidmodel
 import timoshenkomodel
 import framemodel
 import gpmodel
@@ -46,6 +47,7 @@ def declare_models(globdat):
     neumannmodel.declare(factory)
     poissonmodel.declare(factory)
     elasticmodel.declare(factory)
+    solidmodel.declare(factory)
     timoshenkomodel.declare(factory)
     framemodel.declare(factory)
     gpmodel.declare(factory)

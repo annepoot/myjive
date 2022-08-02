@@ -9,45 +9,46 @@ def parse_file(fname):
     sp = filestr.split(';')
 
     while i < len(sp):
-        line = sp[i].replace(' ','')
+        line = sp[i].replace(' ', '')
         if '{' in line:
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
-            data[key], i, sp = read_level(newline,i,sp)
+            data[key], i, sp = read_level(newline, i, sp)
         elif line != '':
-            raise RuntimeError ('Unable to parse: %s' % line)
+            raise RuntimeError('Unable to parse: %s' % line)
 
         i = i + 1
 
     return data
 
 
-def read_level(line,i,sp):
+def read_level(line, i, sp):
     subdata = {}
 
     while True:
         if '{' in line:
             key = line.split('={')[0]
             newline = '={'.join(line.split('={')[1:])
-            subdata[key], i, sp = read_level(newline,i,sp)
+            subdata[key], i, sp = read_level(newline, i, sp)
         elif '}' in line:
             return subdata, i, sp
         elif '=' in line:
             [key, value] = line.split('=')
             subdata[key] = value
         elif line != '':
-            raise RuntimeError ('Unable to parse: %s' % line)
+            raise RuntimeError('Unable to parse: %s' % line)
 
         i = i + 1
 
         if i == len(sp):
             raise RuntimeError('EOF reached while parsing an input block. Did you forget to close a bracket?')
 
-        line = sp[i].replace(' ','')
+        line = sp[i].replace(' ', '')
 
-def parse_list(lst,typ=str):
-   stringlist = lst.strip('[').strip(']').replace(' ','').split(',')
-   return list(map(typ, stringlist))
+
+def parse_list(lst, typ=str):
+    stringlist = lst.strip('[').strip(']').replace(' ', '').split(',')
+    return list(map(typ, stringlist))
 
 
 def uncomment_file(fileraw):
@@ -64,7 +65,7 @@ def uncomment_file(fileraw):
             end = line.find('*/')
             if end >= 0:
                 comment_mode = False
-                line = line[end+len('*/'):]
+                line = line[end + len('*/'):]
 
             # If comment_mode is still enabled, don't include anything
             else:
@@ -102,8 +103,8 @@ def uncomment_line(line):
         # Remove everything in the first one-line block comment that is found
         start = clean_line.find('/*')
         end = clean_line.find('*/')
-        if start >= 0 and end >= 0 and end > start:
-            clean_line = clean_line[:start] + clean_line[end+len('*/'):]
+        if 0 <= start < end and end >= 0:
+            clean_line = clean_line[:start] + clean_line[end + len('*/'):]
         else:
             # Exit if no comments are left
             break
@@ -120,9 +121,22 @@ def soft_cast(value, typ):
         return value
 
 
-def evaluate(value, eval_params):
+def evaluate(value, coords, rank):
     # This function does a string evaluation of value, if possible
     if type(value) is str:
-        return eval(value, {}, eval_params)
+        eval_dict = get_eval_dict(coords, rank)
+        return eval(value, {}, eval_dict)
     else:
         return value
+
+
+def get_eval_dict(coords, rank):
+    # This function builds a dictionary with the x,y,z coordinates of coords
+    eval_dict = {'x': coords[0]}
+
+    if rank >= 2:
+        eval_dict.update({'y': coords[1]})
+    if rank == 3:
+        eval_dict.update({'z': coords[2]})
+
+    return eval_dict

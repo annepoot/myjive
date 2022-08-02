@@ -1,5 +1,6 @@
 from heterogeneousmaterial import HeterogeneousMaterial
 from names import GlobNames as gn
+from scipy.stats import norm
 import numpy as np
 
 DETER_PROP = 'deteriorations'
@@ -31,7 +32,14 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         return self._compute_mass_matrix(ipoint)
 
     def _get_E(self, ipoint=None):
-        return pu.evaluate(self._E, ipoint, self._rank)
+        E = super()._get_E(ipoint)
+
+        # Subtract all deteriorations
+        for i in range(self._ndet):
+            det = norm.pdf(ipoint, loc=self._detlocs[:, i], scale=self._detrads[:, i])
+            E -= np.prod(det)
+
+        return E
 
     def _generate_deteriorations(self, globdat):
         elems = globdat[gn.ESET]

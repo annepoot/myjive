@@ -50,6 +50,7 @@ model =
       thickness = 0.2;
 
       deteriorations = 5;
+      scale=100;
     };
 
     shape =

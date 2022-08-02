@@ -38,6 +38,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
 
     def _get_E(self, ipoint=None):
         E = super()._get_E(ipoint)
+        tiny = E * 1e-10
         scale = self._detscale * E
 
         # Subtract all deteriorations
@@ -46,7 +47,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
             E -= np.prod(det) * scale
 
             if E <= 0:
-                E = 0
+                E = tiny
                 break
 
         return E

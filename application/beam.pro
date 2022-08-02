@@ -41,13 +41,15 @@ model =
 
     material =
     {
-      type = Isotropic;
+      type = Deteriorated;
       rank = 2;
       anmodel = plane_stress;
 
       E = 10000.;
       nu = 0.2;
       thickness = 0.2;
+
+      deteriorations = 5;
     };
 
     shape =

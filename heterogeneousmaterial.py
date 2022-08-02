@@ -7,7 +7,7 @@ class HeterogeneousMaterial(IsotropicMaterial):
 
     def configure(self, props, globdat):
 
-        self._anmodel = props.get(ANMODEL_PROP, self._anmodel).upper()
+        self._anmodel = props.get(ANMODEL_PROP, self._anmodel)
         assert self._is_valid_anmodel(self._anmodel), 'Analysis model ' + self._anmodel + ' not valid for rank ' + str(self._rank)
 
         self._E = props.get(E_PROP, self._E)

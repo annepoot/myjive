@@ -51,7 +51,8 @@ model =
       thickness = 0.2;
 
       deteriorations = 5;
-      scale=5000;
+      scale = 0.5;
+      seed = 0;
     };
 
     shape =

@@ -5,6 +5,7 @@ import numpy as np
 
 DETER_PROP = 'deteriorations'
 SCALE_PROP = 'scale'
+SEED_PROP = 'seed'
 MAXSTD_PROP = 'stdMax'
 SHAPE = 'shape'
 TYPE = 'type'
@@ -20,6 +21,10 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         self._detscale = float(props.get(SCALE_PROP, 1.0))
         self._maxstd = float(props.get(MAXSTD_PROP, 1.0))
 
+        self._seed = None
+        if SEED_PROP in props:
+            self._seed = int(props[SEED_PROP])
+
         self._detlocs = np.zeros((self._rank, self._ndet))
         self._detrads = np.zeros((self._rank, self._ndet))
 
@@ -33,11 +38,12 @@ class DeterioratedMaterial(HeterogeneousMaterial):
 
     def _get_E(self, ipoint=None):
         E = super()._get_E(ipoint)
+        scale = self._detscale * E
 
         # Subtract all deteriorations
         for i in range(self._ndet):
             det = norm.pdf(ipoint, loc=self._detlocs[:, i], scale=self._detrads[:, i])
-            E -= np.prod(det) * self._detscale
+            E -= np.prod(det) * scale
 
             if E <= 0:
                 E = 0
@@ -48,7 +54,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
     def _generate_deteriorations(self, globdat):
         elems = globdat[gn.ESET]
 
-        np.random.seed(0)
+        np.random.seed(self._seed)
 
         for i in range(self._ndet):
             # randomly select an element

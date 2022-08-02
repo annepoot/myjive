@@ -17,8 +17,8 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         super().configure(props)
 
         self._ndet = props[DETER_PROP]
-        self._detscale = props[SCALE_PROP]
-        self._maxstd = props[MAXSTD_PROP]
+        self._detscale = props.get(SCALE_PROP, 1.0)
+        self._maxstd = props.get(MAXSTD_PROP, 1.0)
 
         self._detlocs = np.zeros((self._rank, self._ndet))
         self._detrads = np.zeros((self._rank, self._ndet))

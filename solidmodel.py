@@ -37,7 +37,7 @@ class SolidModel(Model):
         # Configure the material
         matprops = props[MATERIAL]
         self._mat = new_material(matprops)
-        self._mat.configure(matprops)
+        self._mat.configure(matprops, globdat)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])

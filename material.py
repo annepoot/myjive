@@ -14,6 +14,9 @@ def new_material(props):
     elif typ == 'Heterogeneous':
         from heterogeneousmaterial import HeterogeneousMaterial
         mat = HeterogeneousMaterial(rank)
+    elif typ == 'Deteriorated':
+        from deterioratedmaterial import DeterioratedMaterial
+        mat = DeterioratedMaterial(rank)
     else:
         raise ValueError(typ + ' is not a valid material')
 

@@ -31,7 +31,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, diri, neum ];
+  models = [ solid, diri ];
 
   solid =
   {
@@ -47,6 +47,7 @@ model =
 
       E = 10000.;
       nu = 0.2;
+      rho = 1.0;
       thickness = 0.2;
 
       deteriorations = 5;
@@ -64,24 +65,16 @@ model =
   {
     type = Dirichlet; 
 
-    groups = [ lb, lb, rb, rb ];
-    dofs   = [ dx, dy, dx, dy ];
-    values = [ 0., 0., 0., 0. ];
-  };
-  
-  neum =
-  {
-    type = Neumann; 
-
-    groups = [ tm ];
-    dofs   = [ dy ];
-    values = [ -1. ];
+    groups = [ lb, lb, rb ];
+    dofs   = [ dx, dy, dy ];
+    values = [ 0., 0., 0. ];
   };
 };
 
 solver =
 {
   nsteps = 1;
+  storeMatrix = True;
 };
 
 vtkout =

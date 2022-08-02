@@ -1,4 +1,5 @@
 import sys
+import os
 
 sys.path.append('../')
 
@@ -39,12 +40,19 @@ with open('damaged_beams.dat', 'w') as f:
         props['model']['solid']['material']['seed'] = sample
 
         globdat = main.jive(props)
+
+        # Move the created vtu file to a separate folder
+        cwd = os.getcwd()
+        os.rename(cwd + '/stiffness1.vtu', cwd + '/output/stiffness{}.vtu'.format(sample+1))
+
+        # Get the nodes, displacements and stiffnesses
         nodes = globdat[gn.NSET]
         u = globdat[gn.STATE0]
         dx = u[:len(u)//2]
         dy = u[len(u)//2:]
         E_true = globdat[gn.TABLES]['stiffness']['']
 
+        # Write all relevant outputs to a single file
         for i, node in enumerate(nodes):
             coords = node.get_coords()
 

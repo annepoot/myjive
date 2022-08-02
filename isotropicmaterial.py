@@ -35,7 +35,7 @@ class IsotropicMaterial(Material):
         self._stiff_matrix = np.zeros((self._strcount, self._strcount))
         self._mass_matrix = np.zeros((self._rank, self._rank))
 
-    def configure(self, props):
+    def configure(self, props, globdat):
 
         self._anmodel = props.get(ANMODEL_PROP, self._anmodel)
         assert self._is_valid_anmodel(self._anmodel), 'Analysis model ' + self._anmodel + ' not valid for rank ' + str(

@@ -25,7 +25,7 @@ class Material:
     def __init__(self, rank):
         pass
 
-    def configure(self, props):
+    def configure(self, props, globdat):
         pass
 
     def get_config(self):

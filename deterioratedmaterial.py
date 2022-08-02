@@ -37,7 +37,11 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         # Subtract all deteriorations
         for i in range(self._ndet):
             det = norm.pdf(ipoint, loc=self._detlocs[:, i], scale=self._detrads[:, i])
-            E -= np.prod(det)
+            E -= np.prod(det) * self._detscale
+
+            if E <= 0:
+                E = 0
+                break
 
         return E
 

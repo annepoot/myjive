@@ -10,7 +10,7 @@ from names import GlobNames as gn
 
 props = pu.parse_file('beam.pro')
 
-nsamples = 10
+nsamples = 1000
 rng = np.random.default_rng(0)
 
 with open('damaged_beams.dat', 'w') as f:
@@ -43,7 +43,7 @@ with open('damaged_beams.dat', 'w') as f:
 
         # Move the created vtu file to a separate folder
         cwd = os.getcwd()
-        os.rename(cwd + '/stiffness1.vtu', cwd + '/output/stiffness{}.vtu'.format(sample+1))
+        os.replace(cwd + '/stiffness1.vtu', cwd + '/output/stiffness{}.vtu'.format(sample+1))
 
         # Get the nodes, displacements and stiffnesses
         nodes = globdat[gn.NSET]

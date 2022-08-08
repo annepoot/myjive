@@ -16,16 +16,16 @@ props = pu.parse_file('beam.pro')
 # Set all general variables beforehand (to also easily get them in the README file)
 nsamples = 1
 E_mean = np.log(10000)
-E_std = 0.1
+E_std = 0.0
 nu_mean = np.log(0.2)
-nu_std = 0.1
-n_det_rule = "int(20 * sample / nsamples)"
-risk_rule = "'unnecessary' if n_det < 8 else 'maintenance' if n_det < 16 else 'demolition'"
-fname = 'classification-data.csv'
+nu_std = 0.0
+n_det = 1
+fname = 'regression-data.csv'
 locX = props['model']['solid']['material']['locX']
 locY = props['model']['solid']['material']['locY']
 stdX = props['model']['solid']['material']['stdX']
 stdY = props['model']['solid']['material']['stdY']
+scale = props['model']['solid']['material']['scale']
 
 # Use a random number generator for the random sampling stuff
 rng = np.random.default_rng(0)
@@ -43,10 +43,6 @@ for sample in range(nsamples):
     # Get E and nu from a random distribution
     E = rng.lognormal(E_mean, E_std)
     nu = rng.lognormal(nu_mean, nu_std)
-
-    # Get the number of deteriorations and intervention from the rules set beforehand
-    n_det = eval(n_det_rule, {'sample':sample, 'nsamples':nsamples})
-    risk = eval(risk_rule, {'n_det':n_det})
 
     # Set these variables in the model
     props['model']['solid']['material']['E'] = E
@@ -76,7 +72,6 @@ for sample in range(nsamples):
             'E_pure': E,
             'nu': nu,
             'deteriorations': n_det,
-            'intervention': risk,
             'node': i,
             'x': coords[0],
             'y': coords[1],
@@ -105,8 +100,8 @@ with open('README.txt', 'w') as f:
     f.write('number of samples: {}\n'.format(nsamples))
     f.write('E ~ lognormal(mean: ln({:.0f}), std: {:.1f})\n'.format(np.exp(E_mean), E_std))
     f.write('nu ~ lognormal(mean: ln({:.1f}), std: {:.1f})\n'.format(np.exp(nu_mean), nu_std))
-    f.write('n_det = {:s}\n'.format(n_det_rule))
-    f.write('intervention = {:s}\n'.format(risk_rule))
+    f.write('n_det = {:}\n'.format(n_det))
     f.write('deterioration note: in the two expressions below, x and y are the center coordinates of a random element\n')
     f.write('deterioration mean: ({}, {})\n'.format(locX, locY))
     f.write('deterioration std: ({}, {})\n'.format(stdX, stdY))
+    f.write('deterioration scale: {}\n'.format(scale))

@@ -50,13 +50,13 @@ model =
       rho = 1.0;
       thickness = 0.2;
 
-      deteriorations = 5;
+      deteriorations = 1;
       scale = 0.1;
       seed = 0;
       locX = x;
-      locY = y;
-      stdX = np.random.uniform(0.5, 1.0);
-      stdY = np.random.uniform(0.5, 1.0);
+      locY = 1;
+      stdX = 1;
+      stdY = 1;
     };
 
     shape =

@@ -121,16 +121,16 @@ def soft_cast(value, typ):
         return value
 
 
-def evaluate(value, coords, rank):
+def evaluate(value, coords, rank, extra_dict=None):
     # This function does a string evaluation of value, if possible
     if type(value) is str:
-        eval_dict = get_eval_dict(coords, rank)
+        eval_dict = get_eval_dict(coords, rank, extra_dict)
         return eval(value, {}, eval_dict)
     else:
         return value
 
 
-def get_eval_dict(coords, rank):
+def get_eval_dict(coords, rank, extra_dict=None):
     # This function builds a dictionary with the x,y,z coordinates of coords
     eval_dict = {'x': coords[0]}
 
@@ -138,5 +138,9 @@ def get_eval_dict(coords, rank):
         eval_dict.update({'y': coords[1]})
     if rank == 3:
         eval_dict.update({'z': coords[2]})
+
+    # Add the extra dictionary if applicable
+    if extra_dict is not None:
+        eval_dict.update(extra_dict)
 
     return eval_dict

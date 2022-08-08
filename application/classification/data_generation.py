@@ -14,7 +14,7 @@ from names import GlobNames as gn
 props = pu.parse_file('beam.pro')
 
 # Set all general variables beforehand (to also easily get them in the README file)
-nsamples = 1
+nsamples = 1000
 E_mean = np.log(10000)
 E_std = 0.1
 nu_mean = np.log(0.2)

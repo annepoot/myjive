@@ -5,7 +5,7 @@ init =
   mesh =
   {
     type = gmsh;
-    file = beam.msh;
+    file = ../beam.msh;
   };
 
   lb =
@@ -53,8 +53,10 @@ model =
       deteriorations = 5;
       scale = 0.1;
       seed = 0;
-      stdMax = 1.0;
-      stdMin = 0.5;
+      locX = x;
+      locY = y;
+      stdX = np.random.uniform(0.5, 1.0);
+      stdY = np.random.uniform(0.5, 1.0);
     };
 
     shape =

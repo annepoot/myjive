@@ -21,7 +21,11 @@ nu_mean = np.log(0.2)
 nu_std = 0.1
 n_det_rule = "int(20 * sample / nsamples)"
 risk_rule = "'unnecessary' if n_det < 8 else 'maintenance' if n_det < 16 else 'demolition'"
-fname = 'classification/data.csv'
+fname = 'classification-data.csv'
+locX = props['model']['solid']['material']['locX']
+locY = props['model']['solid']['material']['locY']
+stdX = props['model']['solid']['material']['stdX']
+stdY = props['model']['solid']['material']['stdY']
 
 # Use a random number generator for the random sampling stuff
 rng = np.random.default_rng(0)
@@ -54,7 +58,7 @@ for sample in range(nsamples):
 
     # Move the created vtu file to a separate folder
     cwd = os.getcwd()
-    os.replace(cwd + '/stiffness1.vtu', cwd + '/classification/vtk-output/stiffness{}.vtu'.format(sample+1))
+    os.replace(cwd + '/stiffness1.vtu', cwd + '/vtk-output/stiffness{}.vtu'.format(sample+1))
 
     # Get the nodes, displacements and stiffnesses
     nodes = globdat[gn.NSET]
@@ -92,7 +96,7 @@ time = datetime.fromtimestamp(os.path.getmtime(fname)).strftime('%Y-%m-%d %H:%M:
 size = os.path.getsize(fname) / 1024**2
 
 # Write all relevant info to a README file
-with open('classification/README.txt', 'w') as f:
+with open('README.txt', 'w') as f:
     f.write('FILE INFO\n')
     f.write('output file name: {:s}\n'.format(fname))
     f.write('output creation date: {:s}\n'.format(time))
@@ -103,3 +107,6 @@ with open('classification/README.txt', 'w') as f:
     f.write('nu ~ lognormal(mean: ln({:.1f}), std: {:.1f})\n'.format(np.exp(nu_mean), nu_std))
     f.write('n_det = {:s}\n'.format(n_det_rule))
     f.write('intervention = {:s}\n'.format(risk_rule))
+    f.write('deterioration note: in the two expressions below, x and y are the center coordinates of a random element\n')
+    f.write('deterioration mean: ({}, {})\n'.format(locX, locY))
+    f.write('deterioration std: ({}, {})\n'.format(stdX, stdY))

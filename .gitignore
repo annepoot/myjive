@@ -2,6 +2,7 @@ __pycache__
 *.disp
 *.vtu
 *.dat
+*.csv
 *.png
 *.pdf
 go

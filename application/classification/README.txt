@@ -1,6 +1,6 @@
 FILE INFO
 output file name: classification-data.csv
-output creation date: 2022-08-08 17:21:49
+output creation date: 2022-08-08 17:42:34
 output file size: 0.10 MB
 
 PROBLEM INFO
@@ -12,3 +12,4 @@ intervention = 'unnecessary' if n_det < 8 else 'maintenance' if n_det < 16 else 
 deterioration note: in the two expressions below, x and y are the center coordinates of a random element
 deterioration mean: (x, y)
 deterioration std: (np.random.uniform(0.5,1.0), np.random.uniform(0.5,1.0))
+deterioration scale: 0.1

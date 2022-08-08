@@ -26,6 +26,7 @@ locX = props['model']['solid']['material']['locX']
 locY = props['model']['solid']['material']['locY']
 stdX = props['model']['solid']['material']['stdX']
 stdY = props['model']['solid']['material']['stdY']
+scale = props['model']['solid']['material']['scale']
 
 # Use a random number generator for the random sampling stuff
 rng = np.random.default_rng(0)
@@ -110,3 +111,4 @@ with open('README.txt', 'w') as f:
     f.write('deterioration note: in the two expressions below, x and y are the center coordinates of a random element\n')
     f.write('deterioration mean: ({}, {})\n'.format(locX, locY))
     f.write('deterioration std: ({}, {})\n'.format(stdX, stdY))
+    f.write('deterioration scale: {}\n'.format(scale))

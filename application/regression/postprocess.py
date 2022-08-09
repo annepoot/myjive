@@ -3,6 +3,7 @@ import pyvista as pv
 
 df = pd.read_csv('regression-data.csv')
 
-reader = pv.get_reader('vtk-output/stiffness500.vtu')
-mesh = reader.read()
-mesh.plot(scalars='stiffness', cpos='xy')
+for i in range(100, 1000, 100):
+    reader = pv.get_reader('vtk-output/stiffness{}.vtu'.format(i+1))
+    mesh = reader.read()
+    mesh.plot(scalars='stiffness', cpos='xy')

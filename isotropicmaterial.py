@@ -35,7 +35,7 @@ class IsotropicMaterial(Material):
         self._stiff_matrix = np.zeros((self._strcount, self._strcount))
         self._mass_matrix = np.zeros((self._rank, self._rank))
 
-    def configure(self, props):
+    def configure(self, props, globdat):
 
         self._anmodel = props.get(ANMODEL_PROP, self._anmodel)
         assert self._is_valid_anmodel(self._anmodel), 'Analysis model ' + self._anmodel + ' not valid for rank ' + str(
@@ -50,8 +50,8 @@ class IsotropicMaterial(Material):
         elif self._rank == 2:
             self._thickness = float(props.get(THICKNESS_PROP, self._thickness))
 
-        self._compute_stiff_matrix()
-        self._compute_mass_matrix()
+        self._stiff_matrix = self._compute_stiff_matrix()
+        self._mass_matrix = self._compute_mass_matrix()
 
     def get_config(self):
         config = {
@@ -103,6 +103,7 @@ class IsotropicMaterial(Material):
     def _compute_stiff_matrix(self, ipoint=None):
         E = self._get_E(ipoint)
         nu = self._get_nu(ipoint)
+        stiff = np.zeros((self._strcount, self._strcount))
 
         if self._rank == 1:
             area = self._get_area(ipoint)
@@ -110,34 +111,39 @@ class IsotropicMaterial(Material):
             thickness = self._get_thickness(ipoint)
 
         if self._anmodel == BAR:
-            self._stiff_matrix[0, 0] = E * area
+            stiff[0, 0] = E * area
 
         elif self._anmodel == PLANE_STRESS:
-            self._stiff_matrix[[0, 1], [0, 1]] = E / (1 - nu ** 2) * thickness
-            self._stiff_matrix[[0, 1], [1, 0]] = (nu * E) / (1 - nu ** 2) * thickness
-            self._stiff_matrix[2, 2] = 0.5 * E / (1 + nu) * thickness
+            stiff[[0, 1], [0, 1]] = E / (1 - nu ** 2) * thickness
+            stiff[[0, 1], [1, 0]] = (nu * E) / (1 - nu ** 2) * thickness
+            stiff[2, 2] = 0.5 * E / (1 + nu) * thickness
 
         elif self._anmodel == PLANE_STRAIN:
             d = (1 + nu) * (1 - 2 * nu)
-            self._stiff_matrix[[0, 1], [0, 1]] = E * (1 - nu) / d * thickness
-            self._stiff_matrix[[0, 1], [1, 0]] = E * nu / d * thickness
-            self._stiff_matrix[2, 2] = 0.5 * E / (1 + nu) * thickness
+            stiff[[0, 1], [0, 1]] = E * (1 - nu) / d * thickness
+            stiff[[0, 1], [1, 0]] = E * nu / d * thickness
+            stiff[2, 2] = 0.5 * E / (1 + nu) * thickness
 
         elif self._anmodel == SOLID:
             d = (1 + nu) * (1 - 2 * nu)
-            self._stiff_matrix[[0, 1, 2], [0, 1, 2]] = E * (1 - nu) / d
-            self._stiff_matrix[[0, 0, 1, 1, 2, 2], [1, 2, 0, 2, 0, 1]] = E * nu / d
-            self._stiff_matrix[[3, 4, 5], [3, 4, 5]] = 0.5 * E / (1 + nu)
+            stiff[[0, 1, 2], [0, 1, 2]] = E * (1 - nu) / d
+            stiff[[0, 0, 1, 1, 2, 2], [1, 2, 0, 2, 0, 1]] = E * nu / d
+            stiff[[3, 4, 5], [3, 4, 5]] = 0.5 * E / (1 + nu)
+
+        return stiff
 
     def _compute_mass_matrix(self, ipoint=None):
         rho = self._get_rho(ipoint)
+        mass = np.zeros((self._rank, self._rank))
 
         if self._rank == 1:
-            self._mass_matrix[0, 0] = rho
+            mass[0, 0] = rho
         elif self._rank == 2:
-            self._mass_matrix[[0, 1], [0, 1]] = rho
+            mass[[0, 1], [0, 1]] = rho
         elif self._rank == 3:
-            self._mass_matrix[[0, 1, 2], [0, 1, 2]] = rho
+            mass[[0, 1, 2], [0, 1, 2]] = rho
+
+        return mass
 
     def _is_valid_anmodel(self, anmodel):
         valid = False

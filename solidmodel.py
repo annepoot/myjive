@@ -31,13 +31,15 @@ class SolidModel(Model):
                 self._get_stresses(params, globdat)
             if 'strain' in params[pn.TABLENAME]:
                 self._get_strains(params, globdat)
+            if 'stiffness' in params[pn.TABLENAME]:
+                self._get_stiffness(params, globdat)
 
     def configure(self, props, globdat):
 
         # Configure the material
         matprops = props[MATERIAL]
         self._mat = new_material(matprops)
-        self._mat.configure(matprops)
+        self._mat.configure(matprops, globdat)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
@@ -273,6 +275,51 @@ class SolidModel(Model):
         for jcol in jcols:
             values = xtable.get_col_values(None, jcol)
             xtable.set_col_values(None, jcol, values / tbwts)
+
+        # Convert the table back to the original class
+        xtable.__class__ = cls_
+
+    def _get_stiffness(self, params, globdat):
+        xtable = params[pn.TABLE]
+        tbwts = params[pn.TABLEWEIGHTS]
+
+        # Convert the table to an XTable and store the original class
+        cls_ = xtable.__class__
+        xtable.__class__ = XTable
+
+        # Add the column of the Young's modulus to the table
+        jcol = xtable.add_column('')
+
+        for elem in self._elems:
+            # Get the nodal coordinates of each element
+            inodes = elem.get_nodes()
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, gradients, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            ipcoords = self._shape.get_global_integration_points(coords)
+
+            # Reset the element stress matrix and weights
+            elyoung = np.zeros((self._shape.node_count()))
+            elwts = np.zeros(self._shape.node_count())
+
+            for ip in range(self._ipcount):
+                # Get the stiffness in the integration point
+                E = self._mat._get_E(ipcoords[:, ip])
+
+                # Compute the element stiffness and weights
+                elyoung += E * sfuncs[:, ip]
+                elwts += sfuncs[:, ip].flatten()
+
+            # Add the element weights to the global weights
+            tbwts[inodes] += elwts
+
+            # Add the element stiffness to the global stiffness
+            xtable.add_col_values(inodes, jcol, elyoung)
+
+        # Divide the stresses by the shape function weights
+        values = xtable.get_col_values(None, jcol)
+        xtable.set_col_values(None, jcol, values / tbwts)
 
         # Convert the table back to the original class
         xtable.__class__ = cls_

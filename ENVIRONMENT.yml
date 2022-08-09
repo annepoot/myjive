@@ -5,9 +5,11 @@ channels:
 dependencies:
   - matplotlib=3.5.2
   - numpy=1.22.3
+  - pandas=1.4.3
   - pip=22.1.2
   - python-gmsh=4.10.3
   - pyqtwebengine=5.15.4
+  - pyvista=0.36.1
   - scikit-learn=1.1.1
   - scipy=1.8.1
   - spyder=5.2.2

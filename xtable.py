@@ -11,7 +11,6 @@ class XTable(Table):
             self._data = tbl._data
             self._header = tbl._header
 
-
     def clear_data(self):
         self._data = np.zeros((0, self._header.size()))
 
@@ -19,13 +18,11 @@ class XTable(Table):
         self._header = np.zeros(0)
         self.clear_data()
 
-
     def reserve(self, rowcount):
         if self.row_count() < rowcount:
             tmp = np.zeros((rowcount, self.column_count()))
             tmp[:self.row_count(), :self.column_count()] = self._data
             self._data = tmp
-
 
     def add_column(self, name):
         if self.find_column(name) < 0:
@@ -81,7 +78,6 @@ class XTable(Table):
         else:
             self.reserve(max(irows)+1)
             self._data[irows, jcol] += values
-
 
     def to_table(self):
         self.__class__ = Table

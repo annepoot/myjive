@@ -5,6 +5,7 @@ channels:
 dependencies:
   - matplotlib=3.5.2
   - numpy=1.22.3
+  - pandas=1.4.3
   - pip=22.1.2
   - python-gmsh=4.10.3
   - pyqtwebengine=5.15.4

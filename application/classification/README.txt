@@ -1,10 +1,10 @@
 FILE INFO
 output file name: classification-data.csv
-output creation date: 2022-08-08 17:42:34
-output file size: 0.10 MB
+output creation date: 2022-08-08 19:00:09
+output file size: 104.74 MB
 
 PROBLEM INFO
-number of samples: 1
+number of samples: 1000
 E ~ lognormal(mean: ln(10000), std: 0.1)
 nu ~ lognormal(mean: ln(0.2), std: 0.1)
 n_det = int(20 * sample / nsamples)

@@ -1,7 +1,7 @@
 FILE INFO
 output file name: regression-data.csv
-output creation date: 2022-08-08 18:23:18
-output file size: 95.44 MB
+output creation date: 2022-08-10 12:51:53
+output file size: 107.90 MB
 
 PROBLEM INFO
 number of samples: 1000

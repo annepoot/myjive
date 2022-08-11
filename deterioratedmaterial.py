@@ -39,6 +39,9 @@ class DeterioratedMaterial(HeterogeneousMaterial):
 
         self._generate_deteriorations(globdat)
 
+        globdat['detlocs'] = self._detlocs
+        globdat['detrads'] = self._detrads
+
     def stiff_at_point(self, ipoint=None):
         return self._compute_stiff_matrix(ipoint)
 

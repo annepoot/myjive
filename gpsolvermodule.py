@@ -36,8 +36,11 @@ class GPSolverModule(SolverModule):
         # Optionally get the mass matrix
         if self._get_unit_mass_matrix:
             M = spsp.csr_array((dc, dc))
-            params = {pn.MATRIX2: M}
-            model.take_action(act.GETUNITMATRIX2, params, globdat)
+            params = {
+                pn.MATRIX2: M,
+                pn.UNITMATRIX: True
+            }
+            model.take_action(act.GETMATRIX2, params, globdat)
 
             # Optionally store mass matrix in Globdat
             if self._store_matrix:

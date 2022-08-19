@@ -19,6 +19,9 @@ class Constrainer:
         self._nvals.append(val)
 
     def constrain(self, k, f):
+        return self.apply_dirichlet(k, f)
+
+    def apply_dirichlet(self, k, f):
         kc = k.copy()
         fc = f.copy()
 
@@ -33,6 +36,14 @@ class Constrainer:
             kc[dof, dof] = 1.0
 
         return kc, fc
+
+    def apply_neumann(self, f):
+        fc = f.copy()
+
+        for dof, val in zip(self._ndofs, self._nvals):
+            fc[dof] += val
+
+        return fc
 
     def get_constraints(self):
         return self.get_dirichlet()

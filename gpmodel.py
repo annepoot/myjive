@@ -101,9 +101,10 @@ class GPModel(Model):
 
         cdofs, cvals = c.get_constraints()
 
-        # The posterior mean force vector has to contain the Dirichlet BCs
+        # The posterior mean force vector has to contain the Dirichlet and Neumann BCs
         mf = np.zeros_like(f)
-        Kc, mf = c.constrain(K, mf)
+        mf = c.apply_neumann(mf)
+        Kc, mf = c.apply_dirichlet(K, mf)
 
         # Get the actual constrained stiffness matrix and force vector
         Mc, fc = c.constrain(M, f)

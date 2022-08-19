@@ -15,11 +15,13 @@ INCR = 'loadIncr'
 
 class NeumannModel(Model):
     def take_action(self, action, params, globdat):
-        if action == act.GETEXTFORCE:
+        if action == act.GETCONSTRAINTS:
+            self._get_constraints(params, globdat)
+        elif action == act.GETEXTFORCE:
             self._get_ext_force(params, globdat)
-        if action == act.GETUNITFORCE:
+        elif action == act.GETUNITFORCE:
             self._get_unit_force(params, globdat)
-        if action == act.ADVANCE:
+        elif action == act.ADVANCE:
             self._advance_step(params, globdat)
 
     def configure(self, props, globdat):
@@ -31,6 +33,13 @@ class NeumannModel(Model):
             self._loadIncr = pu.parse_list(props[INCR], float)
         else: 
             self._loadIncr = np.zeros(len(self._vals))
+
+    def _get_constraints(self, params, globdat):
+        ds = globdat[gn.DOFSPACE]
+        for group, dof, val in zip(self._groups, self._dofs, self._vals):
+            for node in globdat[gn.NGROUPS][group]:
+                idof = ds.get_dof(node, dof)
+                params[pn.CONSTRAINTS].add_neumann(idof, val)
 
     def _get_ext_force(self, params, globdat):
         ds = globdat[gn.DOFSPACE]

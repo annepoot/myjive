@@ -32,4 +32,45 @@ samples_f_post = globdat['samples_f_post']
 
 Phi = globdat['Phi']
 
-QuickViewer(u_prior, globdat, scale=-1.0, title=r'Prior mean displacement')
+def PrettyViewer(array, globdat, **kwargs):
+    maxcolor = np.max(globdat['samples_u_prior'])
+
+    mean = kwargs.get('mean', False)
+
+    if mean:
+        defaults = {
+            'mincolor' : np.min(globdat['samples_u_prior']),
+            'maxcolor' : np.max(globdat['samples_u_prior']),
+            'colorbar' : None,
+            'backgroundalpha': 0.0,
+            'scale' : 1.0,
+            'inset' : True,
+        }
+    else:
+        defaults = {
+            'mincolor' : np.min(globdat['samples_u_prior']),
+            'maxcolor' : np.max(globdat['samples_u_prior']),
+            'colorbar' : None,
+            'scale' : 1.0,
+            'inset' : True,
+            'alpha' : 0.1,
+            'linealpha' : 0.8,
+        }
+
+    defaults.update(kwargs)
+
+    QuickViewer(array, globdat, **defaults)
+
+fig, ax = plt.subplots(figsize=(5.2,4), tight_layout = True)
+ax.set_axis_off()
+
+for i, sample in enumerate(samples_u_prior.T):
+    if np.isclose(i / samples_u_prior.shape[1], 0.8):
+        PrettyViewer(u_prior, globdat, ax=ax, mean=True)
+    else:
+        PrettyViewer(sample, globdat, ax=ax)
+
+plt.savefig('prior-image.pdf', transparent=True)
+for dpi in [300, 600, 1200]:
+    plt.savefig('prior-image-{}dpi.png'.format(dpi), dpi=dpi, transparent=True)
+plt.show()

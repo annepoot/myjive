@@ -44,8 +44,8 @@ gpsampler =
 {
   type = GPSampler;
 
-  nsample = 3;
-  seed = 0;
+  nsample = 50;
+  seed = 3;
 };
 
 model =
@@ -89,7 +89,7 @@ model =
       func = alpha**2 * inv(K) @ M @ inv(K);
       hyperparams =
       {
-        alpha = 0.1;
+        alpha = 2.0;
       };
     };
 
@@ -117,7 +117,7 @@ model =
 
     groups = [ r ];
     dofs   = [ dy ];
-    values = [ 10. ];
+    values = [ -15. ];
   };
 };
 

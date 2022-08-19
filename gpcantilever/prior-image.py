@@ -37,25 +37,21 @@ def PrettyViewer(array, globdat, **kwargs):
 
     mean = kwargs.get('mean', False)
 
+    defaults = {
+        'mincolor': np.min(globdat['samples_u_prior']),
+        'maxcolor': np.max(globdat['samples_u_prior']),
+        'colorbar': None,
+        'colormap': 'BuPu',
+        'scale': 1.0,
+        'inset': True,
+    }
+
     if mean:
-        defaults = {
-            'mincolor' : np.min(globdat['samples_u_prior']),
-            'maxcolor' : np.max(globdat['samples_u_prior']),
-            'colorbar' : None,
-            'backgroundalpha': 0.0,
-            'scale' : 1.0,
-            'inset' : True,
-        }
+        defaults['boundarywidth'] = 0.5
     else:
-        defaults = {
-            'mincolor' : np.min(globdat['samples_u_prior']),
-            'maxcolor' : np.max(globdat['samples_u_prior']),
-            'colorbar' : None,
-            'scale' : 1.0,
-            'inset' : True,
-            'alpha' : 0.1,
-            'linealpha' : 0.8,
-        }
+        defaults['boundarywidth'] = 0.35
+        defaults['alpha'] = 0.1
+        defaults['linealpha'] = 0.8
 
     defaults.update(kwargs)
 
@@ -69,8 +65,12 @@ for i, sample in enumerate(samples_u_prior.T):
         PrettyViewer(u_prior, globdat, ax=ax, mean=True)
     else:
         PrettyViewer(sample, globdat, ax=ax)
+PrettyViewer(u_prior, globdat, ax=ax, mean=True, alpha=0.0, linealpha=1.0, boundarywidth=0.75)
 
-plt.savefig('prior-image.pdf', transparent=True)
+folder = '/home/anne/Storage/owncloud/phd/images/cantilever-prior/'
+
+plt.savefig(folder + 'prior-image.pdf', transparent=True)
 for dpi in [300, 600, 1200]:
-    plt.savefig('prior-image-{}dpi.png'.format(dpi), dpi=dpi, transparent=True)
+    plt.savefig(folder + 'prior-image-{}dpi.png'.format(dpi), dpi=dpi, transparent=True)
+
 plt.show()

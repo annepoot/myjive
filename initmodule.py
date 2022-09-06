@@ -173,6 +173,7 @@ class InitModule(Module):
                 elif parse_nodes and len(sp) > 1:
                     coords = np.array(sp[1:], dtype=np.float64)
                     nodes.append(Node(coords))
+                    rank = len(sp) - 1
 
                 elif parse_elems and len(sp) > 0:
                     connectivity = np.array(sp, dtype=np.int16)
@@ -180,6 +181,7 @@ class InitModule(Module):
 
         globdat[gn.NSET] = nodes
         globdat[gn.ESET] = elems
+        globdat[gn.MESHRANK] = rank
 
         globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
         globdat[gn.EGROUPS]['all'] = [*range(len(elems))]

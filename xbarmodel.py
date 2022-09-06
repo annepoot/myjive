@@ -86,22 +86,22 @@ class XBarModel(BarModel):
             params[pn.EXTFORCE][idofs] += elfor
 
     def _get_D_matrix(self, ipcoords):
-        EA_ = pu.evaluate(self._EA, {'x':ipcoords[0]})
+        EA_ = pu.evaluate(self._EA, ipcoords, 1)
         D = np.array([[EA_]])
         return D
 
     def _get_K_matrix(self, ipcoords):
-        k_ = pu.evaluate(self._k, {'x':ipcoords[0]})
+        k_ = pu.evaluate(self._k, ipcoords, 1)
         K = np.array([[k_]])
         return K
 
     def _get_M_matrix(self, ipcoords):
-        rhoA_ = pu.evaluate(self._rhoA, {'x':ipcoords[0]})
+        rhoA_ = pu.evaluate(self._rhoA, ipcoords, 1)
         M = np.array([[rhoA_]])
         return M
 
     def _get_Q_vector(self, ipcoords):
-        q_ = pu.evaluate(self._q, {'x':ipcoords[0]})
+        q_ = pu.evaluate(self._q, ipcoords, 1)
         Q = np.array([q_])
         return Q
 

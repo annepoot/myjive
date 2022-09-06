@@ -123,36 +123,37 @@ class SolidModel(Model):
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_body_force(self, params, globdat):
-        if self._rank == 2:
+        if self._rank == 1:
+            gravity = np.array([1])
+        elif self._rank == 2:
             gravity = np.array([0, -1])
-
-            for elem in self._elems:
-                # Get the nodal coordinates of each element
-                inodes = elem.get_nodes()
-                idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-                coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
-
-                # Get the shape functions, weights and coordinates of each integration point
-                sfuncs = self._shape.get_shape_functions()
-                weights = self._shape.get_integration_weights(coords)
-                ipcoords = self._shape.get_global_integration_points(coords)
-
-                # Reset the element force vector
-                elfor = np.zeros(self._dofcount)
-
-                for ip in range(self._ipcount):
-                    # Get the N matrix and b vector for each integration point
-                    N = self._get_N_matrix(sfuncs[:, ip])
-                    b = self._mat.self_weight_at_point(gravity, ipcoords[:, ip])
-
-                    # Compute the element force vector
-                    elfor += weights[ip] * np.matmul(np.transpose(N), b)
-
-                # Add the element force vector to the global force vector
-                params[pn.EXTFORCE][idofs] += elfor
-
         else:
-            pass
+            return
+
+        for elem in self._elems:
+            # Get the nodal coordinates of each element
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+
+            # Get the shape functions, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            weights = self._shape.get_integration_weights(coords)
+            ipcoords = self._shape.get_global_integration_points(coords)
+
+            # Reset the element force vector
+            elfor = np.zeros(self._dofcount)
+
+            for ip in range(self._ipcount):
+                # Get the N matrix and b vector for each integration point
+                N = self._get_N_matrix(sfuncs[:, ip])
+                b = self._mat.self_weight_at_point(gravity, ipcoords[:, ip])
+
+                # Compute the element force vector
+                elfor += weights[ip] * np.matmul(np.transpose(N), b)
+
+            # Add the element force vector to the global force vector
+            params[pn.EXTFORCE][idofs] += elfor
 
     def _get_strains(self, params, globdat):
         xtable = params[pn.TABLE]

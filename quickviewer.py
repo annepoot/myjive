@@ -25,6 +25,7 @@ def QuickViewer(array, globdat, **kwargs):
     boundarywidth = kwargs.get('boundarywidth', None)
     linealpha = float(kwargs.get('linealpha', alpha))
     colorbar = bool(kwargs.get('colorbar', True))
+    cmap = plt.get_cmap(kwargs.get('colormap', 'viridis'))
     ncolors = int(kwargs.get('ncolors', 100))
     mincolor = kwargs.get('mincolor', None)
     maxcolor = kwargs.get('maxcolor', None)
@@ -149,7 +150,7 @@ def QuickViewer(array, globdat, **kwargs):
         maxcolor = z.max()
 
     levels = np.linspace(mincolor, maxcolor, ncolors)
-    mappable = ax.tricontourf(triang, z, levels=levels, alpha=alpha)
+    mappable = ax.tricontourf(triang, z, levels=levels, alpha=alpha, cmap=cmap)
 
     if colorbar:
         ticks = np.linspace(mincolor, maxcolor, 5, endpoint=True)

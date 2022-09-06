@@ -38,7 +38,7 @@ class GPfModel(GPModel):
                 if key == 'alpha':
                     Sigma = globdat[gn.MATRIX2]
                 elif key == 'beta':
-                    Sigma == globdat[gn.MATRIX0]
+                    Sigma = globdat[gn.MATRIX0]
                 else:
                     raise ValueError('cannot find optimal value for ' + key)
 

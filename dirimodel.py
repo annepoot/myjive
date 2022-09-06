@@ -17,7 +17,7 @@ class DirichletModel(Model):
     def take_action(self, action, params, globdat):
         if action == act.GETCONSTRAINTS:
             self._get_constraints(params, globdat)
-        if action == act.ADVANCE:
+        elif action == act.ADVANCE:
             self._advance_step_constraints(params, globdat)
 
     def configure(self, props, globdat):
@@ -30,13 +30,12 @@ class DirichletModel(Model):
         else:
             self._dispIncr = np.zeros(len(self._vals))
 
-
     def _get_constraints(self, params, globdat):
         ds = globdat[gn.DOFSPACE]
         for group, dof, val in zip(self._groups, self._dofs, self._vals):
             for node in globdat[gn.NGROUPS][group]:
                 idof = ds.get_dof(node, dof)
-                params[pn.CONSTRAINTS].add_constraint(idof, val)
+                params[pn.CONSTRAINTS].add_dirichlet(idof, val)
 
     def _advance_step_constraints(self, params, globdat):
         self._vals = np.array(self._initDisp) + globdat[gn.TIMESTEP] * np.array(self._dispIncr)

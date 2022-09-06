@@ -51,19 +51,25 @@ model =
 {
   type = Multi;
 
-  models = [ elastic, gp, diri ];
+  models = [ solid, gp, diri ];
 
-  elastic =
+  solid =
   {
-    type = XElastic;
+    type = Solid;
 
     elements = all;
 
-    young = 10000.;
-    thickness = 0.2;
-    poisson = 0.2;
-    rho = 1;
-    state = plane_stress;
+    material =
+    {
+      type = Isotropic;
+      rank = 2;
+      anmodel = plane_stress;
+
+      E = 10000.;
+      nu = 0.2;
+      rho = 1.0;
+      thickness = 0.2;
+    };
 
     shape =
     {

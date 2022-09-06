@@ -41,7 +41,7 @@ def PrettyViewer(array, globdat, **kwargs):
         'mincolor': np.min(globdat['samples_u_prior']),
         'maxcolor': np.max(globdat['samples_u_prior']),
         'colorbar': None,
-        'colormap': 'BuPu',
+        'colormap': 'viridis',
         'scale': 1.0,
         'inset': True,
     }
@@ -50,7 +50,7 @@ def PrettyViewer(array, globdat, **kwargs):
         defaults['boundarywidth'] = 0.5
     else:
         defaults['boundarywidth'] = 0.35
-        defaults['alpha'] = 0.1
+        defaults['alpha'] = 0.15
         defaults['linealpha'] = 0.8
 
     defaults.update(kwargs)
@@ -65,9 +65,9 @@ for i, sample in enumerate(samples_u_prior.T):
         PrettyViewer(u_prior, globdat, ax=ax, mean=True)
     else:
         PrettyViewer(sample, globdat, ax=ax)
-PrettyViewer(u_prior, globdat, ax=ax, mean=True, alpha=0.0, linealpha=1.0, boundarywidth=0.75)
+PrettyViewer(u_prior, globdat, ax=ax, mean=True, alpha=0.0, linealpha=1.0, boundarywidth=1.00)
 
-folder = '/home/anne/Storage/owncloud/phd/images/cantilever-prior/'
+folder = '/home/annepoot/Storage/ownCloud/phd/images/cantilever-prior/'
 
 plt.savefig(folder + 'prior-image.pdf', transparent=True)
 for dpi in [300, 600, 1200]:

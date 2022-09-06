@@ -3,6 +3,7 @@ sys.path.append('../')
 
 from math import exp
 import matplotlib.pyplot as plt
+from matplotlib.cm import get_cmap
 import numpy as np
 import main
 import proputils as pu
@@ -22,7 +23,7 @@ def mesher_lin(L, n, fname='2nodebar_coarse'):
         for i in range(n):
             fmesh.write('%d %d\n' % (i, i + 1))
 
-props = pu.parse_file('tapered.pro')
+props = pu.parse_file('prior-posterior.pro')
 
 props_c = {}
 props_c['gpinit'] = deepcopy(props['gpinit'])
@@ -69,20 +70,22 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
+cmap = get_cmap('Set2')
+
 plt.figure(tight_layout=True)
 ax = plt.gca()
 ax.set_axis_off()
-plt.plot(xf, u_post, color='C0', label='posterior mean')
-plt.plot(xf, u_prior, color='C1', label='prior mean')
-plt.plot(xf, samples_u_post, color='C0', linewidth=0.3)
-plt.plot(xf, samples_u_prior, color='C1', linewidth=0.3)
-plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, color='C0', alpha=0.3)
-plt.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, color='C1', alpha=0.3)
-plt.plot(xc, u_coarse, color='C2', label='coarse solution')
-plt.plot(xf, u, color='C3', label='fine solution')
-plt.legend(fontsize=13)
+plt.plot(xf, u_post, color=cmap(2), label='posterior mean', linewidth=2.5)
+plt.plot(xf, u_prior, color=cmap(0), label='prior mean', linewidth=2.5)
+plt.plot(xf, samples_u_post, color=cmap(2), linewidth=0.5)
+plt.plot(xf, samples_u_prior, color=cmap(0), linewidth=0.5)
+plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, color=cmap(2), alpha=0.5)
+plt.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, color=cmap(0), alpha=0.5)
+plt.plot(xc, u_coarse, color=cmap(3), label='coarse solution', linewidth=2.5)
+plt.plot(xf, u, color=cmap(1), label='fine solution', linewidth=2.5)
+plt.legend(fontsize=13, loc='upper left', bbox_to_anchor=(0, 0.9))
 
-folder = '/home/anne/Storage/owncloud/phd/images/1d-bar/'
+folder = '/home/annepoot/Storage/ownCloud/phd/images/1d-bar/'
 
 plt.savefig(folder + 'prior-posterior.pdf', transparent=True)
 for dpi in [300, 600, 1200]:

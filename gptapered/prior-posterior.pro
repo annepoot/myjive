@@ -48,7 +48,7 @@ gpsampler =
   type = GPSampler;
 
   nsample = 30;
-  seed = 0;
+  seed = 2;
 };
 
 model =

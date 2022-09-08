@@ -48,7 +48,7 @@ gpsampler =
   type = GPSampler;
 
   nsample = 30;
-  seed = 0;
+  seed = None;
 };
 
 model =
@@ -83,7 +83,7 @@ model =
       func = alpha**2 * M;
       hyperparams =
       {
-        alpha = 0.1;
+        alpha = opt;
       };
     };
 

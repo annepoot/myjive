@@ -48,23 +48,29 @@ gpsampler =
   type = GPSampler;
 
   nsample = 30;
-  seed = None;
+  seed = 0;
 };
 
 model =
 {
   type = Multi;
-  models = [ bar, gp, diri ];
+  models = [ solid, gp, diri ];
 
-  bar =
+  solid =
   {
-    type = XBar;
+    type = Solid;
 
     elements = all;
 
-    EA = 3.0 - 0.29 * x;
-    k = 0.0;
-    q = 0.1;
+    material =
+    {
+      type = Heterogeneous;
+      rank = 1;
+      anmodel = bar;
+
+      E = 3.0 - 0.29 * x;
+      rho = 0.1;
+    };
 
     shape =
     {

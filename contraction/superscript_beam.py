@@ -1,12 +1,10 @@
 import sys
 sys.path.append('../')
 
-from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 import main
 import proputils as pu
-import testutils as tu
 from quickviewer import QuickViewer
 from copy import deepcopy
 
@@ -23,18 +21,18 @@ props_c['init']['mesh']['file'] = 'beam_coarse.msh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
-strain_xx_c = globdat_c['tables']['strain']['xx']
-strain_yy_c = globdat_c['tables']['strain']['yy']
-strain_c = np.append(strain_xx_c, strain_yy_c)
 
 globdat = main.jive(props)
 K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
-strain_xx = globdat['tables']['strain']['xx']
-strain_yy = globdat['tables']['strain']['yy']
-strain = np.append(strain_xx, strain_yy)
+f = globdat['extForce']
+c = globdat['constraints']
 
+Kc, fc = c.constrain(K, f)
+
+Phi = globdat['Phi']
+Phic = globdat['Phic']
 f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']
@@ -49,99 +47,74 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
-Phi = globdat['Phi']
+def get_error_rel(u, u_coarse, Phi):
+    error = Phi @ u_coarse - u
+    error_rel = np.zeros(u.size)
 
-err = abs(u - Phi @ u_coarse)
-err_grad = abs(strain - Phi @ strain_c)
+    for i in range(len(u)):
+        if np.isclose(u[i], 0):
+            if np.isclose(error[i], 0):
+                error_rel[i] = 0
+            else:
+                error_rel[i] = np.nan
+        else:
+            error_rel[i] = error[i] / u[i]
 
-QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
+    return abs(error_rel)
 
-QuickViewer(u, globdat, title=r'Exact displacement ($u$)')
+error = abs(Phi @ u_coarse - u)
+error_rel = get_error_rel(u, u_coarse, Phi)
 
-fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
-QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
-QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
-plt.show()
+cont_hadamard = std_u_post / std_u_prior
 
-fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
-QuickViewer(err_grad, globdat, ax=ax1, comp=0, title=r'Discretization error ($|\varepsilon_f^{xx} - \varepsilon_c^{xx}|$)')
-QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
-plt.show()
+QuickViewer(error_rel, globdat, mincolor=0, maxcolor=1, title=r'$|u_c - u_f| / u_f')
 
-fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
-QuickViewer(err_grad, globdat, ax=ax1, comp=1, title=r'Discretization error ($|\varepsilon_f^{yy} - \varepsilon_c^{yy}|$)')
-QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
-plt.show()
+QuickViewer(cont_hadamard, globdat, mincolor=0, maxcolor=0.1, title=r'$\sigma_{prior}/\sigma_{post}$')
 
-QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-
-for i, sample in enumerate(samples_u_prior.T):
-
-    QuickViewer(sample, globdat, scale=10.0, title=r'Prior samples from $u$ (sample {})'.format(i+1))
-
-for i, sample in enumerate(samples_u_post.T):
-
-    QuickViewer(sample, globdat, scale=10.0, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
-
-fine_list = ['post', 'coarse', 'medium', 'fine', 'fine2']
-x_dict = {}
-u_dict = {}
-
-for fineness in fine_list:
-
-    if fineness != 'post':
-        pro = deepcopy(props_c)
-        pro['init']['mesh']['file'] = 'beam_' + fineness + '.msh'
-
-        glob = main.jive(pro)
-
-        dofs = glob['dofSpace']
-        elems = glob['elemSet']
-        nodes = glob['nodeSet']
-        u = glob['state0']
-
-    else:
-        dofs = globdat['dofSpace']
-        elems = globdat['elemSet']
-        nodes = globdat['nodeSet']
-        u = globdat['u_post']
-        std_u_post = np.sqrt(globdat['var_u_post'])
-        std_u_bottom = []
+def get_bottom_values(u, globdat):
+    dofs = globdat['dofSpace']
+    nodes = globdat['nodeSet']
 
     x_bottom = []
     u_bottom = []
+
+    y_min = nodes[0].get_coords()[1]
+
+    for node in nodes:
+        y = node.get_coords()[1]
+        if y < y_min:
+            y_min = y
 
     for n, node in enumerate(nodes):
         coords = node.get_coords()
 
         # Check if the node in located on the bottom row
-        if np.isclose(coords[1], 0):
+        if np.isclose(coords[1], y_min):
             x_bottom.append(coords[0])
             u_bottom.append(u[dofs.get_dof(n, 'dy')])
 
-            if fineness == 'post':
-                std_u_bottom.append(std_u_post[dofs.get_dof(n, 'dy')])
+    # Sort the x_bottom and u_bottom simultaneously
+    x_bottom, u_bottom = [list(v) for v in zip(*sorted(zip(x_bottom, u_bottom)))]
 
-    if fineness == 'post':
-        x_bottom,u_bottom,std_u_bottom =[list(v) for v in zip(*sorted(zip(x_bottom,u_bottom,std_u_bottom)))]
-    else:
-        x_bottom,u_bottom =[list(v) for v in zip(*sorted(zip(x_bottom,u_bottom)))]
+    return np.array(x_bottom), np.array(u_bottom)
 
-    x_dict[fineness] = x_bottom
-    u_dict[fineness] = u_bottom
+xf, uf = get_bottom_values(u, globdat)
+xc, uc = get_bottom_values(u_coarse, globdat_c)
+xf, ef = get_bottom_values(error_rel, globdat)
+xf, cf = get_bottom_values(cont_hadamard, globdat)
 
-plt.figure()
-
-for fineness in fine_list:
-    plt.plot(x_dict[fineness], u_dict[fineness], label=fineness)
-    if fineness == 'post':
-        u_bar = np.array(u_dict[fineness])
-        std_u_bottom = np.array(std_u_bottom)
-        std_u_bottom[0] = std_u_bottom[-1] = 0
-        plt.fill_between(x_dict[fineness], u_bar - 2*std_u_bottom, u_bar + 2*std_u_bottom, alpha=0.3)
-
-plt.legend()
+fig, (ax1, ax2) = plt.subplots(nrows = 2, figsize=(6,8))
+# ax1.plot(xf, u_post, label='posterior mean')
+# ax1.plot(xf, u_prior, label='prior mean')
+# ax1.plot(xf, samples_u_post, color='gray', linewidth=0.2)
+# ax1.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
+# ax1.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
+# ax1.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
+ax1.plot(xc, uc, label='coarse solution')
+ax1.plot(xf, uf, label='fine solution')
+ax1.legend()
+ax2.plot(xf, ef, label=r'$(u_c - u_f)/u_f$')
+ax2.plot(xf, cf, label=r'$\sigma_{prior} / \sigma_{post}$')
+# ax2.set_ylim(0, 2)
+ax2.legend()
 plt.show()

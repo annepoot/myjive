@@ -3,18 +3,15 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 
-from module import *
 from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
 
-LINEWIDTH ='linewidth'
+LINEWIDTH = 'linewidth'
 PLOT = 'plot'
 NCOLORS = 'ncolors'
 DEFORM = 'deform'
 
-def QuickViewer(array, globdat, **kwargs):
 
+def QuickViewer(array, globdat, **kwargs):
     # Get all possible key word arguments
     comp = kwargs.get('comp', None)
     ax = kwargs.get('ax', None)
@@ -42,17 +39,19 @@ def QuickViewer(array, globdat, **kwargs):
 
     # Set the component to the y-component, if it exists
     if comp is None:
-        comp = min(len(types)-1,1)
-
-    assert  shape == 'Triangle3' or shape == 'Triangle6', 'ViewModule only supports triangles for now'
+        comp = min(len(types) - 1, 1)
 
     x = np.zeros(len(nodes))
     y = np.zeros(len(nodes))
 
     if shape == 'Triangle3':
-        el= np.zeros((len(elems),3),dtype=int)
+        nelem = len(elems)
     elif shape == 'Triangle6':
-        el= np.zeros((len(elems)*4,3),dtype=int)
+        nelem = len(elems) * 4
+    else:
+        raise ValueError('ViewModule only supports triangles for now')
+
+    el = np.zeros((nelem, 3), dtype=int)
 
     for n, node in enumerate(nodes):
         coords = node.get_coords()
@@ -64,18 +63,26 @@ def QuickViewer(array, globdat, **kwargs):
         inodes = elem.get_nodes()
 
         if shape == 'Triangle3':
-            el[e,:] = inodes
+            el[e, :] = inodes
         elif shape == 'Triangle6':
-            el[4*e+0,:] = inodes[[0,3,5]]
-            el[4*e+1,:] = inodes[[1,4,3]]
-            el[4*e+2,:] = inodes[[2,5,4]]
-            el[4*e+3,:] = inodes[[3,4,5]]
+            el[4 * e + 0, :] = inodes[[0, 3, 5]]
+            el[4 * e + 1, :] = inodes[[1, 4, 3]]
+            el[4 * e + 2, :] = inodes[[2, 5, 4]]
+            el[4 * e + 3, :] = inodes[[3, 4, 5]]
 
     dx = np.copy(x)
     dy = np.copy(y)
 
+    for n in range(len(nodes)):
+        idofs = dofs.get_dofs([n], types)
+        du = array[idofs]
+
+        if len(idofs) == 2:
+            dx[n] += scale * du[0]
+            dy[n] += scale * du[1]
+
     # !!! This should be moved to an appropriate module once BoundaryShapes have been implemented
-    if not boundarywidth is None:
+    if boundarywidth is not None:
         topx = []
         topy = []
         bottomx = []
@@ -85,16 +92,7 @@ def QuickViewer(array, globdat, **kwargs):
         rightx = []
         righty = []
 
-    for n in range(len(nodes)):
-        idofs = dofs.get_dofs([n], types)
-        du = array[idofs]
-
-        if len(idofs) == 2:
-          dx[n] += scale * du[0]
-          dy[n] += scale * du[1]
-
-        # !!! This should be moved to an appropriate module once BoundaryShapes have been implemented
-        if not boundarywidth is None:
+        for n in range(len(nodes)):
             if np.isclose(y[n], np.max(y)):
                 topx.append(dx[n])
                 topy.append(dy[n])
@@ -108,19 +106,14 @@ def QuickViewer(array, globdat, **kwargs):
                 leftx.append(dx[n])
                 lefty.append(dy[n])
 
-    # !!! This should be moved to an appropriate module once BoundaryShapes have been implemented
-    if not boundarywidth is None:
         topx, topy = (list(t) for t in zip(*sorted(zip(topx, topy))))
         bottomx, bottomy = (list(t) for t in zip(*sorted(zip(bottomx, bottomy))))
         rightx, righty = (list(t) for t in zip(*sorted(zip(rightx, righty))))
         leftx, lefty = (list(t) for t in zip(*sorted(zip(leftx, lefty))))
 
     if ax is None:
-        fig = plt.figure()
         ax = plt.gca()
     else:
-        fig = ax.get_figure()
-
         if inset:
             ax_inset = inset_axes(ax, width='100%', height='100%', loc=10)
             ax_inset.sharex(ax)
@@ -136,7 +129,7 @@ def QuickViewer(array, globdat, **kwargs):
     else:
         ax.set_aspect('equal', adjustable='datalim')
 
-    triang = tri.Triangulation (dx, dy, el)
+    triang = tri.Triangulation(dx, dy, el)
 
     z = np.zeros(len(nodes))
 
@@ -158,7 +151,7 @@ def QuickViewer(array, globdat, **kwargs):
 
     ax.triplot(triang, 'k-', linewidth=linewidth, alpha=linealpha)
 
-    if not boundarywidth is None:
+    if boundarywidth is not None:
         ax.plot(topx, topy, 'k-', linewidth=boundarywidth, alpha=linealpha)
         ax.plot(bottomx, bottomy, 'k-', linewidth=boundarywidth, alpha=linealpha)
         ax.plot(rightx, righty, 'k-', linewidth=boundarywidth, alpha=linealpha)

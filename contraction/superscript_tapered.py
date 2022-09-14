@@ -69,14 +69,23 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
-plt.figure()
-plt.plot(xf, u_post, label='posterior mean')
-plt.plot(xf, u_prior, label='prior mean')
-plt.plot(xf, samples_u_post, color='gray', linewidth=0.2)
-plt.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
-plt.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
-plt.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
-plt.plot(xc, u_coarse, label='coarse solution')
-plt.plot(xf, u, label='fine solution')
-plt.legend()
+error = abs(Phi @ u_coarse - u)
+
+cont_hadamard = std_u_prior / std_u_post
+
+fig, (ax1, ax2) = plt.subplots(nrows = 2, figsize=(6,8))
+ax1.plot(xf, u_post, label='posterior mean')
+ax1.plot(xf, u_prior, label='prior mean')
+ax1.plot(xf, samples_u_post, color='gray', linewidth=0.2)
+ax1.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
+ax1.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
+ax1.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
+ax1.plot(xc, u_coarse, label='coarse solution')
+ax1.plot(xf, Phi @ u_coarse, label='coarse solution')
+ax1.plot(xf, u, label='fine solution')
+ax1.legend()
+ax2.plot(xf, error / u, label=r'$(u_c - u_f)/u_f$')
+ax2.plot(xf, 1 / cont_hadamard, label=r'$\sigma_{prior} / \sigma_{post}$')
+ax2.set_ylim(0, 0.2)
+ax2.legend()
 plt.show()

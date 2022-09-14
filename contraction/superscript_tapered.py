@@ -45,14 +45,6 @@ Kc, fc = c.constrain(K, f)
 xf = np.linspace(0, 10, len(u))
 xc = np.linspace(0, 10, len(u_coarse))
 
-step = int((len(xf)-1) / (len(xc)-1))
-
-u_post = globdat['u_post']
-
-print(u_coarse)
-print(u[::step])
-print(u_post[::step])
-
 Phi = globdat['Phi']
 Phic = globdat['Phic']
 f_prior = globdat['f_prior']
@@ -69,7 +61,23 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_post = globdat['samples_u_post']
 samples_f_post = globdat['samples_f_post']
 
+def get_error_rel(u, u_coarse, Phi):
+    error = Phi @ u_coarse - u
+    error_rel = np.zeros(u.size)
+
+    for i in range(len(u)):
+        if np.isclose(u[i], 0):
+            if np.isclose(error[i], 0):
+                error_rel[i] = 0
+            else:
+                error_rel[i] = np.nan
+        else:
+            error_rel[i] = error[i] / u[i]
+
+    return abs(error_rel)
+
 error = abs(Phi @ u_coarse - u)
+error_rel = get_error_rel(u, u_coarse, Phi)
 
 cont_hadamard = std_u_prior / std_u_post
 
@@ -80,11 +88,10 @@ ax1.plot(xf, samples_u_post, color='gray', linewidth=0.2)
 ax1.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
 ax1.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
 ax1.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
-ax1.plot(xc, u_coarse, label='coarse solution')
 ax1.plot(xf, Phi @ u_coarse, label='coarse solution')
 ax1.plot(xf, u, label='fine solution')
 ax1.legend()
-ax2.plot(xf, error / u, label=r'$(u_c - u_f)/u_f$')
+ax2.plot(xf, error_rel, label=r'$(u_c - u_f)/u_f$')
 ax2.plot(xf, 1 / cont_hadamard, label=r'$\sigma_{prior} / \sigma_{post}$')
 ax2.set_ylim(0, 0.2)
 ax2.legend()

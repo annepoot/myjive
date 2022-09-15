@@ -118,10 +118,3 @@ model =
     values = [ 0., 0., 0. ];
   };
 };
-
-vtkout =
-{
-  file = results;
-  type = VTKOut;
-  tables = [ stress, strain ];
-};

@@ -111,7 +111,10 @@ def QuickViewer(array, globdat, **kwargs):
         rightx, righty = (list(t) for t in zip(*sorted(zip(rightx, righty))))
         leftx, lefty = (list(t) for t in zip(*sorted(zip(leftx, lefty))))
 
-    if ax is None:
+    no_ax = ax is None
+
+    if no_ax:
+        plt.figure()
         ax = plt.gca()
     else:
         if inset:
@@ -170,5 +173,5 @@ def QuickViewer(array, globdat, **kwargs):
     if not fname is None:
         plt.savefig(fname, dpi=300)
 
-    if ax is None:
-        plt.show(block=False)
+    if no_ax:
+        plt.show(block=True)

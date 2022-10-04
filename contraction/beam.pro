@@ -44,6 +44,7 @@ gpsolver =
   storeConstraints = True;
   getUnitMassMatrix = True;
   getForceResults = True;
+  getFullCovariance = True;
   tables = [ stress, strain ];
 };
 

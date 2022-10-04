@@ -41,6 +41,7 @@ gpsolver =
   storeConstraints = True;
   getUnitMassMatrix = True;
   getForceResults = True;
+  getFullCovariance = True;
 };
 
 gpsampler =

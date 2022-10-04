@@ -12,6 +12,7 @@ from constrainer import Constrainer
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 GETFORCERESULTS = 'getForceResults'
+GETFULLCOVARIANCE = 'getFullCovariance'
 
 class GPSolverModule(SolverModule):
 
@@ -23,7 +24,7 @@ class GPSolverModule(SolverModule):
         myprops = props[self._name]
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'False')))
         self._get_force_results = bool(eval(myprops.get(GETFORCERESULTS, 'False')))
-
+        self._get_full_covariance = bool(eval(myprops.get(GETFULLCOVARIANCE, 'False')))
 
     def run(self, globdat):
 
@@ -60,7 +61,7 @@ class GPSolverModule(SolverModule):
             # Define a dictionary for the settings of u
             params = {}
             params[gppn.FIELD] = field
-            params[gppn.FULLCOVARIANCE] = False
+            params[gppn.FULLCOVARIANCE] = self._get_full_covariance
 
             # Take the appropriate actions for u
             model.take_action(gpact.GETPRIORMEAN, params, globdat)

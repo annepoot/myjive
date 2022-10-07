@@ -46,6 +46,9 @@ class XNodeSet(NodeSet, XItemSet):
             assert self._rank == node.rank()
         self.add_item(node, node_id)
 
+    def erase_node(self, inode):
+        self.erase_item(inode)
+
     def set_node_coords(self, inode, coords):
         self._data[inode].set_coords(coords)
 

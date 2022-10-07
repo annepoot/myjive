@@ -2,9 +2,12 @@ import numpy as np
 
 class ItemSet():
 
-    def __init__(self):
-        self._map = {}
-        self._data = []
+    def __init__(self, data=None):
+        if data is None:
+            self._data = []
+            self._map = {}
+        else:
+            self._data, self._map = data
 
     def size(self):
         return len(self._data)
@@ -41,8 +44,8 @@ class ItemSet():
 class XItemSet(ItemSet):
 
     def clear(self):
-        self._map = {}
         self._data= []
+        self._map = {}
 
     def add_item(self, item, item_id=None):
         size = self.size()
@@ -50,13 +53,13 @@ class XItemSet(ItemSet):
             item_id = size+1
         if item_id in self._map.keys():
             raise ValueError('item ID already exists in itemset')
-        self._map[item_id] = size+1
         self._data.append(item)
+        self._map[item_id] = size+1
 
     def erase_item(self, iitem):
+        self._data.pop(iitem)
         for item_id, idx in self._map.items():
             if idx > iitem:
                 self._map[item_id] = idx - 1
             elif idx == iitem:
                 self._map.pop(item_id)
-        self._data.pop(iitem)

@@ -4,8 +4,8 @@ from element import Element
 
 class ElementSet(ItemSet):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, data=None):
+        super().__init__(data)
         self._maxNodeCount = 0
 
     def find_element(self, elem_id):
@@ -41,8 +41,8 @@ class ElementSet(ItemSet):
 
 class XElementSet(ElementSet, XItemSet):
 
-    def add_element(self, nodes, elem_id=None):
-        elem = Element(nodes)
+    def add_element(self, inodes, elem_id=None):
+        elem = Element(inodes)
         nodeCount = elem.get_node_count()
 
         if self._maxNodeCount < nodeCount:

@@ -9,9 +9,11 @@ class ItemSet():
     def size(self):
         return len(self._data)
 
+    def get_data(self):
+        return self._data, self._map
+
     def get_item_map(self):
         return self._map
-
 
     def find_item(self, item_id):
         return self._map.get(item_id, -1)

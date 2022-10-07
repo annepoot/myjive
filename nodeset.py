@@ -8,9 +8,6 @@ class NodeSet(ItemSet):
         super().__init__()
         self._rank = 0
 
-    def get_data(self):
-        return self._data, self._map
-
     def rank(self):
         return self._rank
 
@@ -27,13 +24,13 @@ class NodeSet(ItemSet):
         coords = []
         for inode in range(self.size()):
             coords.append(self.get_node_coords(inode))
-        return np.array(coords, dtype=float)
+        return coords
 
     def get_some_coords(self, inodes):
         coords = []
         for inode in inodes:
             coords.append(self.get_node_coords(inode))
-        return np.array(coords, dtype=float)
+        return coords
 
 
 class XNodeSet(NodeSet, XItemSet):

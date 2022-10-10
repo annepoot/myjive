@@ -3,8 +3,8 @@ from element import Element
 
 class ElementSet(ItemSet):
 
-    def __init__(self, nodes, data=None):
-        super().__init__(data)
+    def __init__(self, nodes, elems=None):
+        super().__init__(elems)
         self._nodes = nodes
         self._maxNodeCount = 0
 

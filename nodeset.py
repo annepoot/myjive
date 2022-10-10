@@ -3,8 +3,8 @@ from node import Node
 
 class NodeSet(ItemSet):
 
-    def __init__(self, data=None):
-        super().__init__(data)
+    def __init__(self, nodes=None):
+        super().__init__(nodes)
         self._rank = 0
 
     def rank(self):

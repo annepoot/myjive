@@ -2,18 +2,16 @@ import numpy as np
 
 class ItemSet():
 
-    def __init__(self, data=None):
-        if data is None:
+    def __init__(self, items=None):
+        if items is None:
             self._data = []
             self._map = {}
         else:
-            self._data, self._map = data
+            self._data, items._data
+            self._map = items._map
 
     def size(self):
         return len(self._data)
-
-    def get_data(self):
-        return self._data, self._map
 
     def get_item_map(self):
         return self._map

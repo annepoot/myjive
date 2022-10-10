@@ -10,6 +10,18 @@ class ItemSet():
             self._data = items._data
             self._map = items._map
 
+    def __len__(self):
+        return self.size()
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __next__(self):
+        return next(self._data)
+
+    def __getitem__(self, iitem):
+        return self._data[iitem]
+
     def size(self):
         return len(self._data)
 

@@ -71,3 +71,7 @@ class XElementSet(ElementSet, XItemSet):
 
     def set_elem_nodes(self, ielem, nodes):
         self._data[ielem].set_nodes(nodes)
+
+    def to_elementset(self):
+        self.__class__ = ElementSet
+        return self

@@ -1,3 +1,4 @@
+import numpy as np
 from itemset import ItemSet, XItemSet
 from node import Node
 
@@ -23,13 +24,13 @@ class NodeSet(ItemSet):
         coords = []
         for inode in range(self.size()):
             coords.append(self.get_node_coords(inode))
-        return coords
+        return np.array(coords).T
 
     def get_some_coords(self, inodes):
         coords = []
         for inode in inodes:
             coords.append(self.get_node_coords(inode))
-        return coords
+        return np.array(coords).T
 
 
 class XNodeSet(NodeSet, XItemSet):
@@ -59,3 +60,7 @@ class XNodeSet(NodeSet, XItemSet):
             raise ValueError('first dimension of coords does not match the size of inodes')
         for i, inode in enumerate(inodes):
             self.set_node_coords(inode, coords[i])
+
+    def to_nodeset(self):
+        self.__class__ = NodeSet
+        return self

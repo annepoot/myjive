@@ -7,7 +7,7 @@ class ItemSet():
             self._data = []
             self._map = {}
         else:
-            self._data, items._data
+            self._data = items._data
             self._map = items._map
 
     def size(self):

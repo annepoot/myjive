@@ -70,3 +70,7 @@ class XNodeSet(NodeSet, XItemSet):
     def to_nodeset(self):
         self.__class__ = NodeSet
         return self
+
+def to_xnodeset(nodes):
+    nodes.__class__ = XNodeSet
+    return nodes

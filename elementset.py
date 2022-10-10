@@ -76,3 +76,7 @@ class XElementSet(ElementSet, XItemSet):
     def to_elementset(self):
         self.__class__ = ElementSet
         return self
+
+def to_xelementset(elems):
+    elems.__class__ = XElementSet
+    return elems

@@ -1,4 +1,3 @@
-import numpy as np
 from itemset import ItemSet, XItemSet
 from node import Node
 

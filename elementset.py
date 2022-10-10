@@ -1,11 +1,11 @@
-import numpy as np
 from itemset import ItemSet, XItemSet
 from element import Element
 
 class ElementSet(ItemSet):
 
-    def __init__(self, data=None):
+    def __init__(self, nodes, data=None):
         super().__init__(data)
+        self._nodes = nodes
         self._maxNodeCount = 0
 
     def find_element(self, elem_id):
@@ -30,13 +30,20 @@ class ElementSet(ItemSet):
         return self._data[ielem].get_nodes()
 
     def get_nodes(self):
-        nodes = []
-        for ielem in range(self.size()):
-            nodes.append(self.get_elem_nodes(ielem))
-        return nodes
+        return self._nodes
 
     def get_some_elem_nodes(self, index, inode):
         return self.get_elem_nodes(inode)[index]
+
+    def get_nodes_of(self, ielems):
+        inodes = []
+        for ielem in ielems:
+            for inode in self.get_elem_nodes(ielem):
+                inodes.append(inode)
+        return inodes
+
+    def get_unique_nodes_of(self, ielems):
+        return list(set(self.get_nodes_of(ielems)))
 
 
 class XElementSet(ElementSet, XItemSet):

@@ -13,6 +13,18 @@ class ItemGroup():
 
         assert isinstance(self._items, ItemSet)
 
+    def __len__(self):
+        return self.size()
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __next__(self):
+        return next(self._data)
+
+    def __contains__(self, iitem):
+        return self.contains(iitem)
+
     def size(self):
         return len(self._data)
 

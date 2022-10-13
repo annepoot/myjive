@@ -1,3 +1,4 @@
+import numpy as np
 from itemset import ItemSet
 
 class ItemGroup():
@@ -19,27 +20,27 @@ class ItemGroup():
         self._items.get_item_ids(self.get_indices())
 
     def get_indices(self):
-        return self._data
+        return np.array(self._data, dtype=int)
 
     def get_items(self):
         return self._items
 
     def contains(self, iitem):
-        return iitem in self.get_indices
+        return iitem in self.get_indices()
 
     def find_members(self, iitems):
         jitems = []
         for iitem in iitems:
             if self.contains(iitem):
                 jitems.append(iitem)
-        return jitems
+        return np.array(jitems, dtype=int)
 
     def find_non_members(self, iitems):
         jitems = []
         for iitem in iitems:
             if not self.contains(iitem):
                 jitems.append(iitem)
-        return jitems
+        return np.array(jitems, dtype=int)
 
 
 class XItemGroup(ItemGroup):

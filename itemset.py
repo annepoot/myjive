@@ -52,7 +52,7 @@ class XItemSet(ItemSet):
         if item_id in self._map.keys():
             raise ValueError('item ID already exists in itemset')
         self._data.append(item)
-        self._map[item_id] = size+1
+        self._map[item_id] = size
 
     def erase_item(self, iitem):
         self._data.pop(iitem)

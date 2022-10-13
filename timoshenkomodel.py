@@ -45,7 +45,8 @@ class TimoshenkoModel(Model):
         for elem in self._elems:
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:1, :]
+            coords = self._nodes.get_some_coords(inodes)
+
             sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
 

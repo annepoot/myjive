@@ -78,7 +78,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elmat = np.zeros((6, 6))
 
             if self._subtype == LINEAR:
@@ -134,7 +134,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elmatM = np.zeros((6, 6))
             elmatG = np.zeros((6, 6))
 
@@ -170,7 +170,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elfor = np.zeros(6)
 
             ue = [globdat[gn.STATE0][i] for i in idofs]
@@ -257,7 +257,7 @@ class FrameModel(Model):
             globdat[gn.HISTORY] = np.column_stack(( globdat[gn.HISTORY], globdat[gn.HISTORY][:,oldphidof]))
 
         # Update element connectivity
-        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)        
+        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)
 
         # Modify hinge variables
         self._nhinges += 1
@@ -279,7 +279,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             m1 = 0
             m2 = 0
 

@@ -2,7 +2,7 @@ init =
 {
   nodeGroups = [ bl, tl, tr, br ];
 
-  mesh = 
+  mesh =
   {
     type = geo;
     file = frame.geom;
@@ -43,7 +43,7 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ bl, bl, br, br, tr ];
     dofs   = [ dx, dy, dx, dy, dy ];
@@ -51,7 +51,7 @@ model =
     dispIncr = [ 0.0, 0.0, 0.0, 0.0, -0.0002 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -71,5 +71,6 @@ nonlin =
 
 frameview =
 {
+  type = FrameView;
   deform = 10.;
 };

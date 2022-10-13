@@ -2,7 +2,7 @@ init =
 {
   nodeGroups = [ bl, tl, tr, br ];
 
-  mesh = 
+  mesh =
   {
     type = geo;
     file = frame.geom;
@@ -43,7 +43,7 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ bl, bl, br, br ];
     dofs   = [ dx, dy, dx, dy ];
@@ -51,7 +51,7 @@ model =
     dispIncr = [ 0.0, 0.0, 0.0, 0.0 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -71,19 +71,20 @@ arclen =
   dl = 0.02;
 };
 
-loaddisp = 
+loaddisp =
 {
+  type = LoadDisp;
   groups = [ tl ];
 };
 
 frameview =
 {
+  type = FrameView;
   deform = 1.;
 };
 
-graph = 
+graph =
 {
   xData = [loaddisp.tl.disp.dx,loaddisp.tl.disp.dy];
   yData = [loaddisp.tl.load.dx,loaddisp.tl.load.dy];
 };
-

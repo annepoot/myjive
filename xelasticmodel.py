@@ -82,13 +82,13 @@ class XElasticModel(ElasticModel):
 
     def _get_D_matrix(self, ipcoords):
         D = np.zeros((self._strcount, self._strcount))
-        E = pu.evaluate(self._young, {'x':ipcoords[0], 'y':ipcoords[1]})
+        E = pu.evaluate(self._young, ipcoords, 2)
 
         if self._rank == 1:
             D[[0]] = E
             return D
 
-        nu = pu.evaluate(self._poisson, {'x':ipcoords[0], 'y':ipcoords[1]})
+        nu = pu.evaluate(self._poisson, ipcoords, 2)
         g = 0.5 * E / (1. + nu)
 
         if self._rank == 3:
@@ -127,7 +127,7 @@ class XElasticModel(ElasticModel):
         return D
 
     def _get_M_matrix(self, ipcoords):
-        rho_ = pu.evaluate(self._rho, {'x':ipcoords[0], 'y':ipcoords[1]})
+        rho_ = pu.evaluate(self._rho, ipcoords, 2)
         M = rho_ * np.identity(self._rank)
 
         if self._rank == 2:
@@ -136,7 +136,7 @@ class XElasticModel(ElasticModel):
         return M
 
     def _get_b_vector(self, ipcoords):
-        rho_ = pu.evaluate(self._rho, {'x':ipcoords[0], 'y':ipcoords[1]})
+        rho_ = pu.evaluate(self._rho, ipcoords, 2)
 
         if self._rank == 3:
             gravity = np.array([0, -1, 0])

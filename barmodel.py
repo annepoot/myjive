@@ -67,7 +67,7 @@ class BarModel(Model):
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, gradients, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
@@ -97,7 +97,7 @@ class BarModel(Model):
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()

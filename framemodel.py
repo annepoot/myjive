@@ -6,6 +6,7 @@ from names import GlobNames as gn
 from names import PropNames as prn
 from model import *
 from node import Node
+from nodeset import to_xnodeset
 
 ELEMENTS = 'elements'
 SUBTYPE = 'subtype'
@@ -236,7 +237,9 @@ class FrameModel(Model):
         # Add node
         oldnode = hingenode
         coords = globdat[gn.NSET][oldnode].get_coords()
-        globdat[gn.NSET].append(Node(coords))
+        xnodes = to_xnodeset(globdat[gn.NSET])
+        xnodes.add_node(coords)
+        xnodes.to_nodeset()
         newnode = len(globdat[gn.NSET]) - 1
 
         # Duplicate dofs and add new phi dof

@@ -71,7 +71,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
             ielem = np.random.randint(0, len(elems) - 1)
             elem = elems[ielem]
             inodes = elem.get_nodes()
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            coords = globdat[gn.NSET].get_some_coords(inodes)
 
             center_coords = np.mean(coords, axis=1)
 

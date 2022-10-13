@@ -2,7 +2,11 @@ import numpy as np
 
 from module import Module
 from node import Node
+from nodeset import XNodeSet
+from nodegroup import NodeGroup
 from element import Element
+from elementset import XElementSet
+from elementgroup import ElementGroup
 from dofspace import DofSpace
 
 from names import GlobNames as gn
@@ -28,6 +32,7 @@ class InitModule(Module):
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
         globdat[gn.EGROUPS] = {}
+
         modelfac = globdat[gn.MODELFACTORY]
         modelprops = props[gn.MODEL]
 
@@ -79,82 +84,92 @@ class InitModule(Module):
         if not fname.endswith('.msh'):
             raise RuntimeError('Unexpected mesh file extension')
 
-        nodes = []
-        elems = []
-
-        parse_nodes = False
-        parse_elems = False
-        eltype = 0
-        nnodes = 0
+        # Create a clean nodeset and elementset
+        nodes = XNodeSet()
+        elems = XElementSet(nodes)
 
         with open(fname) as msh:
-            for line in msh:
-                sp = line.split()
+            lines = msh.readlines()
 
-                if '$Nodes' in line:
-                    parse_nodes = True
+            # Extract the Nodes and Elements blocks from the gmsh file
+            nlines = lines[lines.index('$Nodes\n')+2:lines.index('$EndNodes\n')]
+            elines = lines[lines.index('$Elements\n')+2:lines.index('$EndElements\n')]
 
-                elif '$Elements' in line:
-                    parse_nodes = False
-                    parse_elems = True
+            # Split the node and element info
+            node_ids = np.genfromtxt(nlines, dtype=int)[:,0]
+            coords = np.genfromtxt(nlines, dtype=float)[:,1:]
 
-                elif parse_nodes and len(sp) > 1:
-                    if len(sp[1:]) != 3:
-                        raise SyntaxError('InitModule: Three coordinates per node are expected')
-                    coords = np.array(sp[1:], dtype=np.float64)
-                    nodes.append(Node(coords))
+            elem_ids = np.genfromtxt(elines, dtype=int)[:,0]
+            elem_info = np.genfromtxt(elines, dtype=int)[:,1:5]
+            inodes = np.genfromtxt(elines, dtype=int)[:,5:]
 
-                elif parse_elems and len(sp) > 1:
-                    if eltype == 0:
-                        eltype = int(sp[1])
-                        if eltype == 1:
-                            globdat[gn.MESHSHAPE] = 'Line2'
-                            globdat[gn.MESHRANK] = 1
-                            nnodes = 2
-                        elif eltype == 2:
-                            globdat[gn.MESHSHAPE] = 'Triangle3'
-                            globdat[gn.MESHRANK] = 2
-                            nnodes = 3
-                        elif eltype == 3:
-                            globdat[gn.MESHSHAPE] = 'Quad4'
-                            globdat[gn.MESHRANK] = 2
-                            nnodes = 4
-                        elif eltype == 4:
-                            globdat[gn.MESHSHAPE] = 'Tet4'
-                            globdat[gn.MESHRANK] = 3
-                            nnodes = 4
-                        elif eltype == 5:
-                            globdat[gn.MESHSHAPE] = 'Brick8'
-                            globdat[gn.MESHRANK] = 3
-                            nnodes = 8
-                        elif eltype == 8:
-                            globdat[gn.MESHSHAPE] = 'Line3'
-                            globdat[gn.MESHRANK] = 1
-                            nnodes = 3
-                        elif eltype == 9:
-                            globdat[gn.MESHSHAPE] = 'Triangle6'
-                            globdat[gn.MESHRANK] = 2
-                            nnodes = 6
-                        else:
-                            raise SyntaxError('InitModule: Unsupported element type')
-                    elif eltype != int(sp[1]):
-                        raise SyntaxError('InitModule: Only one element type per mesh is supported')
-                    inodes = np.array(sp[3 + int(sp[2]):], dtype=np.int32) - 1
-                    if len(inodes) != nnodes:
-                        raise SyntaxError('InitModule: Could not read element with incorrect number of nodes')
-                    elems.append(Element(inodes))
+            # Get the element type, and make sure it is the only one
+            eltype = elem_info[0,0]
+            nnodes = 0
+            if not np.all(elem_info[:,0] == eltype):
+                raise SyntaxError('InitModule: Only one element type per mesh is supported')
 
-        globdat[gn.NSET] = nodes
-        globdat[gn.ESET] = elems
+            # Get the info belonging to the element type
+            if eltype == 1:
+                globdat[gn.MESHSHAPE] = 'Line2'
+                globdat[gn.MESHRANK] = 1
+                nnodes = 2
+            elif eltype == 2:
+                globdat[gn.MESHSHAPE] = 'Triangle3'
+                globdat[gn.MESHRANK] = 2
+                nnodes = 3
+            elif eltype == 3:
+                globdat[gn.MESHSHAPE] = 'Quad4'
+                globdat[gn.MESHRANK] = 2
+                nnodes = 4
+            elif eltype == 4:
+                globdat[gn.MESHSHAPE] = 'Tet4'
+                globdat[gn.MESHRANK] = 3
+                nnodes = 4
+            elif eltype == 5:
+                globdat[gn.MESHSHAPE] = 'Brick8'
+                globdat[gn.MESHRANK] = 3
+                nnodes = 8
+            elif eltype == 8:
+                globdat[gn.MESHSHAPE] = 'Line3'
+                globdat[gn.MESHRANK] = 1
+                nnodes = 3
+            elif eltype == 9:
+                globdat[gn.MESHSHAPE] = 'Triangle6'
+                globdat[gn.MESHRANK] = 2
+                nnodes = 6
+            else:
+                raise SyntaxError('InitModule: Unsupported element type')
 
-        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
-        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+            # Make sure that the correct number of nodes and coordinates is passed
+            if coords.shape[1] != 3:
+                raise SyntaxError('InitModule: Three coordinates per node are expected')
+            if inodes.shape[1] != nnodes:
+                raise SyntaxError('InitModule: Could not read element with incorrect number of nodes')
+
+            # Add all nodes to the node set
+            for i in range(coords.shape[0]):
+                nodes.add_node(coords[i,:globdat[gn.MESHRANK]], node_id=node_ids[i])
+
+            # Add all elements to the element set
+            for i in range(inodes.shape[0]):
+                elems.add_element(nodes.find_nodes(inodes[i,:]), elem_id=elem_ids[i])
+
+        # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
+        globdat[gn.NSET] = nodes.to_nodeset()
+        globdat[gn.ESET] = elems.to_elementset()
+
+        # Create node and element groups containing all items
+        globdat[gn.NGROUPS]['all'] = NodeGroup(nodes, [*range(nodes.size())])
+        globdat[gn.EGROUPS]['all'] = ElementGroup(elems, [*range(elems.size())])
 
     def _read_mesh(self, fname, globdat):
         print('InitModule: Reading manual mesh file', fname, '...')
 
-        nodes = []
-        elems = []
+        # Create a clean nodeset and elementset
+        nodes = XNodeSet()
+        elems = XElementSet(nodes)
+
         parse_nodes = False
         parse_elems = False
 
@@ -171,30 +186,32 @@ class InitModule(Module):
                     parse_elems = True
 
                 elif parse_nodes and len(sp) > 1:
-                    coords = np.array(sp[1:], dtype=np.float64)
-                    nodes.append(Node(coords))
-                    rank = len(sp) - 1
+                    nodes.add_node(sp[1:], sp[0])
+                    globdat[gn.MESHRANK] = len(sp) - 1
 
                 elif parse_elems and len(sp) > 0:
-                    connectivity = np.array(sp, dtype=np.int16)
-                    elems.append(Element(connectivity))
+                    elems.add_element(sp)
 
-        globdat[gn.NSET] = nodes
-        globdat[gn.ESET] = elems
-        globdat[gn.MESHRANK] = rank
+        # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
+        globdat[gn.NSET] = nodes.to_nodeset()
+        globdat[gn.ESET] = elems.to_elementset()
 
-        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
-        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+        # Create node and element groups containing all items
+        globdat[gn.NGROUPS]['all'] = NodeGroup(nodes, [*range(nodes.size())])
+        globdat[gn.EGROUPS]['all'] = ElementGroup(elems, [*range(elems.size())])
 
     def _read_geo(self, fname, globdat):
         print('InitModule: Reading geo mesh file', fname, '...')
 
-        nodes = []
-        members = []
-        nelem = []
-        elems = []
+        # Create a clean nodeset and elementset
+        nodes = XNodeSet()
+        elems = XElementSet(nodes)
+
         parse_nodes = False
         parse_elems = False
+
+        members = []
+        nelem = []
 
         with open(fname) as msh:
             for line in msh:
@@ -208,8 +225,7 @@ class InitModule(Module):
                     parse_elems = True
 
                 elif parse_nodes and len(sp) > 1:
-                    coords = np.array(sp[1:], dtype=np.float64)
-                    nodes.append(Node(coords))
+                    nodes.add_node(sp[1:], sp[0])
 
                 elif parse_elems and len(sp) > 0:
                     members.append([int(sp[0]), int(sp[1])])
@@ -227,65 +243,72 @@ class InitModule(Module):
                 pass
 
             elif nel == 1:
-                elems.append(Element(mem))
+                elems.add_element(mem)
 
             else:
                 x0 = nodes[mem[0]].get_coords()
                 x1 = nodes[mem[1]].get_coords()
                 dx = (x1 - x0) / nel
-                nodes.append(Node(x0 + dx))
+                nodes.add_node(x0 + dx)
                 connectivity = np.array([mem[0], inode])
-                elems.append(Element(connectivity))  # first element on member
+                elems.add_element(connectivity)  # first element on member
 
                 if nel > 2:
                     for i in range(nel - 2):
                         coords = np.array(x0 + (i + 2) * dx, dtype=np.float64)
-                        nodes.append(Node(coords))
+                        nodes.add_node(coords)
                         connectivity = np.array([inode, inode + 1])
-                        elems.append(Element(connectivity))  # intermediate elements on member
+                        elems.add_element(connectivity)  # intermediate elements on member
                         inode += 1
 
                 connectivity = np.array([inode, mem[1]])
-                elems.append(Element(connectivity))  # last element on member
+                elems.add_element(connectivity)  # last element on member
                 inode += 1
 
             ie1 = len(elems)
-            globdat[gn.EGROUPS]['member'+str(imember)] = [*range(ie0,ie1)]
+            globdat[gn.EGROUPS]['member'+str(imember)] = ElementGroup(elems, [*range(ie0,ie1)])
             imember += 1
 
         print('done reading geo ' + str(len(elems)) + ' elements')
-        globdat[gn.NSET] = nodes
-        globdat[gn.ESET] = elems
-        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
-        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+
+        # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
+        globdat[gn.NSET] = nodes.to_nodeset()
+        globdat[gn.ESET] = elems.to_elementset()
+
+        # Create node and element groups containing all items
+        globdat[gn.NGROUPS]['all'] = NodeGroup(nodes, [*range(nodes.size())])
+        globdat[gn.EGROUPS]['all'] = ElementGroup(elems, [*range(elems.size())])
 
     def _read_meshio(self, mesh, globdat):
         print('Reading mesh from a Meshio object...')
 
-        nodes = []
-        elems = []
+        # Create a clean nodeset and elementset
+        nodes = XNodeSet()
+        elems = XElementSet(nodes)
 
         for point in mesh.points:
-            nodes.append(Node(point))
+            nodes.add_node(point)
 
         if 'triangle' in mesh.cells_dict:
             globdat[gn.MESHSHAPE] = 'Triangle3'
             globdat[gn.MESHRANK] = 2
             for elem in mesh.cells_dict['triangle']:
-                elems.append(Element(elem))
+                elems.add_element(elem)
         else:
             raise SyntaxError('InitModule: Unsupported Meshio element type')
 
-        globdat[gn.NSET] = nodes
-        globdat[gn.ESET] = elems
+        # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
+        globdat[gn.NSET] = nodes.to_nodeset()
+        globdat[gn.ESET] = elems.to_elementset()
 
-        globdat[gn.NGROUPS]['all'] = [*range(len(nodes))]
-        globdat[gn.EGROUPS]['all'] = [*range(len(elems))]
+        # Create node and element groups containing all items
+        globdat[gn.NGROUPS]['all'] = NodeGroup(nodes, [*range(nodes.size())])
+        globdat[gn.EGROUPS]['all'] = ElementGroup(elems, [*range(elems.size())])
 
     def _create_ngroups(self, groups, props, globdat):
-        coords = np.stack([node.get_coords() for node in globdat[gn.NSET]], axis=1)
+        coords = globdat[gn.NSET].get_coords()
         for g in groups:
-            group = np.array(globdat[gn.NGROUPS]['all'])
+            group = globdat[gn.NGROUPS]['all'].get_indices()
             gprops = props[g]
             if isinstance(gprops,dict):
                 for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
@@ -307,7 +330,8 @@ class InitModule(Module):
             else:
                 group = pu.parse_list(gprops,int)
 
-            globdat[gn.NGROUPS][g] = group
+            globdat[gn.NGROUPS][g] = NodeGroup(globdat[gn.NSET], group)
+
             print('InitModule: Created group', g, 'with nodes', group)
 
     def _create_egroups(self, groups, globdat):

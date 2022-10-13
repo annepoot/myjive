@@ -49,7 +49,9 @@ class VTKOutModule(Module):
                 out.write('<Points>\n')
                 out.write('<DataArray type="Float64" NumberOfComponents="3" format="ascii">\n')
                 for node in nodes:
-                    out.write(' '.join(map(str, node.get_coords())) + '\n')
+                    coords3d = np.zeros(3)
+                    coords3d[:node.rank()] = node.get_coords()
+                    out.write(' '.join(map(str, coords3d)) + '\n')
                 out.write('</DataArray>\n')
                 out.write('</Points>\n')
                 out.write('<Cells>\n')

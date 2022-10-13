@@ -6,6 +6,7 @@ from names import GlobNames as gn
 from names import PropNames as prn
 from model import *
 from node import Node
+from nodeset import to_xnodeset
 
 ELEMENTS = 'elements'
 SUBTYPE = 'subtype'
@@ -51,7 +52,9 @@ class FrameModel(Model):
 
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
-        self._elems = [globdat[gn.ESET][e] for e in egroup]
+        self._elems = egroup.get_elements()
+        self._ielems = egroup.get_indices()
+        self._nodes = self._elems.get_nodes()
 
         self._ipcount = self._shape.ipoint_count()
         self._dofcount = 3 * self._shape.node_count()
@@ -76,7 +79,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elmat = np.zeros((6, 6))
 
             if self._subtype == LINEAR:
@@ -132,7 +135,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elmatM = np.zeros((6, 6))
             elmatG = np.zeros((6, 6))
 
@@ -168,7 +171,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             elfor = np.zeros(6)
 
             ue = [globdat[gn.STATE0][i] for i in idofs]
@@ -234,7 +237,9 @@ class FrameModel(Model):
         # Add node
         oldnode = hingenode
         coords = globdat[gn.NSET][oldnode].get_coords()
-        globdat[gn.NSET].append(Node(coords))
+        xnodes = to_xnodeset(globdat[gn.NSET])
+        xnodes.add_node(coords)
+        xnodes.to_nodeset()
         newnode = len(globdat[gn.NSET]) - 1
 
         # Duplicate dofs and add new phi dof
@@ -255,7 +260,7 @@ class FrameModel(Model):
             globdat[gn.HISTORY] = np.column_stack(( globdat[gn.HISTORY], globdat[gn.HISTORY][:,oldphidof]))
 
         # Update element connectivity
-        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)        
+        globdat[gn.ESET][hingeelem].change_node(oldnode, newnode)
 
         # Modify hinge variables
         self._nhinges += 1
@@ -277,7 +282,7 @@ class FrameModel(Model):
             coords1d = np.array([0, l_0])
 
             sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords1d)
+            grads, weights = self._shape.get_shape_gradients([coords1d])
             m1 = 0
             m2 = 0
 

@@ -1,3 +1,4 @@
+import numpy as np
 from itemset import ItemSet, XItemSet
 from element import Element
 
@@ -33,17 +34,17 @@ class ElementSet(ItemSet):
         return self._nodes
 
     def get_some_elem_nodes(self, index, inode):
-        return self.get_elem_nodes(inode)[index]
+        return np.array(self.get_elem_nodes(inode)[index], dtype=int)
 
     def get_nodes_of(self, ielems):
         inodes = []
         for ielem in ielems:
             for inode in self.get_elem_nodes(ielem):
                 inodes.append(inode)
-        return inodes
+        return np.array(inodes, dtype=int)
 
     def get_unique_nodes_of(self, ielems):
-        return list(set(self.get_nodes_of(ielems)))
+        return np.unique(self.get_nodes_of(ielems))
 
 
 class XElementSet(ElementSet, XItemSet):

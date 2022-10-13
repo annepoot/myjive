@@ -23,7 +23,7 @@ class ItemSet():
         iitems = np.empty_like(item_ids, dtype=int)
         for i, item_id in enumerate(item_ids):
             iitems[i] = self.find_item(item_id)
-        return iitems
+        return np.array(iitems, dtype=int)
 
     def get_item_id(self, iitem):
         for item_id, idx in self._map.items():
@@ -36,7 +36,7 @@ class ItemSet():
         item_ids = np.empty_like(iitems, dtype=int)
         for i, iitem in enumerate(iitems):
             item_ids[i] = self.get_item_id(iitem)
-        return item_ids
+        return np.array(item_ids, dtype=int)
 
 
 class XItemSet(ItemSet):

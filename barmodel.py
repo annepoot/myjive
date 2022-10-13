@@ -36,7 +36,9 @@ class BarModel(Model):
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
-        self._elems = [globdat[gn.ESET][e] for e in egroup]
+        self._elems = egroup.get_elements()
+        self._ielems = egroup.get_indices()
+        self._nodes = self._elems.get_nodes()
 
         # The rest of the configuration happens in configure_noprops
         self._configure_noprops(globdat)

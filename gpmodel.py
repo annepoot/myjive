@@ -390,7 +390,7 @@ class GPModel(Model):
         for elemc in elemsc:
             inodesc = elemc.get_nodes()
             idofsc = dofsc.get_dofs(inodesc, self._dof_types)
-            coordsc = np.stack([nodesc[i].get_coords() for i in inodesc], axis=1)[0:self._rank, :]
+            coordsc = nodes.get_some_coords(inodesc)
 
             # Get the bounding box of the coarse element
             bbox = np.zeros((self._rank, 2))
@@ -401,7 +401,7 @@ class GPModel(Model):
             # Go over the fine mesh
             for elem in elems:
                 inodes = elem.get_nodes()
-                coords = np.stack([nodes[i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+                coords = nodes.get_some_coords(inodes)
 
                 # Check if the bounding boxes of the coarse and fine element overlap
                 inside = True

@@ -54,11 +54,11 @@ class PoissonModel(Model):
         self._dofcount = len(DOFTYPES) * self._shape.node_count()
 
         # Create a new dof for every node and dof type
-        nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
-        for doftype in DOFTYPES:
+        for doftype in DOFTYPES[0:self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
-                globdat[gn.DOFSPACE].add_dof(node, doftype)
+            for inode in self._elems.get_unique_nodes_of(self._ielems):
+                globdat[gn.DOFSPACE].add_dof(inode, doftype)
+
 
     def _get_matrix(self, params, globdat):
 
@@ -66,7 +66,7 @@ class PoissonModel(Model):
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            coords = self._nodes.get_some_coords(inodes)
 
             # Get the gradients, weights and coordinates of each integration point
             grads, weights = self._shape.get_shape_gradients(coords)
@@ -92,7 +92,7 @@ class PoissonModel(Model):
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = np.stack([globdat[gn.NSET][i].get_coords() for i in inodes], axis=1)[0:self._rank, :]
+            coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()

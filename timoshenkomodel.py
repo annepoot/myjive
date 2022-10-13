@@ -12,7 +12,7 @@ GAs = 'GAs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 DOFTYPES = ['phi', 'dy']
-
+TYPE = 'type'
 
 class TimoshenkoModel(Model):
     def take_action(self, action, params, globdat):
@@ -24,9 +24,13 @@ class TimoshenkoModel(Model):
     def configure(self, props, globdat):
         self._EI = float(props[EI])
         self._GAs = float(props[GAs])
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
+
+        # Get shape and element info
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
-        self._elems = [globdat[gn.ESET][e] for e in egroup]
+        self._elems = egroup.get_elements()
+        self._ielems = egroup.get_indices()
+        self._nodes = self._elems.get_nodes()
 
         self._ipcount = self._shape.ipoint_count()
         self._dofcount = 2 * self._shape.node_count()

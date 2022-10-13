@@ -51,7 +51,9 @@ class FrameModel(Model):
 
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][prn.TYPE], props[SHAPE][INTSCHEME])
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
-        self._elems = [globdat[gn.ESET][e] for e in egroup]
+        self._elems = egroup.get_elements()
+        self._ielems = egroup.get_indices()
+        self._nodes = self._elems.get_nodes()
 
         self._ipcount = self._shape.ipoint_count()
         self._dofcount = 3 * self._shape.node_count()

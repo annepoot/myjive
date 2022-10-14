@@ -390,7 +390,7 @@ class GPModel(Model):
         for elemc in elemsc:
             inodesc = elemc.get_nodes()
             idofsc = dofsc.get_dofs(inodesc, self._dof_types)
-            coordsc = nodes.get_some_coords(inodesc)
+            coordsc = nodesc.get_some_coords(inodesc)
 
             # Get the bounding box of the coarse element
             bbox = np.zeros((self._rank, 2))

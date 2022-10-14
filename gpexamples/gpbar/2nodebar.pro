@@ -48,7 +48,7 @@ gpsampler =
   type = GPSampler;
 
   nsample = 30;
-  seed = None;
+  seed = 0;
 };
 
 model =
@@ -77,8 +77,6 @@ model =
   {
     type = GPf;
 
-    obsNoise = 1e-5;
-
     prior =
     {
       type = SPDE;
@@ -88,6 +86,8 @@ model =
         alpha = opt;
       };
     };
+
+    obsNoise = 1e-5;
 
     shape =
     {

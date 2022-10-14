@@ -4,8 +4,8 @@ sys.path.append('../../')
 from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
-import main
-import proputils as pu
+from jive.app import main
+import jive.util.proputils as pu
 import testutils as tu
 from copy import deepcopy
 

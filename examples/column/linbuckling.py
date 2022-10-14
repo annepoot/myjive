@@ -3,13 +3,10 @@ sys.path.append('../../')
 
 import numpy as np
 
-import proputils as pu
-import main
-
-import declare
-
-from names import GlobNames as gn
-
+from jive.app import main
+from jive.model import declare
+from jive.fem.names import GlobNames as gn
+import jive.util.proputils as pu
 
 props = pu.parse_file('column.pro')
 

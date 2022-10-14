@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 
-from names import GlobNames as gn
+from jive.fem.names import GlobNames as gn
 
 LINEWIDTH = 'linewidth'
 PLOT = 'plot'

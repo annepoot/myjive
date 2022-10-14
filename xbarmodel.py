@@ -1,10 +1,10 @@
 import numpy as np
 
-from names import Actions as act
-from names import ParamNames as pn
-from names import GlobNames as gn
+from jive.fem.names import Actions as act
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import GlobNames as gn
 from barmodel import BarModel
-import proputils as pu
+import jive.util.proputils as pu
 
 ELEMENTS = 'elements'
 EA = 'EA'

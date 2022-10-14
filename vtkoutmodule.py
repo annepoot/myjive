@@ -1,11 +1,11 @@
 import numpy as np
 
-from module import Module
-from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
-import proputils as pu
-from table import Table
+from jive.app.module import Module
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import Actions as act
+import jive.util.proputils as pu
+from jive.util.table import Table
 
 FILENAME = 'file'
 TABLES = 'tables'

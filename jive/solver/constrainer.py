@@ -1,5 +1,3 @@
-import numpy as np
-
 class Constrainer:
     def __init__(self):
         self._ddofs = []

@@ -2,8 +2,8 @@ import sys
 sys.path.append('../../')
 
 import numpy as np
-import main
-import proputils as pu
+from jive.app import main
+import jive.util.proputils as pu
 
 props = pu.parse_file('beam.pro')
 

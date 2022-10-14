@@ -1,6 +1,5 @@
-import declare
-from names import GlobNames as gn
-
+from jive.model import declare
+from jive.fem.names import GlobNames as gn
 
 def jive(props):
     # Initialize global database, declare models and modules

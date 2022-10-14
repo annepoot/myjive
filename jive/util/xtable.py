@@ -1,6 +1,6 @@
 import numpy as np
 
-from table import Table
+from jive.util.table import Table
 
 class XTable(Table):
 

@@ -1,12 +1,10 @@
 import numpy as np
 
-from model import *
-
-import proputils as pu
+from jive.model.model import Model
+import jive.util.proputils as pu
 
 MODELS = 'models'
 TYPE = 'type'
-
 
 class MultiModel(Model):
     def take_action(self, action, params, globdat):

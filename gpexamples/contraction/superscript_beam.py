@@ -3,8 +3,8 @@ sys.path.append('../../')
 
 import matplotlib.pyplot as plt
 import numpy as np
-import main
-import proputils as pu
+from jive.app import main
+import jive.util.proputils as pu
 from quickviewer import QuickViewer
 from copy import deepcopy
 

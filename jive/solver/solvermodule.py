@@ -2,13 +2,14 @@ import numpy as np
 import scipy.sparse as spsp
 import scipy.sparse.linalg as spspla
 
-from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
-import proputils as pu
-from module import Module
-from constrainer import Constrainer
-from table import Table
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import Actions as act
+
+import jive.util.proputils as pu
+from jive.app.module import Module
+from jive.solver.constrainer import Constrainer
+from jive.util.table import Table
 
 NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'

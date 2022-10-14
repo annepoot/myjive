@@ -5,9 +5,9 @@ import numpy as np
 import pygmsh
 from scipy.optimize import differential_evolution, Bounds
 
-import proputils as pu
-import main
-from   names import GlobNames as gn
+import jive.util.proputils as pu
+from jive.app import main
+from jive.fem.names import GlobNames as gn
 
 # Parameters defining the optimization problem
 length    = 10.0

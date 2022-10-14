@@ -89,6 +89,7 @@ arclen =
 
 loaddisp = 
 {
+  type = LoadDisp;
   groups = [ top ];
 };
 
@@ -100,6 +101,7 @@ graph =
 
 frameview = 
 {
+  type = FrameView;
   interactive = True;
   deform = 1.;
 };

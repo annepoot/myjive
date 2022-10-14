@@ -1,5 +1,5 @@
-from itemgroup import ItemGroup
-from nodeset import NodeSet
+from jive.fem.itemgroup import ItemGroup
+from jive.fem.nodeset import NodeSet
 
 class NodeGroup(ItemGroup):
 

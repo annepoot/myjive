@@ -1,7 +1,5 @@
-from module import *
-
-from names import GlobNames as gn
-
+from jive.app.module import Module
+from jive.fem.names import GlobNames as gn
 
 class OutputModule(Module):
 

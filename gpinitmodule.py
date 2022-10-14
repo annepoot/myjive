@@ -1,7 +1,7 @@
-from names import GlobNames as gn
-from initmodule import InitModule
-from dofspace import DofSpace
-import proputils as pu
+from jive.fem.names import GlobNames as gn
+from jive.app.initmodule import InitModule
+from jive.fem.dofspace import DofSpace
+import jive.util.proputils as pu
 
 COARSEMESH = 'coarseMesh'
 TYPE = 'type'

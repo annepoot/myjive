@@ -1,6 +1,3 @@
-import numpy as np
-
-
 class DofSpace:
     def __init__(self):
         self._dofs = {}

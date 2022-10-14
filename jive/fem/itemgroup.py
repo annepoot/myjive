@@ -1,5 +1,6 @@
 import numpy as np
-from itemset import ItemSet
+
+from jive.fem.itemset import ItemSet
 
 class ItemGroup():
 

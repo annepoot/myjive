@@ -1,10 +1,18 @@
-from names import GlobNames as gn
+from jive.fem.names import GlobNames as gn
 
-import model
-import module
-import shape
+from jive.app import module
+from jive.app import initmodule
+from jive.app import outputmodule
+from jive.gl import frameviewmodule
+from jive.gl import graphmodule
+from jive.gl import viewmodule
+from jive.model import model
+from jive.model import multimodel
+from jive.fem import shape
+from jive.fem import paramshapes
+from jive.solver import arclenmodule
+from jive.solver import solvermodule
 
-import multimodel
 import barmodel
 import dirimodel
 import neumannmodel
@@ -20,23 +28,13 @@ import xbarmodel
 import xelasticmodel
 import xpoissonmodel
 
-import initmodule
-import solvermodule
 import gpinitmodule
 import gpsolvermodule
 import gpsamplermodule
 import nonlinmodule
-import arclenmodule
-import outputmodule
 import vtkoutmodule
 import linbuckmodule
-import viewmodule
-import frameviewmodule
 import loaddispmodule
-import graphmodule
-
-import paramshapes
-
 
 def declare_models(globdat):
     factory = model.ModelFactory()

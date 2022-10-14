@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
-from module import Module
-from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
-from table import Table
+from jive.app.module import Module
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import Actions as act
+from jive.util.table import Table
 
 LINEWIDTH ='linewidth'
 PLOT = 'plot'

@@ -1,6 +1,7 @@
 import numpy as np
-from itemset import ItemSet, XItemSet
-from node import Node
+
+from jive.fem.itemset import ItemSet, XItemSet
+from jive.fem.node import Node
 
 class NodeSet(ItemSet):
 

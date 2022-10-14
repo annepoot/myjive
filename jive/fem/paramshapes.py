@@ -1,6 +1,6 @@
 import numpy as np
 
-from shape import Shape
+from jive.fem.shape import Shape
 
 class Tri3Shape(Shape):
     def __init__(self, intscheme):

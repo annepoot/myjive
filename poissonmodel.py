@@ -87,6 +87,10 @@ class PoissonModel(Model):
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
     def _get_mass_matrix(self, params, globdat):
+        unit_matrix = params.get(pn.UNITMATRIX, False)
+
+        if unit_matrix:
+            M = np.identity(self._rank)
 
         for elem in self._elems:
             # Get the nodal coordinates of each element
@@ -105,7 +109,9 @@ class PoissonModel(Model):
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
                 N = self._get_N_matrix(sfuncs[:,ip])
-                M = self._get_M_matrix(ipcoords[:,ip])
+
+                if not unit_matrix:
+                    M = self._get_M_matrix(ipcoords[:,ip])
 
                 # Compute the element mass matrix
                 elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))

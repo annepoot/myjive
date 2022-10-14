@@ -63,6 +63,8 @@ for sample in range(nsamples):
     dy = u[len(u)//2:]
     E_true = globdat[gn.TABLES]['stiffness']['']
 
+    detloc = globdat['detlocs'][0,0]
+
     # Write all relevant outputs to a single file
     for i, node in enumerate(nodes):
         coords = node.get_coords()
@@ -72,6 +74,7 @@ for sample in range(nsamples):
             'E_pure': E,
             'nu': nu,
             'deteriorations': n_det,
+            'location': detloc,
             'node': i,
             'x': coords[0],
             'y': coords[1],

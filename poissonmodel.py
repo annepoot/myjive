@@ -90,7 +90,7 @@ class PoissonModel(Model):
         unit_matrix = params.get(pn.UNITMATRIX, False)
 
         if unit_matrix:
-            M = np.identity(self._rank)
+            M = np.identity(1)
 
         for elem in self._elems:
             # Get the nodal coordinates of each element

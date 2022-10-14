@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as spsp
 import scipy.sparse.linalg as spspla
 
-from names import GPParamNames as gppn
+from jive.fem.names import GPParamNames as gppn
 from gpmodel import GPModel
 
 ENSEMBLE = 'ensemble'

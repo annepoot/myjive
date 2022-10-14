@@ -1,6 +1,6 @@
 from isotropicmaterial import IsotropicMaterial
 from isotropicmaterial import E_PROP, NU_PROP, RHO_PROP, AREA_PROP, THICKNESS_PROP, ANMODEL_PROP
-import proputils as pu
+import jive.util.proputils as pu
 
 
 class HeterogeneousMaterial(IsotropicMaterial):

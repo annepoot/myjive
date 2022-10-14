@@ -1,9 +1,9 @@
 import numpy as np
 
-from names import Actions as act
-from names import GlobNames as gn
+from jive.fem.names import Actions as act
+from jive.fem.names import GlobNames as gn
 from elasticmodel import ElasticModel
-import proputils as pu
+import jive.util.proputils as pu
 
 ELEMENTS = 'elements'
 YOUNG = 'young'

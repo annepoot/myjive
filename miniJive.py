@@ -1,7 +1,7 @@
 import sys
 
-import proputils as pu
-import main
+import jive.util.proputils as pu
+from jive.app import main
 
 if len(sys.argv) != 2:
     raise RuntimeError('Script expects exactly one argument')

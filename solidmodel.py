@@ -1,11 +1,11 @@
 import numpy as np
 
-from names import Actions as act
-from names import ParamNames as pn
-from names import GlobNames as gn
-from model import Model
+from jive.fem.names import Actions as act
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import GlobNames as gn
+from jive.model.model import Model
 from material import new_material
-from xtable import XTable
+from jive.util.xtable import XTable
 
 ELEMENTS = 'elements'
 RHO = 'rho'

@@ -1,12 +1,12 @@
 import numpy as np
 
-from names import Actions as act
-from names import ParamNames as pn
-from names import GlobNames as gn
-from names import PropNames as prn
-from model import *
-from node import Node
-from nodeset import to_xnodeset
+from jive.fem.names import Actions as act
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import PropNames as prn
+from jive.model.model import Model
+from jive.fem.node import Node
+from jive.fem.nodeset import to_xnodeset
 
 ELEMENTS = 'elements'
 SUBTYPE = 'subtype'

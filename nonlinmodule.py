@@ -5,12 +5,12 @@ import scipy.sparse.linalg as linalg
 
 from numpy.linalg import norm as norm
 
-from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import Actions as act
 
-from module import *
-from constrainer import Constrainer
+from jive.app.module import Module
+from jive.solver.constrainer import Constrainer
 
 NSTEPS = 'nsteps'
 ITERMAX = 'itermax'

@@ -1,10 +1,10 @@
 import numpy as np
 
-from names import GlobNames as gn
-from names import GPParamNames as gppn
-from names import GPActions as gpact
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import GPParamNames as gppn
+from jive.fem.names import GPActions as gpact
 
-from module import Module
+from jive.app.module import Module
 
 NSAMPLE = 'nsample'
 SEED = 'seed'

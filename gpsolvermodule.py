@@ -1,14 +1,14 @@
 import numpy as np
 import scipy.sparse as spsp
 
-from names import GlobNames as gn
-from names import ParamNames as pn
-from names import Actions as act
-from names import GPActions as gpact
-from names import GPParamNames as gppn
+from jive.fem.names import GlobNames as gn
+from jive.fem.names import ParamNames as pn
+from jive.fem.names import Actions as act
+from jive.fem.names import GPActions as gpact
+from jive.fem.names import GPParamNames as gppn
 
-from solvermodule import SolverModule
-from constrainer import Constrainer
+from jive.solver.solvermodule import SolverModule
+from jive.solver.constrainer import Constrainer
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 GETFORCERESULTS = 'getForceResults'

@@ -3,9 +3,9 @@ import scipy.sparse as spsp
 import scipy.linalg as spla
 import scipy.sparse.linalg as spspla
 
-from names import GPActions as gpact
-from names import GPParamNames as gppn
-from names import GlobNames as gn
+from jive.fem.names import GPActions as gpact
+from jive.fem.names import GPParamNames as gppn
+from jive.fem.names import GlobNames as gn
 from gpmodel import GPModel
 
 PRIOR = 'prior'

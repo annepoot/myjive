@@ -1,10 +1,9 @@
 import os, sys
+sys.path.append('../../')
 
 import numpy as np
 import pygmsh
 from scipy.optimize import differential_evolution, Bounds
-
-sys.path.append('../')
 
 import proputils as pu
 import main
@@ -111,10 +110,10 @@ def run_final_design (vars):
 
 # Run a meta-heuristic algorithm
 result = differential_evolution (
-                                 objective_function, 
+                                 objective_function,
                                  bounds=bounds,
                                  workers=4,
-                                 seed=rseed, 
+                                 seed=rseed,
                                  popsize=10,
                                  maxiter=100,
                                  polish=False,

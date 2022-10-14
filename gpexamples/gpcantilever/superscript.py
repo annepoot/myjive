@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../')
+sys.path.append('../../')
 
 from math import exp
 import matplotlib.pyplot as plt

@@ -1,5 +1,5 @@
 import sys
-sys.path.append('../')
+sys.path.append('../../')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,5 +44,3 @@ plt.figure()
 plt.loglog(ns,abs(u1-exact))
 plt.loglog(ns,abs(u2-exact))
 plt.show()
-
-

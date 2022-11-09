@@ -21,13 +21,14 @@ def conjugate_gradient(A, b, x0=None, tol=1e-7):
     p = r
     k = 0
 
-    while True:
+    while np.linalg.norm(r) > tol:
         alpha = (r @ r) / (p @ A @ p)
 
         x = x + alpha * p
+
         r_new = r - alpha * A @ p
 
-        if np.linalg.norm(r_new) < tol:
+        if np.linalg.norm(r_new) <= tol:
             break
 
         beta = (r_new @ r_new) / (r @ r)
@@ -41,13 +42,18 @@ def conjugate_gradient(A, b, x0=None, tol=1e-7):
     return x
 
 
-def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None):
+def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, get_history=False):
+
+    history = []
 
     # Get the initial approximate solution
     if x0 is None:
         x = np.zeros(b.size)
     else:
         x = x0
+
+    if get_history:
+        history.append(x)
 
     # Get the preconditioner matrix if given
     if P is None:
@@ -68,10 +74,9 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None):
         elif P_inv is not None:
             return P_inv @ r
         elif L is not None:
-            LT = L.T
-            LTr = spspla.spsolve(LT, r)
-            LLTr = spspla.spsolve(L, LTr)
-            return LLTr
+            Lr = spspla.spsolve(L, r)
+            LTLr = spspla.spsolve(L.T, Lr)
+            return LTLr
         else:
             assert False, 'Either P is None or P_inv is calculated, or L is calculated'
 
@@ -80,13 +85,17 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None):
     p = z
     k = 0
 
-    while True:
+    while np.linalg.norm(r) > tol:
         alpha = (r @ z) / (p @ A @ p)
 
         x = x + alpha * p
+
+        if get_history:
+            history.append(x)
+
         r_new = r - alpha * A @ p
 
-        if np.linalg.norm(r_new) < tol:
+        if np.linalg.norm(r_new) <= tol:
             break
 
         z_new = get_z(r_new)
@@ -100,4 +109,7 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None):
 
         k += 1
 
-    return x
+    if get_history:
+        return history
+    else:
+        return x

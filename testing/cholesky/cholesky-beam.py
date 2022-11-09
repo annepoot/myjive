@@ -2,7 +2,6 @@ import sys
 sys.path.append('../../')
 
 import numpy as np
-import scipy.sparse as spsp
 from time import perf_counter
 import matplotlib.pyplot as plt
 import gputils as gpu

@@ -1,12 +1,16 @@
 import pytest
+import os
 
 import numpy as np
-import jive.util.proputils as pu
+from jive.util import proputils as pu
 from jive.app import main
 
 @pytest.fixture(autouse=True)
 def change_test_dir(monkeypatch):
-    monkeypatch.chdir('../examples/bar')
+    cwd = os.getcwd()
+    pyjivedir = cwd[:cwd.rfind('/bfem')] + '/bfem'
+    monkeypatch.chdir(pyjivedir)
+    monkeypatch.chdir('examples/bar')
 
 @pytest.fixture
 def props():

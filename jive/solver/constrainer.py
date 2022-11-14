@@ -30,7 +30,8 @@ class Constrainer:
                 else:
                     fc[i] -= kc[i, dof] * val
 
-            kc[:, dof] = kc[dof, :] = 0.0
+            kc[:,[dof]] *= 0.0
+            kc[[dof], :] *= 0.0
             kc[dof, dof] = 1.0
 
         return kc, fc

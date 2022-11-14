@@ -18,6 +18,7 @@ GETMASSMATRIX = 'getMassMatrix'
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 TABLES = 'tables'
 
+
 class SolverModule(Module):
 
     def init(self, props, globdat):
@@ -39,7 +40,7 @@ class SolverModule(Module):
         print('Running time step', self._step)
         globdat[gn.TIMESTEP] = self._step
 
-        K = spsp.csr_array((dc, dc))
+        K = self._get_empty_matrix(globdat)
         f = np.zeros(dc)
         c = Constrainer()
 
@@ -59,7 +60,7 @@ class SolverModule(Module):
 
         # Optionally get the mass matrix
         if self._get_mass_matrix:
-            M = spsp.csr_array((dc, dc))
+            M = self._get_empty_matrix(globdat)
             params[pn.MATRIX2] = M
             model.take_action(act.GETMATRIX2, params, globdat)
 
@@ -105,6 +106,29 @@ class SolverModule(Module):
 
     def __solve(self, globdat):
         pass
+
+    def _get_empty_matrix(self, globdat):
+
+        rowindices = []
+        colindices = []
+
+        doftypes = globdat[gn.DOFSPACE].get_types()
+        dc = globdat[gn.DOFSPACE].dof_count()
+
+        for elem in globdat[gn.ESET]:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, doftypes)
+
+            for row in idofs:
+                for col in idofs:
+                    rowindices.append(row)
+                    colindices.append(col)
+
+        assert len(rowindices) == len(colindices)
+        values = np.zeros(len(rowindices))
+
+        K_empty = spsp.csr_array((values, (rowindices, colindices)), shape=(dc,dc), dtype=float)
+        return K_empty
 
 
 def declare(factory):

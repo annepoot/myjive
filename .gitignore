@@ -9,4 +9,5 @@ go
 .ipynb_checkpoints/
 .idea/
 *.swp
-
+beam_fine7.msh
+beam_fine8.msh

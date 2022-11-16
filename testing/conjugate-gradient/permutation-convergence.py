@@ -3,12 +3,14 @@ sys.path.append('../../')
 
 import numpy as np
 import scipy.sparse.linalg as spspla
-from time import perf_counter
 import matplotlib.pyplot as plt
+from time import perf_counter
+
+from jive.app import main
+import jive.util.proputils as pu
+
 import solverutils as su
 import gputils as gpu
-import jive.util.proputils as pu
-from jive.app import main
 
 props = pu.parse_file('beam.pro')
 
@@ -24,8 +26,6 @@ gpprops['gpinit']['mesh']['file'] = fine_mesh
 gpprops['gpinit']['coarseMesh']['file'] = coarse_mesh
 globdat_gp = main.jive(gpprops)
 Phi = globdat_gp['Phi']
-
-densities = ['coarse', 'medium', 'fine', 'fine2', 'fine3', 'fine4']
 
 def get_res_hist(u_hist, uref):
     res_hist = []
@@ -44,13 +44,20 @@ K, f = c.constrain(K, f)
 
 L = gpu.incomplete_cholesky(K)
 
-Lf = spspla.spsolve(L, f)
-LTLf = spspla.spsolve(L.T, Lf)
+reorder = su.get_reorder(K)
+P = su.get_reorder_matrix(reorder)
+K_r = su.reorder_matrix(K, P)
+f_r = su.reorder_vector(f, P)
 
 plt.figure()
-for u0_string in ['Phi @ u_c', 'None']:
+for u0_string in ['None', 'Phi @ u_c']:
 
     u0 = eval(u0_string)
+
+    if u0 is None:
+        u0_r = None
+    else:
+        u0_r = su.reorder_vector(u0, P)
 
     N = K.shape[0]
 
@@ -67,19 +74,32 @@ for u0_string in ['Phi @ u_c', 'None']:
     if N < 5000:
         print('time3')
         time3 = perf_counter()
-        u3_hist = su.preconditioned_conjugate_gradient(K, f, x0=u0, P='ichol', L=L, get_history=True)
+        u3_hist = su.preconditioned_conjugate_gradient(K, f, x0=u0, P='ichol', get_history=True)
         time3 = perf_counter() - time3
+
+        print('time4')
+        time4 = perf_counter()
+        u4_r_hist = su.preconditioned_conjugate_gradient(K_r, f_r, x0=u0_r, P='ichol', get_history=True)
+        time4 = perf_counter() - time4
+
+        u4_hist = []
+
+        for u4_r in u4_r_hist:
+            u4 = su.rev_reorder_vector(u4_r, P)
+            u4_hist.append(u4)
 
     uref = spspla.spsolve(K, f)
 
-    print(N, time1, time2, time3)
+    print(N, time1, time2, time3, time4)
 
     res1_hist = get_res_hist(u1_hist, uref)
     res2_hist = get_res_hist(u2_hist, uref)
     res3_hist = get_res_hist(u3_hist, uref)
+    res4_hist = get_res_hist(u4_hist, uref)
 
     plt.plot(res1_hist, label=r'$u0 = {}$, $P = None$'.format(u0_string))
     plt.plot(res2_hist, label=r'$u0 = {}$, $P = diag$'.format(u0_string))
     plt.plot(res3_hist, label=r'$u0 = {}$, $P = ichol$'.format(u0_string))
+    plt.plot(res4_hist, label=r'$u0 = {}$, $P = ichol (amd)$'.format(u0_string))
 plt.legend()
 plt.figure()

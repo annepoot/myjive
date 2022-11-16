@@ -2,6 +2,8 @@ import numpy as np
 from scipy.linalg import eigvalsh
 import scipy.sparse as spsp
 import scipy.sparse.linalg as spspla
+from sksparse import cholmod as cm
+
 from gputils import incomplete_cholesky
 
 def condition_number(A):
@@ -113,3 +115,59 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, g
         return history
     else:
         return x
+
+
+def get_reorder(A, ordering_method=None):
+    if ordering_method is None:
+        ordering_method='amd'
+    chol = cm.analyze(A, ordering_method=ordering_method)
+    reorder = chol.P()
+    return reorder
+
+
+def get_reorder_matrix(reorder):
+    N = len(reorder)
+    P = spsp.csr_array((np.ones(N), reorder, np.arange(N+1)), shape=(N,N))
+    return P
+
+
+def get_rev_reorder(reorder):
+    rev_reorder = np.argsort(reorder)
+    return rev_reorder
+
+
+def reorder_vector(b, P):
+    if len(P.shape) == 1:
+        return b[P]
+    elif len(P.shape) == 2:
+        return P @ b
+    else:
+        raise ValueError('P has to be a 1D or 2D array')
+
+
+def rev_reorder_vector(b, P):
+    if len(P.shape) == 1:
+        return b[get_rev_reorder(P)]
+    elif len(P.shape) == 2:
+        return P.T @ b
+    else:
+        raise ValueError('P has to be a 1D or 2D array')
+
+
+def reorder_matrix(A, P):
+    if len(P.shape) == 1:
+        return A[P[:, np.newaxis], P[np.newaxis, :]]
+    elif len(P.shape) == 2:
+        return P @ A @ P.T
+    else:
+        raise ValueError('P has to be a 1D or 2D array')
+
+
+def rev_reorder_matrix(A, P):
+    if len(P.shape) == 1:
+        P_rev = get_rev_reorder(P)
+        return A[P_rev[:, np.newaxis], P_rev[np.newaxis, :]]
+    elif len(P.shape) == 2:
+        return P.T @ A @ P
+    else:
+        raise ValueError('P has to be a 1D or 2D array')

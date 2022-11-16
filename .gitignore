@@ -5,6 +5,7 @@ __pycache__
 *.csv
 *.png
 *.pdf
+*.avi
 go
 .ipynb_checkpoints/
 .idea/

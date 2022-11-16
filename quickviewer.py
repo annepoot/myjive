@@ -22,6 +22,7 @@ def QuickViewer(array, globdat, **kwargs):
     boundarywidth = kwargs.get('boundarywidth', None)
     linealpha = float(kwargs.get('linealpha', alpha))
     colorbar = bool(kwargs.get('colorbar', True))
+    tickformat = kwargs.get('tickformat', None)
     cmap = plt.get_cmap(kwargs.get('colormap', 'viridis'))
     ncolors = int(kwargs.get('ncolors', 100))
     mincolor = kwargs.get('mincolor', None)
@@ -150,7 +151,7 @@ def QuickViewer(array, globdat, **kwargs):
 
     if colorbar:
         ticks = np.linspace(mincolor, maxcolor, 5, endpoint=True)
-        plt.colorbar(mappable, ticks=ticks, ax=ax)
+        plt.colorbar(mappable, ticks=ticks, ax=ax, format=tickformat)
 
     ax.triplot(triang, 'k-', linewidth=linewidth, alpha=linealpha)
 

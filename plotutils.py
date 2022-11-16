@@ -1,9 +1,25 @@
 import numpy as np
+import cv2
+import os
+
+def make_movie(image_folder, video_name):
+    images = sorted([img for img in os.listdir(image_folder) if img.endswith(".png")])
+    frame = cv2.imread(os.path.join(image_folder, images[0]))
+    height, width, _ = frame.shape
+
+    video = cv2.VideoWriter(video_name, 0, 10, (width,height))
+
+    for image in images:
+        video.write(cv2.imread(os.path.join(image_folder, image)))
+
+    cv2.destroyAllWindows()
+    video.release()
 
 
 def is_array(var):
 
     return hasattr(var, '__iter__') and not isinstance(var, str)
+
 
 def create_dat(data, headers, fname, types=None):
 

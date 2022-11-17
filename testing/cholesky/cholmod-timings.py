@@ -11,7 +11,7 @@ from jive.app import main
 
 props = pu.parse_file('beam.pro')
 
-densities = ['coarse', 'medium', 'fine', 'fine2', 'fine3', 'fine4', 'fine5', 'fine6', 'fine7', 'fine8']
+densities = ['coarse', 'medium', 'fine', 'fine2', 'fine3', 'fine4', 'fine5', 'fine6', 'fine7']
 
 N_range = []
 time1_list = []

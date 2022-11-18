@@ -82,4 +82,7 @@ for u0_string in ['Phi @ u_c', 'None']:
     plt.plot(res2_hist, label=r'$u0 = {}$, $P = diag$'.format(u0_string))
     plt.plot(res3_hist, label=r'$u0 = {}$, $P = ichol$'.format(u0_string))
 plt.legend()
+plt.xlabel('iterations')
+plt.ylabel('residual norm')
+plt.title('convergence study')
 plt.figure()

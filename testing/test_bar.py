@@ -2,7 +2,7 @@ import pytest
 import os
 
 import numpy as np
-from jive.util import proputils as pu
+import jive.util.proputils as pu
 from jive.app import main
 
 @pytest.fixture(autouse=True)
@@ -37,9 +37,12 @@ def mesher_quad(L, n):
             fmesh.write('%d %d %d\n' % (2 * i, 2 * i + 1, 2 * i + 2))
 
 def test_lin(props):
+    props['solver']['storeMatrix'] = 'True'
+    props['solver']['storeConstraints'] = 'True'
 
     props['model']['bar']['shape']['type'] = 'Line2'
     props['model']['bar']['shape']['intScheme'] = 'Gauss2'
+
     mesher_lin(10, 64)
 
     globdat = main.jive(props)
@@ -50,12 +53,26 @@ def test_lin(props):
     assert len(nodes) == 65
     assert len(elems) == 64
 
+    K = globdat['matrix0']
     u = globdat['state0']
+    f = globdat['extForce']
+    c = globdat['constraints']
 
-    assert np.isclose(min(u), -0.9989842929382093)
+    Kc, fc = c.constrain(K, f)
+
+    # Check solver solution
+    assert np.isclose(Kc @ u, fc).all()
+
+    u_left = u[0]
+
+    # Check displacement field
+    assert np.isclose(u_left, -0.9989842929382093)
+    assert np.isclose(min(u), u_left)
     assert np.isclose(max(u), 0)
 
 def test_quad(props):
+    props['solver']['storeMatrix'] = 'True'
+    props['solver']['storeConstraints'] = 'True'
 
     props['model']['bar']['shape']['type'] = 'Line3'
     props['model']['bar']['shape']['intScheme'] = 'Gauss3'
@@ -69,7 +86,18 @@ def test_quad(props):
     assert len(nodes) == 129
     assert len(elems) == 64
 
+    K = globdat['matrix0']
     u = globdat['state0']
+    f = globdat['extForce']
+    c = globdat['constraints']
 
-    assert np.isclose(min(u), -0.9999995829648631)
+    Kc, fc = c.constrain(K, f)
+
+    # Check solver solution
+    assert np.isclose(Kc @ u, fc).all()
+
+    u_left = u[0]
+
+    assert np.isclose(u_left, -0.9999995829648631)
+    assert np.isclose(min(u), u_left)
     assert np.isclose(max(u), 0)

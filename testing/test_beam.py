@@ -1,0 +1,126 @@
+import pytest
+import os
+
+import numpy as np
+import jive.util.proputils as pu
+from jive.app import main
+
+@pytest.fixture(autouse=True)
+def change_test_dir(monkeypatch):
+    cwd = os.getcwd()
+    pyjivedir = cwd[:cwd.rfind('/bfem')] + '/bfem'
+    monkeypatch.chdir(pyjivedir)
+    monkeypatch.chdir('examples/beam')
+
+@pytest.fixture
+def props():
+    return pu.parse_file('beam.pro')
+
+
+def test_point_load(props):
+    props['solver']['storeMatrix'] = 'True'
+    props['solver']['storeConstraints'] = 'True'
+
+    globdat = main.jive(props)
+
+    K = globdat['matrix0']
+    u = globdat['state0']
+    f = globdat['extForce']
+    c = globdat['constraints']
+
+    Kc, fc = c.constrain(K, f)
+
+    # Check solver solution
+    assert np.isclose(Kc @ u, fc).all()
+
+    u_mid = u[globdat['dofSpace'].get_dof(3,'dy')]
+    u_y = u[len(u)//2:]
+
+    # Check displacement field
+    assert np.isclose(u_mid, -0.01069531888112345)
+    assert np.isclose(min(u_y), u_mid)
+    assert np.isclose(max(u_y), 0)
+
+    f = K @ u
+    bodyforces_y = f[715:]
+    reactions_y = f[713:715]
+
+    # Check force equilibrium
+    assert np.isclose(sum(reactions_y), 1)
+    assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
+
+
+def test_point_load_roll(props):
+    props['solver']['storeMatrix'] = 'True'
+    props['solver']['storeConstraints'] = 'True'
+
+    props['model']['diri']['groups'] = '[lb,lb,rb]'
+    props['model']['diri']['dofs'] = '[dx,dy,dy]'
+    props['model']['diri']['values'] = '[0,0,0]'
+
+    globdat = main.jive(props)
+
+    K = globdat['matrix0']
+    u = globdat['state0']
+    f = globdat['extForce']
+    c = globdat['constraints']
+
+    Kc, fc = c.constrain(K, f)
+
+    # Check solver solution
+    assert np.isclose(Kc @ u, fc).all()
+
+    u_mid = u[globdat['dofSpace'].get_dof(3,'dy')]
+    u_y = u[len(u)//2:]
+
+    # Check displacement field
+    assert np.isclose(u_mid, -0.01876697733149987)
+    assert np.isclose(min(u_y), u_mid)
+    assert np.isclose(max(u_y), 0)
+
+    f = K @ u
+    bodyforces_y = f[715:]
+    reactions_y = f[713:715]
+
+    # Check force equilibrium
+    assert np.isclose(sum(reactions_y), 1)
+    assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
+
+
+def test_body_load(props):
+    props['solver']['storeMatrix'] = 'True'
+    props['solver']['storeConstraints'] = 'True'
+
+    props['model']['diri']['groups'] = '[lb,lb,rb]'
+    props['model']['diri']['dofs'] = '[dx,dy,dy]'
+    props['model']['diri']['values'] = '[0,0,0]'
+
+    props['model']['neum']['values'] = '[0.0]'
+    props['model']['solid']['material']['rho'] = '1'
+
+    globdat = main.jive(props)
+
+    K = globdat['matrix0']
+    u = globdat['state0']
+    f = globdat['extForce']
+    c = globdat['constraints']
+
+    Kc, fc = c.constrain(K, f)
+
+    # Check solver solution
+    assert np.isclose(Kc @ u, fc).all()
+
+    u_mid = u[globdat['dofSpace'].get_dof(3,'dy')]
+    u_y = u[len(u)//2:]
+
+    # Check displacement field
+    assert np.isclose(u_mid, -0.046080900691179726)
+    assert np.isclose(max(u_y), 0)
+
+    f = K @ u
+    bodyforces_y = f[715:]
+    reactions_y = f[713:715]
+
+    # Check force equilibrium
+    assert np.isclose(sum(reactions_y), 3.9962615448382706)
+    assert np.isclose(-sum(bodyforces_y), sum(reactions_y))

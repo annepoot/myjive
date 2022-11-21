@@ -16,7 +16,7 @@ props_f = {}
 props_f['init'] = deepcopy(props['gpinit'])
 props_f['init']['type'] = 'Init'
 props_f['solver'] = deepcopy(props['gpsolver'])
-props_f['solver']['type'] = 'Solver'
+props_f['solver']['type'] = 'Linsolve'
 props_f['model'] = deepcopy(props['model'])
 props_f['model']['models'] = props['model']['models'].replace('gp,', '')
 

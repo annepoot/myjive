@@ -2,7 +2,7 @@ init =
 {
   nodeGroups = [ left, right ];
 
-  mesh = 
+  mesh =
   {
     type = manual;
     file = bar.mesh;
@@ -43,14 +43,14 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ right ];
     dofs   = [ dx ];
     values = [ 0.0 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -62,6 +62,7 @@ model =
 
 solver =
 {
+  type = Linsolve;
   nsteps = 1;
   storeMatrix = True;
 };

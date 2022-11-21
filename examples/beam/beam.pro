@@ -59,16 +59,16 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ lb, lb, rb, rb ];
     dofs   = [ dx, dy, dx, dy ];
     values = [ 0., 0., 0., 0. ];
   };
-  
+
   neum =
   {
-    type = Neumann; 
+    type = Neumann;
 
     groups = [ tm ];
     dofs   = [ dy ];
@@ -78,5 +78,6 @@ model =
 
 solver =
 {
+  type = Linsolve;
   nsteps = 1;
 };

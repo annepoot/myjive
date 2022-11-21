@@ -7,11 +7,10 @@ from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 
 import jive.util.proputils as pu
-from jive.app.module import Module
+from jive.implicit.solvermodule import SolverModule
 from jive.solver.constrainer import Constrainer
 from jive.util.table import Table
 
-NSTEPS = 'nsteps'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
@@ -19,41 +18,29 @@ GETUNITMASSMATRIX = 'getUnitMassMatrix'
 TABLES = 'tables'
 
 
-class SolverModule(Module):
+class LinsolveModule(SolverModule):
 
     def init(self, props, globdat):
 
         myprops = props[self._name]
-        self._step = 0
-        self._nsteps = int(myprops.get(NSTEPS,1))
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
         self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
         self._tnames = pu.parse_list(myprops.get(TABLES, '[]'))
 
-    def run(self, globdat):
+        self._model = globdat[gn.MODEL]
+        self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        dc = globdat[gn.DOFSPACE].dof_count()
+    def solve(self, globdat):
+
         model = globdat[gn.MODEL]
 
-        self._step += 1
-        print('Running time step', self._step)
-        globdat[gn.TIMESTEP] = self._step
+        print('Running LinsolverModule')
+        globdat[gn.TIMESTEP] = 1
 
-        K = self._get_empty_matrix(globdat)
-        f = np.zeros(dc)
-        c = Constrainer()
-
-        params = {pn.MATRIX0: K, pn.EXTFORCE: f, pn.CONSTRAINTS: c}
-
-        # Assemble K
-        model.take_action(act.GETMATRIX0, params, globdat)
-
-        # Assemble f
-        model.take_action(act.GETEXTFORCE, params, globdat)
-
-        # Get constraints
-        model.take_action(act.GETCONSTRAINTS, params, globdat)
+        K, _ = self.update_matrix(globdat)
+        f = self.get_ext_vector(globdat)
+        c = self.update_constraints(globdat)
 
         # Constrain K and f
         Kc, fc = c.constrain(K, f)
@@ -61,7 +48,7 @@ class SolverModule(Module):
         # Optionally get the mass matrix
         if self._get_mass_matrix:
             M = self._get_empty_matrix(globdat)
-            params[pn.MATRIX2] = M
+            params = {pn.MATRIX2: M}
             model.take_action(act.GETMATRIX2, params, globdat)
 
         # Solve the system
@@ -96,16 +83,47 @@ class SolverModule(Module):
 
             globdat[gn.TABLES][name] = params[pn.TABLE]
 
-        if self._step >= self._nsteps:
-            return 'exit'
-        else:
-            return 'ok'
+        return 'ok'
 
-    def shutdown(self, globdat):
+    def configure(self, props, globdat):
         pass
 
-    def __solve(self, globdat):
+    def get_ext_vector(self, globdat):
+        f_ext = np.zeros(self._dc)
+        params = {pn.EXTFORCE: f_ext}
+
+        self._model.take_action(act.GETEXTFORCE, params, globdat)
+
+        return f_ext
+
+    def update_matrix(self, globdat):
+        K = self._get_empty_matrix(globdat)
+        f_int = np.zeros(self._dc)
+        params = {pn.MATRIX0: K, pn.INTFORCE:f_int}
+
+        self._model.take_action(act.GETMATRIX0, params, globdat)
+
+        return K, f_int
+
+    def update_constraints(self, globdat):
+        c = Constrainer()
+        params = {pn.CONSTRAINTS: c}
+
+        self._model.take_action(act.GETCONSTRAINTS, params, globdat)
+
+        return c
+
+    def advance(self, globat):
+        # globdat[gn.MODEL].take_action(act.ADVANCE)
         pass
+
+    def cancel(self, globdat):
+        # globdat[gn.MODEL].take_action(act.CANCEL)
+        pass
+
+    def commit(self, globdat):
+        # globdat[gn.MODEL].take_action(act.COMMIT)
+        return True
 
     def _get_empty_matrix(self, globdat):
 
@@ -132,4 +150,4 @@ class SolverModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Solver', SolverModule)
+    factory.declare_module('Linsolve', LinsolveModule)

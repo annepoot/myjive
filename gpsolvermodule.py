@@ -7,14 +7,14 @@ from jive.fem.names import Actions as act
 from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 
-from jive.solver.solvermodule import SolverModule
+from jive.implicit.linsolvemodule import LinsolveModule
 from jive.solver.constrainer import Constrainer
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 GETFORCERESULTS = 'getForceResults'
 GETFULLCOVARIANCE = 'getFullCovariance'
 
-class GPSolverModule(SolverModule):
+class GPSolverModule(LinsolveModule):
 
     def init(self, props, globdat):
 

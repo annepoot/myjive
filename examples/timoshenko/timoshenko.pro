@@ -44,14 +44,14 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ left, left ];
     dofs   = [ phi, dy ];
     values = [ 0.0, 0.0 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -63,5 +63,6 @@ model =
 
 solver =
 {
+  type = Linsolve;
   nsteps = 1;
 };

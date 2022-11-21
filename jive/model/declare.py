@@ -10,8 +10,9 @@ from jive.model import model
 from jive.model import multimodel
 from jive.fem import shape
 from jive.fem import paramshapes
-from jive.solver import arclenmodule
-from jive.solver import solvermodule
+from jive.implicit import arclenmodule
+from jive.implicit import solvermodule
+from jive.implicit import linsolvemodule
 
 import barmodel
 import dirimodel
@@ -61,6 +62,7 @@ def declare_modules(globdat):
 
     initmodule.declare(factory)
     solvermodule.declare(factory)
+    linsolvemodule.declare(factory)
     gpinitmodule.declare(factory)
     gpsolvermodule.declare(factory)
     gpsamplermodule.declare(factory)

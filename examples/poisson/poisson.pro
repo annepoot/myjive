@@ -52,5 +52,6 @@ model =
 
 solver =
 {
+  type= Linsolve;
   nsteps = 1;
 };

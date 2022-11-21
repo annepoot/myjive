@@ -36,12 +36,9 @@ def jive(props):
     # Run chain until one of the modules ends the computation
     print('Running chain...')
 
-    keep_going = True
-
-    while keep_going:
-        for module in chain:
-            if 'exit' in module.run(globdat):
-                keep_going = False
+    for module in chain:
+        if 'exit' in module.run(globdat):
+            break
 
     # Run postprocessing routines
     for module in chain:

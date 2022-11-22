@@ -106,9 +106,12 @@ class GPModel(Model):
         mf = c.apply_neumann(mf)
         Kc, mf = c.apply_dirichlet(K, mf)
 
+        cM = c.new_constrainer(M)
+
         # Get the actual constrained stiffness matrix and force vector
-        Mc, fc = c.constrain(M, f)
-        Kc, fc = c.constrain(K, f)
+        Mc = cM.get_output_matrix()
+        Kc = c.get_output_matrix()
+        fc = c.get_rhs(f)
 
         # Store all constrained matrices and vectors
         self._Mc = Mc

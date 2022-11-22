@@ -40,7 +40,7 @@ class LinsolveModule(SolverModule):
 
         K, _ = self.update_matrix(globdat)
         f = self.get_ext_vector(globdat)
-        c = self.update_constraints(globdat)
+        c = self.update_constraints(K, globdat)
 
         # Constrain K and f
         Kc, fc = c.constrain(K, f)
@@ -105,8 +105,8 @@ class LinsolveModule(SolverModule):
 
         return K, f_int
 
-    def update_constraints(self, globdat):
-        c = Constrainer()
+    def update_constraints(self, K, globdat):
+        c = Constrainer(K)
         params = {pn.CONSTRAINTS: c}
 
         self._model.take_action(act.GETCONSTRAINTS, params, globdat)

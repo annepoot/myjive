@@ -33,7 +33,7 @@ class LinsolveModule(SolverModule):
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        solver = myprops.get(SOLVER, 'DirectSolver')
+        solver = myprops.get(SOLVER, 'direct')
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
 
     def solve(self, globdat):

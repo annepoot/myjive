@@ -11,6 +11,7 @@ from jive.implicit.solvermodule import SolverModule
 from jive.solver.constraints import Constraints
 from jive.util.table import Table
 
+SOLVER = 'solver'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
@@ -32,7 +33,8 @@ class LinsolveModule(SolverModule):
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        self._solver = globdat[gn.SOLVERFACTORY].get_solver('StdIterativeSolver')
+        solver = myprops.get(SOLVER, 'DirectSolver')
+        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
 
     def solve(self, globdat):
 

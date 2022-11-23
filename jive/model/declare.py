@@ -13,6 +13,8 @@ from jive.fem import paramshapes
 from jive.implicit import arclenmodule
 from jive.implicit import solvermodule
 from jive.implicit import linsolvemodule
+from jive.solver import solver
+from jive.solver import stditerativesolver
 
 import barmodel
 import dirimodel
@@ -81,7 +83,11 @@ def declare_modules(globdat):
 
 def declare_shapes(globdat):
     factory = shape.ShapeFactory()
-
     paramshapes.declare(factory)
-
     globdat[gn.SHAPEFACTORY] = factory
+
+
+def declare_solvers(globdat):
+    factory = solver.SolverFactory()
+    stditerativesolver.declare(factory)
+    globdat[gn.SOLVERFACTORY] = factory

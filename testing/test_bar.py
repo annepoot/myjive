@@ -2,8 +2,10 @@ import pytest
 import os
 
 import numpy as np
+
 import jive.util.proputils as pu
 from jive.app import main
+from jive.solver.constrainer import Constrainer
 
 @pytest.fixture(autouse=True)
 def change_test_dir(monkeypatch):
@@ -58,7 +60,9 @@ def test_lin(props):
     f = globdat['extForce']
     c = globdat['constraints']
 
-    Kc, fc = c.constrain(K, f)
+    conman = Constrainer(c, K)
+    Kc = conman.get_output_matrix()
+    fc = conman.get_rhs(f)
 
     # Check solver solution
     assert np.isclose(Kc @ u, fc).all()
@@ -91,7 +95,9 @@ def test_quad(props):
     f = globdat['extForce']
     c = globdat['constraints']
 
-    Kc, fc = c.constrain(K, f)
+    conman = Constrainer(c, K)
+    Kc = conman.get_output_matrix()
+    fc = conman.get_rhs(f)
 
     # Check solver solution
     assert np.isclose(Kc @ u, fc).all()

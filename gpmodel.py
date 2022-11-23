@@ -10,6 +10,7 @@ from jive.fem.names import GPParamNames as gppn
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import PropNames as prn
 from jive.model.model import Model
+from jive.solver.constrainer import Constrainer
 
 OBSNOISE = 'obsNoise'
 PDNOISE = 'pdNoise'
@@ -99,26 +100,25 @@ class GPModel(Model):
         f = globdat.get(gn.EXTFORCE)
         c = globdat.get(gn.CONSTRAINTS)
 
-        cdofs, cvals = c.get_constraints()
+        conmanK = Constrainer(c, K)
+        conmanM = Constrainer(c, M)
 
         # The posterior mean force vector has to contain the Dirichlet and Neumann BCs
         mf = np.zeros_like(f)
-        mf = c.apply_neumann(mf)
-        Kc, mf = c.apply_dirichlet(K, mf)
-
-        cM = c.new_constrainer(M)
+        mf = conmanK.apply_neumann(mf)
+        Kc, mf = conmanK.apply_dirichlet(K, mf)
 
         # Get the actual constrained stiffness matrix and force vector
-        Mc = cM.get_output_matrix()
-        Kc = c.get_output_matrix()
-        fc = c.get_rhs(f)
+        Mc = conmanM.get_output_matrix()
+        Kc = conmanK.get_output_matrix()
+        fc = conmanK.get_rhs(f)
 
         # Store all constrained matrices and vectors
         self._Mc = Mc
         self._Kc = Kc
         self._fc = fc
         self._m = spspla.spsolve(Kc, mf)
-        self._cdofs = cdofs
+        self._cdofs = c.get_constraints()[0]
 
         # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi(globdat)
@@ -127,7 +127,7 @@ class GPModel(Model):
         globdat['Phi'] = self._Phi
 
         for i in range(phi.shape[1]):
-            for cdof in cdofs:
+            for cdof in self._cdofs:
                 if np.isclose(phi[cdof,i], 1):
                     for j in range(phi.shape[0]):
 
@@ -139,7 +139,7 @@ class GPModel(Model):
 
                             phi[j,i] = 1.0
 
-                        elif not j in cdofs:
+                        elif not j in self._cdofs:
                             phi[j,i] = 0.0
 
         self._Phic = phi

@@ -31,7 +31,7 @@ init =
 
 solver =
 {
-  type = Solver;
+  type = Linsolve;
 
   nsteps = 1;
   storeMatrix = True;

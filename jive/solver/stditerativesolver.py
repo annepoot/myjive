@@ -19,6 +19,7 @@ class StdIterativeSolver(Solver):
         self._maxiter = 1000
 
     def configure(self, props):
+        super().configure(props)
         self._maxiter = props.get(MAXITER, self._maxiter)
 
     def update(self, matrix, constraints, preconditioner=None):
@@ -54,7 +55,7 @@ class StdIterativeSolver(Solver):
         return u
 
     def _solve(self, res):
-        return spspla.spsolve(self._matrix, -res)
+        return res
 
     def get_residual(self, lhs, rhs):
         return self._matrix @ lhs - rhs

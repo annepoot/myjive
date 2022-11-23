@@ -6,7 +6,7 @@ from jive.solver.constrainer import Constrainer
 
 MAXITER = 'maxIter'
 
-class StdIterativeSolver(Solver):
+class IterativeSolver(Solver):
 
     def __init__(self):
         super().__init__()
@@ -68,4 +68,4 @@ class StdIterativeSolver(Solver):
 
 
 def declare(factory):
-    factory.declare_solver('StdIterativeSolver', StdIterativeSolver)
+    factory.declare_solver('iterative', IterativeSolver)

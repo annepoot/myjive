@@ -34,4 +34,4 @@ class DirectSolver(Solver):
 
 
 def declare(factory):
-    factory.declare_solver('DirectSolver', DirectSolver)
+    factory.declare_solver('direct', DirectSolver)

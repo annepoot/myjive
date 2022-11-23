@@ -11,6 +11,7 @@ class GlobNames:
     MODELFACTORY = 'modelFactory'
     MODULEFACTORY = 'moduleFactory'
     SHAPEFACTORY = 'shapeFactory'
+    SOLVERFACTORY = 'solverFactory'
     TIMESTEP = 'timeStep'
     STATE0 = 'state0'
     EXTFORCE = 'extForce'

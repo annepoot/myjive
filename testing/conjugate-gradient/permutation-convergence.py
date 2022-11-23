@@ -8,6 +8,7 @@ from time import perf_counter
 
 from jive.app import main
 import jive.util.proputils as pu
+from jive.solver.constrainer import Constrainer
 
 import solverutils as su
 import gputils as gpu
@@ -40,7 +41,10 @@ globdat = main.jive(props)
 K = globdat['matrix0']
 f = globdat['extForce']
 c = globdat['constraints']
-K, f = c.constrain(K, f)
+
+conman = Constrainer(c, K)
+K = conman.get_output_matrix()
+f = conman.get_rhs(f)
 
 L = gpu.incomplete_cholesky(K)
 

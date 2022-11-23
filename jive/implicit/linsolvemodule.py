@@ -8,7 +8,7 @@ from jive.fem.names import Actions as act
 
 import jive.util.proputils as pu
 from jive.implicit.solvermodule import SolverModule
-from jive.solver.constrainer import Constrainer
+from jive.solver.constraints import Constraints
 from jive.util.table import Table
 
 STOREMATRIX = 'storeMatrix'
@@ -21,6 +21,7 @@ TABLES = 'tables'
 class LinsolveModule(SolverModule):
 
     def init(self, props, globdat):
+        super().init(props, globdat)
 
         myprops = props[self._name]
         self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
@@ -30,6 +31,8 @@ class LinsolveModule(SolverModule):
 
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
+
+        self._solver = globdat[gn.SOLVERFACTORY].get_solver('StdIterativeSolver')
 
     def solve(self, globdat):
 
@@ -42,17 +45,17 @@ class LinsolveModule(SolverModule):
         f = self.get_ext_vector(globdat)
         c = self.update_constraints(K, globdat)
 
-        # Constrain K and f
-        Kc, fc = c.constrain(K, f)
-
         # Optionally get the mass matrix
         if self._get_mass_matrix:
             M = self._get_empty_matrix(globdat)
             params = {pn.MATRIX2: M}
             model.take_action(act.GETMATRIX2, params, globdat)
 
+        # Update the solver
+        self._solver.update(K, c)
+
         # Solve the system
-        u = spspla.spsolve(Kc, fc)
+        u = self._solver.solve(f)
 
         # Store rhs and solution in Globdat
         globdat[gn.EXTFORCE] = f
@@ -106,7 +109,7 @@ class LinsolveModule(SolverModule):
         return K, f_int
 
     def update_constraints(self, K, globdat):
-        c = Constrainer(K)
+        c = Constraints()
         params = {pn.CONSTRAINTS: c}
 
         self._model.take_action(act.GETCONSTRAINTS, params, globdat)

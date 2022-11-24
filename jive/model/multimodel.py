@@ -1,5 +1,3 @@
-import numpy as np
-
 from jive.model.model import Model
 import jive.util.proputils as pu
 

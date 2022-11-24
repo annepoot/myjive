@@ -1,11 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
 
 from jive.app.module import Module
-from jive.fem.names import GlobNames as gn
-from jive.fem.names import ParamNames as pn
-from jive.fem.names import Actions as act
-
 import jive.util.proputils as pu
 
 XDATA = 'xData'
@@ -23,7 +18,7 @@ class GraphModule(Module):
 
     def run(self, globdat):
         return 'ok'
-                
+
     def shutdown(self, globdat):
         self._make_graph(globdat)
 
@@ -36,6 +31,7 @@ class GraphModule(Module):
             y = globdat[module][group][ld][typ]
             plt.plot(x, y)
         plt.show()
+
 
 def declare(factory):
     factory.declare_module('Graph', GraphModule)

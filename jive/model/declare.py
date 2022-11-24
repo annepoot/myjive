@@ -18,7 +18,6 @@ from jive.solver import directsolver
 from jive.solver import iterativesolver
 from jive.solver import cg
 
-
 import barmodel
 import dirimodel
 import neumannmodel
@@ -86,13 +85,17 @@ def declare_modules(globdat):
 
 def declare_shapes(globdat):
     factory = shape.ShapeFactory()
+
     paramshapes.declare(factory)
+
     globdat[gn.SHAPEFACTORY] = factory
 
 
 def declare_solvers(globdat):
     factory = solver.SolverFactory()
+
     iterativesolver.declare(factory)
     cg.declare(factory)
     directsolver.declare(factory)
+
     globdat[gn.SOLVERFACTORY] = factory

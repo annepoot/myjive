@@ -14,8 +14,10 @@ from jive.implicit import arclenmodule
 from jive.implicit import solvermodule
 from jive.implicit import linsolvemodule
 from jive.solver import solver
-from jive.solver import iterativesolver
 from jive.solver import directsolver
+from jive.solver import iterativesolver
+from jive.solver import cg
+
 
 import barmodel
 import dirimodel
@@ -91,5 +93,6 @@ def declare_shapes(globdat):
 def declare_solvers(globdat):
     factory = solver.SolverFactory()
     iterativesolver.declare(factory)
+    cg.declare(factory)
     directsolver.declare(factory)
     globdat[gn.SOLVERFACTORY] = factory

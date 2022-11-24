@@ -1,6 +1,7 @@
 import numpy as np
 
 PRECISION = 'precision'
+NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
 class SolverFactory:
     def __init__(self):
@@ -41,7 +42,7 @@ class Solver:
         return lhs
 
     def get_matrix(self):
-        pass
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_constraints(self):
-        pass
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)

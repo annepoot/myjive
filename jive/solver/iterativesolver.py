@@ -1,10 +1,10 @@
 import numpy as np
-import scipy.sparse.linalg as spspla
 
 from jive.solver.solver import Solver
 from jive.solver.constrainer import Constrainer
 
 MAXITER = 'maxIter'
+NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
 class IterativeSolver(Solver):
 
@@ -40,22 +40,22 @@ class IterativeSolver(Solver):
         f = self._conman.get_rhs(rhs)
         u = self._conman.get_lhs(lhs)
 
-        for iter in range(self._maxiter):
+        for _ in range(self._maxiter):
             res = self.get_residual(u, f)
             error = np.linalg.norm(res)
 
             if error < self._precision:
                 break
 
-            du = self._solve(res)
+            du = self.iterate(res)
             u += du
         else:
             raise RuntimeError('maximum number of iterations {} exceeded'.format(self._maxiter))
 
         return u
 
-    def _solve(self, res):
-        return res
+    def iterate(self, res):
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_residual(self, lhs, rhs):
         return self._matrix @ lhs - rhs

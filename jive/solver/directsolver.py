@@ -23,7 +23,6 @@ class DirectSolver(Solver):
     def solve(self, rhs):
         f = self._conman.get_rhs(rhs)
         u = spspla.spsolve(self._matrix, f)
-
         return u
 
     def get_matrix(self):

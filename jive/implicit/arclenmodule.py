@@ -3,8 +3,6 @@ import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as linalg
 
-from numpy.linalg import norm as norm
-
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
@@ -17,7 +15,6 @@ ITERMAX = 'itermax'
 TOLERANCE = 'tolerance'
 BETA = 'beta'
 DL = 'dl'
-
 
 class ArclenModule(Module):
     def init(self, props, globdat):
@@ -141,7 +138,7 @@ class ArclenModule(Module):
             self._duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
             globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
 
-        
+
         while len(self._fhat) < globdat[gn.DOFSPACE].dof_count():
             self._fhat = np.append(self._fhat, 0)
             self._fext0 = np.append(self._fext0, 0)

@@ -1,4 +1,3 @@
-
 class Constraints:
     def __init__(self):
         self._ddofs = []

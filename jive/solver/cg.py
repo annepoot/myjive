@@ -24,5 +24,6 @@ class CG(IterativeSolver):
 
         return du
 
+
 def declare(factory):
     factory.declare_solver('CG', CG)

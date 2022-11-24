@@ -1,6 +1,5 @@
 from jive.app.module import Module
 
-
 class SolverModule(Module):
 
     def init(self, props, globdat):
@@ -9,7 +8,6 @@ class SolverModule(Module):
     def run(self, globdat):
 
         while True:
-
             self.advance(globdat)
 
             self.solve(globdat)

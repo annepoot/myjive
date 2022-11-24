@@ -11,7 +11,6 @@ INTERACTIVE = 'interactive'
 LABEL = 'label'
 MAXSTEP = 'maxStep'
 
-
 class FrameViewModule(Module):
 
     def init(self, props, globdat):

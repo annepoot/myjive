@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.sparse as spsp
-import scipy.sparse.linalg as spspla
 
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
@@ -17,7 +16,6 @@ STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 TABLES = 'tables'
-
 
 class LinsolveModule(SolverModule):
 

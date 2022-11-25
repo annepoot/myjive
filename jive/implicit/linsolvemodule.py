@@ -11,6 +11,7 @@ from jive.solver.constraints import Constraints
 from jive.util.table import Table
 
 SOLVER = 'solver'
+PRECONDITIONER = 'preconditioner'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
@@ -34,6 +35,11 @@ class LinsolveModule(SolverModule):
         solver = myprops.get(SOLVER, 'direct')
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
 
+        self._precon = None
+        precon = myprops.get(PRECONDITIONER)
+        if precon is not None:
+            self._precon = globdat[gn.PRECONFACTORY].get_precon(precon)
+
     def solve(self, globdat):
 
         model = globdat[gn.MODEL]
@@ -52,7 +58,7 @@ class LinsolveModule(SolverModule):
             model.take_action(act.GETMATRIX2, params, globdat)
 
         # Update the solver
-        self._solver.update(K, c)
+        self._solver.update(K, c, self._precon)
 
         # Solve the system
         u = self._solver.solve(f)

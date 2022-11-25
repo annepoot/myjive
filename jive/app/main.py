@@ -9,6 +9,7 @@ def jive(props):
     declare.declare_modules(globdat)
     declare.declare_shapes(globdat)
     declare.declare_solvers(globdat)
+    declare.declare_precons(globdat)
 
     # Build main Module chain
     print('Initializing module chain...')

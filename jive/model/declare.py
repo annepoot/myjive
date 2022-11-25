@@ -19,6 +19,7 @@ from jive.solver import iterativesolver
 from jive.solver import cg
 from jive.solver import preconditioner
 from jive.solver import diagprecon
+from jive.solver import icholprecon
 
 import barmodel
 import dirimodel
@@ -107,5 +108,6 @@ def declare_precons(globdat):
     factory = preconditioner.PreconFactory()
 
     diagprecon.declare(factory)
+    icholprecon.declare(factory)
 
     globdat[gn.PRECONFACTORY] = factory

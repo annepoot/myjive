@@ -1,0 +1,32 @@
+import scipy.sparse as spsp
+
+class DiagPrecon:
+
+    def __init__(self):
+        super().__init__()
+
+        self._sourcematrix = None
+        self._matrix = None
+        self._invmatrix = None
+
+    def update(self, sourcematrix):
+        self._sourcematrix = sourcematrix
+        diag = self._sourcematrix.diagonal()
+        self._M = spsp.diags(diag, format='csr')
+        self._M_inv = spsp.diags(1/diag, format='csr')
+
+    def dot(self, lhs):
+        return self._M @ lhs
+
+    def solve(self, rhs):
+        return self._M_inv @ rhs
+
+    def get_matrix(self):
+        return self._M
+
+    def get_inv_matrix(self):
+        return self._M_inv
+
+
+def declare(factory):
+    factory.declare_precon('diag', DiagPrecon)

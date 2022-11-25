@@ -27,6 +27,8 @@ class IterativeSolver(Solver):
         self._conman = Constrainer(self._cons, matrix)
         self._matrix = self._conman.get_output_matrix()
         self._precon = preconditioner
+        if self._precon is not None:
+            self._precon.update(self._matrix)
 
     def start(self):
         if self._precon is not None:

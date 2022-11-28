@@ -38,8 +38,8 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-
-  nsteps = 1;
+  solver = CG;
+  preconditioner = ichol;
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;

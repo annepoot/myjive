@@ -31,9 +31,8 @@ init =
 
 solver =
 {
-  type = Solver;
-
-  nsteps = 1;
+  type = Linsolve;
+  solver = CG;
   storeMatrix = True;
   storeConstraints = True;
 };

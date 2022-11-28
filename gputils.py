@@ -7,7 +7,7 @@ def cholesky(A, get_nops=False):
 
     for i in range(A.shape[0]):
         for j in range(i+1):
-            rowsum = 0
+            rowsum = 0.0
 
             for k in range(j):
                 n_ops += 1
@@ -16,7 +16,7 @@ def cholesky(A, get_nops=False):
             if i == j:
                 L[i,j] = np.sqrt(A[i,i] - rowsum)
             else:
-                L[i,j] = 1 / L[j,j] * (A[i,j] - rowsum)
+                L[i,j] = (A[i,j] - rowsum) / L[j,j]
 
     if get_nops:
         return L, n_ops
@@ -46,7 +46,7 @@ def incomplete_cholesky(A, get_nops=False):
         jrowvalues = data[indptr[col]:indptr[col+1]]
 
         # Initialize rowsum computation
-        rowsum = 0
+        rowsum = 0.0
         iidx = 0
         jidx = 0
 
@@ -108,7 +108,7 @@ def sparse_cholesky(A, get_nops=False):
                 jrowvalues = Ldata[Lindptr[col]:Lindptr[col+1]]
 
             # Initialize rowsum computation
-            rowsum = 0
+            rowsum = 0.0
             iidx = 0
             jidx = 0
 
@@ -139,13 +139,13 @@ def sparse_cholesky(A, get_nops=False):
                 Ljj = Ldata[Lindptr[col+1]-1]
                 Lij = (A[row,col] - rowsum) / Ljj
 
-            if not np.isclose(Lij, 0):
+            if Lij != 0:
                 Ldata.append(Lij)
                 Lindices.append(col)
 
         Lindptr.append(len(Lindices))
 
-    L = spsp.csr_array((Ldata, Lindices, Lindptr), dtype=float)
+    L = spsp.csr_array((Ldata, Lindices, Lindptr), dtype=np.float64)
 
     if get_nops:
         return L, n_ops

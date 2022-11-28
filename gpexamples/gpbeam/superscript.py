@@ -95,6 +95,8 @@ for fineness in fine_list:
     if fineness != 'post':
         pro = deepcopy(props_c)
         pro['init']['mesh']['file'] = 'beam_' + fineness + '.msh'
+        pro['solver']['type'] = 'Linsolve'
+        pro['solver']['solver'] = 'direct'
 
         glob = main.jive(pro)
 

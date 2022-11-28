@@ -15,7 +15,7 @@ class DirectSolver(Solver):
     def configure(self, props):
         super().configure(props)
 
-    def update(self, matrix, constraints):
+    def update(self, matrix, constraints, preconditioner=None):
         self._cons = constraints
         self._conman = Constrainer(self._cons, matrix)
         self._matrix = self._conman.get_output_matrix()

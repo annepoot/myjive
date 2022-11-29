@@ -32,7 +32,7 @@ init =
 solver =
 {
   type = Linsolve;
-  solver = CG;
+  solver = direct;
   storeMatrix = True;
   storeConstraints = True;
 };

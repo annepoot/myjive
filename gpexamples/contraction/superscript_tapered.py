@@ -1,12 +1,10 @@
 import sys
 sys.path.append('../../')
 
-from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
-import testutils as tu
 from copy import deepcopy
 
 def mesher_lin(L, n, fname='2nodebar_coarse'):

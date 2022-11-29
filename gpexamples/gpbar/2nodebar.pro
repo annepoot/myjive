@@ -35,8 +35,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-
-  nsteps = 1;
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;

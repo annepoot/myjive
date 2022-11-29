@@ -63,6 +63,7 @@ model =
 solver =
 {
   type = Linsolve;
-  nsteps = 1;
+  solver = CG;
+  preconditioner = ichol;
   storeMatrix = True;
 };

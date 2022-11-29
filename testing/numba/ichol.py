@@ -100,7 +100,7 @@ def incomplete_cholesky(data, indices, indptr):
     return L_data
 
 props = pu.parse_file('beam.pro')
-props['init']['mesh']['file'] = 'meshes/beam_fine4.msh'
+props['init']['mesh']['file'] = 'meshes/beam_fine2.msh'
 props['solver']['solver'] = 'direct'
 globdat = main.jive(props)
 

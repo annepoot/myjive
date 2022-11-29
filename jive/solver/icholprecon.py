@@ -16,13 +16,14 @@ class ICholPrecon:
         self._L = spsp.tril(self._sourcematrix, format='csr')
         ichol_data = incomplete_cholesky(self._L.data, self._L.indices, self._L.indptr)
         self._L.data = ichol_data
+        self._LT = self._L.T.tocsr()
 
     def dot(self, lhs):
         return self._L @ (self._L.T @ lhs)
 
     def solve(self, rhs):
-        tmp = spspla.spsolve_triangular(self._L, rhs, lower=True)
-        return spspla.spsolve_triangular(self._L.T, tmp, lower=False)
+        tmp = solve_triangular(self._L.data, self._L.indices, self._L.indptr, rhs, lower=True)
+        return solve_triangular(self._LT.data, self._LT.indices, self._LT.indptr, tmp, lower=False)
 
     def get_matrix(self):
         return self._L @ self._L.T
@@ -122,3 +123,32 @@ def incomplete_cholesky(data, indices, indptr):
         L_data[idx] = L_ij
 
     return L_data
+
+
+@njit
+def solve_triangular(data, indices, indptr, b, lower=True):
+    x = np.zeros_like(b)
+
+    if lower:
+        rng = range(len(b))
+    else:
+        rng = range(len(b)-1, -1, -1)
+
+    for i in rng:
+        if lower:
+            start = indptr[i]
+            end = indptr[i+1]-1
+            L_ii = data[indptr[i+1]-1]
+        else:
+            start = indptr[i]+1
+            end = indptr[i+1]
+            L_ii = data[indptr[i]]
+
+        cols = indices[start:end]
+        vals = data[start:end]
+        numerator = b[i]
+
+        for j, L_ij in zip(cols, vals):
+            numerator -= L_ij * x[j]
+        x[i] = numerator / L_ii
+    return x

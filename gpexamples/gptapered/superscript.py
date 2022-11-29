@@ -1,12 +1,11 @@
 import sys
 sys.path.append('../../')
 
-from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
-import testutils as tu
+from jive.solver.constrainer import Constrainer
 from copy import deepcopy
 
 def mesher_lin(L, n, fname='2nodebar_coarse'):
@@ -40,7 +39,9 @@ u = globdat['state0']
 f = globdat['extForce']
 c = globdat['constraints']
 
-Kc, fc = c.constrain(K, f)
+conman = Constrainer(c, K)
+Kc = conman.get_output_matrix()
+fc = conman.get_rhs(f)
 
 xf = np.linspace(0, 10, len(u))
 xc = np.linspace(0, 10, len(u_coarse))

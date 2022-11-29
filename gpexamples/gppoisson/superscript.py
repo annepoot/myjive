@@ -1,12 +1,9 @@
 import sys
 sys.path.append('../../')
 
-from math import exp
-import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
-import testutils as tu
 from quickviewer import QuickViewer
 from copy import deepcopy
 

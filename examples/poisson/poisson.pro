@@ -52,6 +52,7 @@ model =
 
 solver =
 {
-  type= Linsolve;
-  nsteps = 1;
+  type = Linsolve;
+  solver = CG;
+  preconditioner = ichol;
 };

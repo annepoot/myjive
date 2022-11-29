@@ -1,12 +1,10 @@
 import sys
 sys.path.append('../../')
 
-from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
-import testutils as tu
 from quickviewer import QuickViewer
 from copy import deepcopy
 
@@ -96,7 +94,6 @@ for fineness in fine_list:
         pro = deepcopy(props_c)
         pro['init']['mesh']['file'] = 'beam_' + fineness + '.msh'
         pro['solver']['type'] = 'Linsolve'
-        pro['solver']['solver'] = 'direct'
 
         glob = main.jive(pro)
 

@@ -13,6 +13,8 @@ from jive.solver.constrainer import Constrainer
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 GETFORCERESULTS = 'getForceResults'
 GETFULLCOVARIANCE = 'getFullCovariance'
+NSAMPLE = 'nsample'
+SEED = 'seed'
 
 class GPSolverModule(LinsolveModule):
 
@@ -25,6 +27,11 @@ class GPSolverModule(LinsolveModule):
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'False')))
         self._get_force_results = bool(eval(myprops.get(GETFORCERESULTS, 'False')))
         self._get_full_covariance = bool(eval(myprops.get(GETFULLCOVARIANCE, 'False')))
+
+        self._nsample = int(myprops.get(NSAMPLE,1))
+        self._seed = eval(myprops.get(SEED,'None'))
+        if not self._seed is None:
+            self._seed = int(self._seed)
 
     def run(self, globdat):
 
@@ -51,41 +58,94 @@ class GPSolverModule(LinsolveModule):
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
         model.take_action(gpact.CONFIGUREPRIOR, params, globdat)
 
-        if self._get_force_results:
-            fields = ['u', 'f']
+        # Define a dictionary for the output params
+        params = {}
+
+        # Get the prior mean
+        model.take_action(gpact.GETPRIORMEAN, params, globdat)
+
+        # Store the prior mean in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['f_prior'] = params[gppn.PRIORMEAN]
+            globdat['u_prior'] = self._solver.solve(params[gppn.PRIORMEAN])
         else:
-            fields = ['u']
+            globdat['u_prior'] = params[gppn.PRIORMEAN]
+            globdat['f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORMEAN]
 
-        for field in fields:
+        # Get the posterior mean
+        model.take_action(gpact.GETPOSTERIORMEAN, params, globdat)
 
-            # Define a dictionary for the settings of u
-            params = {}
-            params[gppn.FIELD] = field
-            params[gppn.FULLCOVARIANCE] = self._get_full_covariance
+        # Store the posterior mean in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['f_post'] = params[gppn.POSTERIORMEAN]
+            globdat['u_post'] = self._solver.solve(params[gppn.POSTERIORMEAN])
+        else:
+            globdat['u_post'] = params[gppn.POSTERIORMEAN]
+            globdat['f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORMEAN]
 
-            # Take the appropriate actions for u
-            model.take_action(gpact.GETPRIORMEAN, params, globdat)
-            model.take_action(gpact.GETPOSTERIORMEAN, params, globdat)
-            model.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
-            model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
+        # Get the prior covariance
+        model.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
 
-            # Get the log likelihood
-            model.take_action(gpact.GETLOGLIKELIHOOD, params, globdat)
+        # Store the prior covariance in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['var_f_prior'] = params[gppn.PRIORCOVARIANCE]
+            globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]))
+        else:
+            globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
+            globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
 
-            # Optionally store stiffness matrix in Globdat
-            if self._store_matrix:
-                globdat[field+'_prior'] = params[gppn.PRIORMEAN]
-                globdat[field+'_post'] = params[gppn.POSTERIORMEAN]
-                globdat['var_'+field+'_prior'] = params[gppn.PRIORCOVARIANCE]
-                globdat['var_'+field+'_post'] = params[gppn.POSTERIORCOVARIANCE]
-                globdat['logLikelihood'] = params[gppn.LOGLIKELIHOOD]
+        # Get the posterior covariance
+        model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
+
+        # Store the posterior covariance in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['var_f_post'] = params[gppn.POSTERIORCOVARIANCE]
+            globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]))
+        else:
+            globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
+            globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
+
+        # Get the log likelihood and store it in globdat
+        model.take_action(gpact.GETLOGLIKELIHOOD, params, globdat)
+        globdat['logLikelihood'] = params[gppn.LOGLIKELIHOOD]
+
+        # Set the params for the samples
+        params[gppn.NSAMPLE] = self._nsample
+        params[gppn.RNG] = np.random.default_rng(self._seed)
+
+        # Get the prior samples
+        model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
+
+        # Store the prior samples in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['samples_f_prior'] = params[gppn.PRIORSAMPLES]
+            globdat['samples_u_prior'] = np.zeros_like(params[gppn.PRIORSAMPLES])
+            for i in range(params[gppn.NSAMPLE]):
+                globdat['samples_u_prior'][:,i] = self._solver.solve(params[gppn.PRIORSAMPLES][:,i])
+        else:
+            globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
+            globdat['samples_f_prior'] = np.zeros_like(params[gppn.PRIORSAMPLES])
+            for i in range(params[gppn.NSAMPLE]):
+                globdat['samples_f_prior'][:,i] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES][:,i]
+
+        # Get the prior samples
+        model.take_action(gpact.GETPOSTERIORSAMPLES, params, globdat)
+
+        # Store the prior samples in globdat
+        if params[gppn.FIELD] == 'f':
+            globdat['samples_f_post'] = params[gppn.POSTERIORSAMPLES]
+            globdat['samples_u_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
+            for i in range(params[gppn.NSAMPLE]):
+                globdat['samples_u_post'][:,i] = self._solver.solve(params[gppn.POSTERIORSAMPLES][:,i])
+        else:
+            globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
+            globdat['samples_f_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
+            for i in range(params[gppn.NSAMPLE]):
+                globdat['samples_f_post'][:,i] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES][:,i]
 
         return output
 
     def shutdown(self, globdat):
-        pass
-
-    def __solve(self, globdat):
         pass
 
 

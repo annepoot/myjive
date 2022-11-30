@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
+from jive.solver.constrainer import Constrainer
 from quickviewer import QuickViewer
 from copy import deepcopy
 
@@ -14,7 +15,7 @@ props_c = {}
 props_c['init'] = deepcopy(props['gpinit'])
 props_c['init']['type'] = 'Init'
 props_c['solver'] = deepcopy(props['gpsolver'])
-props_c['solver']['type'] = 'Solver'
+props_c['solver']['type'] = 'Linsolve'
 props_c['model'] = deepcopy(props['model'])
 props_c['model']['models'] = '[ solid, diri ]'
 props_c['init']['mesh']['file'] = 'beam_coarse.msh'
@@ -29,7 +30,9 @@ u = globdat['state0']
 f = globdat['extForce']
 c = globdat['constraints']
 
-Kc, fc = c.constrain(K, f)
+conman = Constrainer(c, K)
+Kc = conman.get_output_matrix()
+fc = conman.get_rhs(f)
 
 Phi = globdat['Phi']
 Phic = globdat['Phic']

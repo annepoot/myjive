@@ -37,7 +37,6 @@ import xpoissonmodel
 
 import gpinitmodule
 import gpsolvermodule
-import gpsamplermodule
 import nonlinmodule
 import vtkoutmodule
 import linbuckmodule
@@ -72,7 +71,6 @@ def declare_modules(globdat):
     linsolvemodule.declare(factory)
     gpinitmodule.declare(factory)
     gpsolvermodule.declare(factory)
-    gpsamplermodule.declare(factory)
     nonlinmodule.declare(factory)
     arclenmodule.declare(factory)
     outputmodule.declare(factory)

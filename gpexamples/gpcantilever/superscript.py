@@ -37,10 +37,10 @@ f_prior = globdat['f_prior']
 u_prior = globdat['u_prior']
 f_post = globdat['f_post']
 u_post = globdat['u_post']
-std_f_prior = np.sqrt(globdat['var_f_prior'])
-std_f_post = np.sqrt(globdat['var_f_post'])
-std_u_prior = np.sqrt(globdat['var_u_prior'])
-std_u_post = np.sqrt(globdat['var_u_post'])
+std_f_prior = np.sqrt(globdat['var_f_prior'].diagonal())
+std_f_post = np.sqrt(globdat['var_f_post'].diagonal())
+std_u_prior = np.sqrt(globdat['var_u_prior'].diagonal())
+std_u_post = np.sqrt(globdat['var_u_post'].diagonal())
 
 samples_u_prior = globdat['samples_u_prior']
 samples_f_prior = globdat['samples_f_prior']

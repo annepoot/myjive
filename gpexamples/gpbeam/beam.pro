@@ -38,21 +38,15 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  solver = CG;
-  preconditioner = ichol;
+  solver = direct;
+  nsample = 3;
+  seed = 0;
+  //preconditioner = ichol;
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
   getForceResults = True;
   tables = [ stress, strain ];
-};
-
-gpsampler =
-{
-  type = GPSampler;
-
-  nsample = 3;
-  seed = 0;
 };
 
 model =

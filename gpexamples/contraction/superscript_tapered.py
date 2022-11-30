@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
+from jive.solver.constrainer import Constrainer
 from copy import deepcopy
 
 def mesher_lin(L, n, fname='2nodebar_coarse'):
@@ -38,7 +39,9 @@ u = globdat['state0']
 f = globdat['extForce']
 c = globdat['constraints']
 
-Kc, fc = c.constrain(K, f)
+conman = Constrainer(c, K)
+Kc = conman.get_output_matrix()
+fc = conman.get_rhs(f)
 
 xf = np.linspace(0, 10, len(u))
 xc = np.linspace(0, 10, len(u_coarse))
@@ -50,7 +53,7 @@ u_prior = globdat['u_prior']
 f_post = globdat['f_post']
 u_post = globdat['u_post']
 
-Sigma_f_prior = globdat['var_f_prior'].toarray()
+Sigma_f_prior = globdat['var_f_prior']
 Sigma_f_post = globdat['var_f_post']
 Sigma_u_prior = globdat['var_u_prior']
 Sigma_u_post = globdat['var_u_post']

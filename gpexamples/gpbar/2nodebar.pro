@@ -35,18 +35,12 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
+  nsample = 30;
+  seed = 0;
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
   getForceResults = True;
-};
-
-gpsampler =
-{
-  type = GPSampler;
-
-  nsample = 30;
-  seed = 0;
 };
 
 model =

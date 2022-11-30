@@ -27,7 +27,7 @@ class GPfModel(GPModel):
         self._H = self._Phic.T
 
         # Define the mean in terms of the force vector as well
-        self._m = self._Kc @ self._m
+        self._m = self._mf
 
         # Check if alpha or beta should be optimized
         if len(self._hyperparams) == 1:
@@ -52,101 +52,47 @@ class GPfModel(GPModel):
 
     def _get_prior_mean(self, params, globdat):
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
+        # Get the prior mean on f
+        super()._get_prior_mean(params, globdat)
 
-        if field == 'u':
-
-            # Return the prior of the displacement field
-            params[gppn.PRIORMEAN] = spspla.spsolve(self._Kc, self._m)
-
-        elif field == 'f':
-
-            # Return the prior of the force field
-            params[gppn.PRIORMEAN] = self._m
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that force-related info is returned
+        params[gppn.FIELD] = 'f'
 
     def _get_posterior_mean(self, params, globdat):
 
-        # Get the posterior mean on f first
+        # Get the posterior mean on f
         super()._get_posterior_mean(params, globdat)
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-
-        if field == 'u':
-
-            # Solve to get the posterior of the displacement field
-            params[gppn.POSTERIORMEAN] = spspla.spsolve(self._Kc, params[gppn.POSTERIORMEAN])
-
-        elif field == 'f':
-
-            pass
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that force-related info is returned
+        params[gppn.FIELD] = 'f'
 
     def _get_prior_covariance(self, params, globdat):
 
         # Get the prior covariance on f first
         super()._get_prior_covariance(params, globdat)
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-        fullSigma = params.get(gppn.FULLCOVARIANCE, False)
+        # Get the relevant matrices
+        self._get_sqrtSigma()
 
-        if field == 'u':
+        # Solve the system for each dof
+        if not '_V2' in vars(self):
+            self._V2 = spspla.spsolve(self._Kc, self._sqrtSigma)
 
-            # Get the relevant matrices
-            self._get_sqrtSigma()
+        # Convert to dense if necessary
+        if hasattr(self._V2, 'todense'):
+            self._V2 = self._V2.todense()
 
-            # Solve the system for each dof
-            if not '_V2' in vars(self):
-                self._V2 = spspla.spsolve(self._Kc, self._sqrtSigma)
+        # Compute the full covariance matrix
+        Sigma_prior = self._V2 @ self._V2.T
+        params[gppn.PRIORCOVARIANCE] = Sigma_prior
 
-            # Convert to dense if necessary
-            if hasattr(self._V2, 'todense'):
-                self._V2 = self._V2.todense()
-
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_prior = self._V2 @ self._V2.T
-                params[gppn.PRIORCOVARIANCE] = Sigma_prior
-
-            else:
-
-                # Compute only the diagonal of the covariance matrix
-                var_prior = np.zeros(self._dc)
-                for i in range(self._dc):
-                    var_prior[i] = self._V2[i,:] @ self._V2[i,:].T
-
-                params[gppn.PRIORCOVARIANCE] = var_prior
-
-        elif field == 'f':
-
-            pass
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_posterior_covariance(self, params, globdat):
 
         # Get the posterior covariance on f first
         super()._get_posterior_covariance(params, globdat)
-
-        # Check if the posterior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-        fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
         # Check if the prior variance is given in the params, otherwise, take an action to obtain it
         if not gppn.PRIORCOVARIANCE in params:
@@ -155,88 +101,40 @@ class GPfModel(GPModel):
         # Get the prior variance from the params
         var_prior = params[gppn.PRIORCOVARIANCE]
 
-        if field == 'u':
+        # Get the relevant matrices
+        self._get_V1()
 
-            # Get the relevant matrices
-            self._get_V1()
+        # Solve the system for each coarse dof
+        if not '_V3' in vars(self):
+            self._V3 = spspla.spsolve(self._Kc, self._V1.T)
 
-            # Solve the system for each coarse dof
-            if not '_V3' in vars(self):
-                self._V3 = spspla.spsolve(self._Kc, self._V1.T)
+        # Convert to dense if necessary
+        if hasattr(self._V3, 'todense'):
+            self._V3 = self._V3.todense()
 
-            # Convert to dense if necessary
-            if hasattr(self._V3, 'todense'):
-                self._V3 = self._V3.todense()
+        # If so, compute the full covariance matrix
+        Sigma_post = var_prior.copy()
+        Sigma_post -= self._V3 @ self._V3.T
+        params[gppn.POSTERIORCOVARIANCE] = Sigma_post
 
-            # Check if the full covariance matrix should be returned
-            if fullSigma:
-
-                # If so, compute the full covariance matrix
-                Sigma_post = var_prior.copy()
-                Sigma_post -= self._V3 @ self._V3.T
-                params[gppn.POSTERIORCOVARIANCE] = Sigma_post
-
-            else:
-
-                # If not, compute only the diagonal of the covariance matrix
-                var_post = var_prior.copy()
-                for i in range(self._dc):
-                    var_post[i] -= self._V3[i,:] @ self._V3[i,:].T
-
-                params[gppn.POSTERIORCOVARIANCE] = var_post
-
-        elif field == 'f':
-
-            pass
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_prior_samples(self, params, globdat):
 
-        # Get the prior samples on f first
+        # Get the prior samples on f
         super()._get_prior_samples(params, globdat)
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-
-        if field == 'u':
-
-            # Compute the corresponding displacement field for each sample
-            params[gppn.PRIORSAMPLES] = spspla.spsolve(self._Kc, params[gppn.PRIORSAMPLES])
-
-        elif field == 'f':
-
-            pass
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that force-related info is returned
+        params[gppn.FIELD] = 'f'
 
     def _get_posterior_samples(self, params, globdat):
 
-        # Get the prior samples on f first
+        # Get the prior samples on f
         super()._get_posterior_samples(params, globdat)
 
-        # Check if the prior on u, eps or f should be obtained
-        field = params.get(gppn.FIELD, 'u')
-
-        if field == 'u':
-
-            # Compute the corresponding displacement field for each sample
-            params[gppn.POSTERIORSAMPLES] = spspla.spsolve(self._Kc, params[gppn.POSTERIORSAMPLES])
-
-        elif field == 'f':
-
-            pass
-
-        else:
-
-            raise ValueError(field)
-
+        # Inform GPSolverModule that force-related info is returned
+        params[gppn.FIELD] = 'f'
 
     def _get_param_opt(self, Sigma_fc):
 
@@ -246,7 +144,6 @@ class GPfModel(GPModel):
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)
-
 
     def _get_sqrtSigma(self):
 

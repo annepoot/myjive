@@ -106,18 +106,13 @@ class GPModel(Model):
         # The posterior mean force vector has to contain the Dirichlet and Neumann BCs
         mf = np.zeros_like(f)
         mf = conmanK.apply_neumann(mf)
-        Kc, mf = conmanK.apply_dirichlet(K, mf)
 
         # Get the actual constrained stiffness matrix and force vector
-        Mc = conmanM.get_output_matrix()
-        Kc = conmanK.get_output_matrix()
-        fc = conmanK.get_rhs(f)
+        self._Mc = conmanM.get_output_matrix()
+        self._Kc = conmanK.get_output_matrix()
 
-        # Store all constrained matrices and vectors
-        self._Mc = Mc
-        self._Kc = Kc
-        self._fc = fc
-        self._m = spspla.spsolve(Kc, mf)
+        self._mf = mf
+        self._m = spspla.spsolve(self._Kc, conmanK.get_rhs(self._mf))
         self._cdofs = c.get_constraints()[0]
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -149,7 +144,7 @@ class GPModel(Model):
         self._H = self._Phic.T @ self._Kc
 
         # Get the observed force vector (as a deviation from the prior mean)
-        self._y = self._Phic.T @ self._fc - self._H @ self._m
+        self._y = self._Phic.T @ conmanK.get_rhs(f) - self._H @ self._m
 
 
     def _configure_prior(self, params, globdat):
@@ -193,9 +188,11 @@ class GPModel(Model):
 
     def _get_prior_mean(self, params, globdat):
 
-        # Return the prior of the displacement field
+        # Return the prior of the force field
         params[gppn.PRIORMEAN] = self._m
 
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_posterior_mean(self, params, globdat):
 
@@ -216,32 +213,23 @@ class GPModel(Model):
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
 
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_prior_covariance(self, params, globdat):
-
-        fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
         ####################
         # PRIOR COVARIANCE #
         ####################
 
-        # Check if the full covariance matrix should be returned
-        if fullSigma:
+        # Compute the full covariance matrix
+        Sigma_prior = self._Sigma
+        params[gppn.PRIORCOVARIANCE] = Sigma_prior
 
-            # If so, compute the full covariance matrix
-            Sigma_prior = self._Sigma
-            params[gppn.PRIORCOVARIANCE] = Sigma_prior
-
-        else:
-
-            # If not, compute only the diagonal of the covariance matrix
-            var_prior = self._Sigma.diagonal()
-            params[gppn.PRIORCOVARIANCE] = var_prior
-
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_posterior_covariance(self, params, globdat):
-
-        fullSigma = params.get(gppn.FULLCOVARIANCE, False)
 
         ########################
         # POSTERIOR COVARIANCE #
@@ -259,23 +247,13 @@ class GPModel(Model):
         # Get the relevant matrices
         self._get_V1()
 
-        # Check if the full covariance matrix should be returned
-        if fullSigma:
+        # Compute the full covariance matrix
+        Sigma_post = var_prior.copy()
+        Sigma_post -= self._V1.T @ self._V1
+        params[gppn.POSTERIORCOVARIANCE] = Sigma_post
 
-            # If so, compute the full covariance matrix
-            Sigma_post = var_prior.copy()
-            Sigma_post -= self._V1.T @ self._V1
-            params[gppn.POSTERIORCOVARIANCE] = Sigma_post
-
-        else:
-
-            # If not, compute only the diagonal of the covariance matrix
-            var_post = var_prior.copy()
-            for i in range(self._dc):
-                var_post[i] -= self._V1[:,i].T @ self._V1[:,i]
-
-            params[gppn.POSTERIORCOVARIANCE] = var_post
-
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_prior_samples(self, params, globdat):
 
@@ -310,6 +288,8 @@ class GPModel(Model):
         # Return the array of samples
         params[gppn.PRIORSAMPLES] = samples
 
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_posterior_samples(self, params, globdat):
 
@@ -360,6 +340,8 @@ class GPModel(Model):
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples
 
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
 
     def _get_log_likelihood(self, params, globdat):
 
@@ -376,7 +358,6 @@ class GPModel(Model):
         l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
 
         params[gppn.LOGLIKELIHOOD] = l
-
 
     def _get_phi(self, globdat):
 
@@ -452,7 +433,6 @@ class GPModel(Model):
 
         return phi
 
-
     def _apply_covariance_bcs(self, Sigma):
         Sigmac = Sigma.copy()
 
@@ -466,7 +446,6 @@ class GPModel(Model):
             Sigmac += self._pdnoise2 * np.identity(self._dc)
 
         return Sigmac
-
 
     def _get_variances(self, params, globdat):
 
@@ -504,7 +483,6 @@ class GPModel(Model):
 
                 tbwts[inode] = 1
 
-
     def _get_standard_deviations(self, params, globdat):
         table = params[pn.TABLE]
         name = params[pn.TABLENAME]
@@ -518,7 +496,6 @@ class GPModel(Model):
             table[comp] = np.sqrt(table[comp])
 
         params[pn.TABLENAME] = name
-
 
     def _get_Sigma_obs(self):
 
@@ -563,6 +540,7 @@ class GPModel(Model):
     def _postmul_Sigma(self, X):
 
         return X @ self._Sigma
+
 
 def declare(factory):
     factory.declare_model('GP', GPModel)

@@ -83,28 +83,13 @@ class GPEnKFModel(GPModel):
 
     def _get_prior_covariance(self, params, globdat):
 
-        fullSigma = params.get(gppn.FULLCOVARIANCE, False)
-
         ####################
         # PRIOR COVARIANCE #
         ####################
 
-        # Check if the full covariance matrix should be returned
-        if fullSigma:
-
-            # If so, compute the full covariance matrix
-            Sigma_prior = self._A @ self._A.T / (self._nens - 1)
-            params[gppn.PRIORCOVARIANCE] = Sigma_prior
-
-        else:
-
-            # If not, compute only the diagonal of the covariance matrix
-            var_prior = np.zeros(self._dc)
-            for i in range(self._dc):
-                var_prior[i] = self._A[i,:] @ self._A[i,:].T / (self._nens - 1)
-
-            params[gppn.PRIORCOVARIANCE] = var_prior
-
+        # Compute the full covariance matrix
+        Sigma_prior = self._A @ self._A.T / (self._nens - 1)
+        params[gppn.PRIORCOVARIANCE] = Sigma_prior
 
     def _get_Sigma_obs(self):
 

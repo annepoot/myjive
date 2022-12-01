@@ -59,8 +59,9 @@ model =
       E = 10000.;
       nu = 0.2;
       rho = 1.0;
-      thickness = 0.2;
     };
+
+    thickness = 0.2;
 
     shape =
     {

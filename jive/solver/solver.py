@@ -23,7 +23,7 @@ class SolverFactory:
 class Solver:
 
     def __init__(self):
-        self._precision = 1e-5
+        self._precision = 1e-10
 
     def configure(self, props):
         self._precision = props.get(PRECISION, self._precision)

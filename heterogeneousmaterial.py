@@ -21,9 +21,6 @@ class HeterogeneousMaterial(IsotropicMaterial):
         if self._rank == 1:
             self._area = props.get(AREA_PROP, self._area)
             self._area = pu.soft_cast(self._area, float)
-        elif self._rank == 2:
-            self._thickness = props.get(THICKNESS_PROP, self._thickness)
-            self._thickness = pu.soft_cast(self._thickness, float)
 
     def stiff_at_point(self, ipoint=None):
         return self._compute_stiff_matrix(ipoint)
@@ -42,6 +39,3 @@ class HeterogeneousMaterial(IsotropicMaterial):
 
     def _get_area(self, ipoint=None):
         return pu.evaluate(self._area, ipoint, self._rank)
-
-    def _get_thickness(self, ipoint=None):
-        return pu.evaluate(self._thickness, ipoint, self._rank)

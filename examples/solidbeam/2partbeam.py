@@ -1,10 +1,8 @@
 import sys
+sys.path.append('../../')
 
-sys.path.append('../')
-
-import numpy as np
-import main
-import proputils as pu
+from jive.app import main
+from jive.util import proputils as pu
 
 props = pu.parse_file('2partbeam.pro')
 

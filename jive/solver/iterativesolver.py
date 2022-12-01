@@ -16,7 +16,7 @@ class IterativeSolver(Solver):
         self._conman = None
         self._precon = None
 
-        self._maxiter = 1000
+        self._maxiter = 2000
 
     def configure(self, props):
         super().configure(props)
@@ -30,17 +30,11 @@ class IterativeSolver(Solver):
         if self._precon is not None:
             self._precon.update(self._matrix)
 
-    def start(self):
-        if self._precon is not None:
-            self._precon.start()
-
-    def finish(self):
-        if self._precon is not None:
-            self._precon.finish()
-
     def improve(self, lhs, rhs):
         f = self._conman.get_rhs(rhs)
         u = self._conman.get_lhs(lhs)
+
+        self.start()
 
         for _ in range(self._maxiter):
             res = self.get_residual(u, f)
@@ -54,9 +48,17 @@ class IterativeSolver(Solver):
         else:
             raise RuntimeError('maximum number of iterations {} exceeded'.format(self._maxiter))
 
+        self.finish()
+
         return u
 
     def iterate(self, res):
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)
+
+    def start(self):
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)
+
+    def finish(self):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_residual(self, lhs, rhs):

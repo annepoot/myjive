@@ -8,7 +8,8 @@ class ICholPrecon:
         super().__init__()
 
         self._sourcematrix = None
-        self._matrix = None
+        self._L = None
+        self._LT = None
 
     def update(self, sourcematrix):
         self._sourcematrix = sourcematrix

@@ -5,7 +5,12 @@ class CG(IterativeSolver):
     def __init__(self):
         super().__init__()
 
-        self._beta = None
+        self._p = None
+
+    def start(self):
+        self._p = None
+
+    def finish(self):
         self._p = None
 
     def iterate(self, res):
@@ -29,8 +34,8 @@ class CG(IterativeSolver):
         else:
             z_new = self._precon.solve(r_new)
 
-        self._beta = (r_new @ z_new) / (r @ z)
-        self._p = z_new + self._beta * self._p
+        beta = (r_new @ z_new) / (r @ z)
+        self._p = z_new + beta * self._p
 
         return du
 

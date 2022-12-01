@@ -106,5 +106,5 @@ model =
 
 solver =
 {
-  nsteps = 1;
+  type = Linsolve;
 };

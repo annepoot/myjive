@@ -42,8 +42,8 @@ class TimoshenkoModel(Model):
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def __stiffness(self, params, globdat):
-        for elem in self._elems:
-            inodes = elem.get_nodes()
+        for ielem in self._ielems:
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
             coords = self._nodes.get_some_coords(inodes)
 

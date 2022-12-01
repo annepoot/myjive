@@ -93,10 +93,25 @@ class InitModule(Module):
             nlines = lines[lines.index('$Nodes\n')+2:lines.index('$EndNodes\n')]
             elines = lines[lines.index('$Elements\n')+2:lines.index('$EndElements\n')]
 
-            # Split the node and element info
+
+            # If possible, extract the element group block from the gmsh file
+            if '$PhysicalNames\n' in lines:
+                grouplines = lines[lines.index('$PhysicalNames\n')+2:lines.index('$EndPhysicalNames\n')]
+
+                # Split the element group info
+                group_ids = np.genfromtxt(grouplines, dtype=int)[:,1]
+                group_names = np.genfromtxt(grouplines, dtype=str)[:,2]
+                group_names = np.char.strip(group_names, '"')
+
+            else:
+                group_ids = []
+                group_names = []
+
+            # Split the node info
             node_ids = np.genfromtxt(nlines, dtype=int)[:,0]
             coords = np.genfromtxt(nlines, dtype=float)[:,1:]
 
+            # Split the element info
             elem_ids = np.genfromtxt(elines, dtype=int)[:,0]
             elem_info = np.genfromtxt(elines, dtype=int)[:,1:5]
             inodes = np.genfromtxt(elines, dtype=int)[:,5:]
@@ -152,6 +167,13 @@ class InitModule(Module):
             # Add all elements to the element set
             for i in range(inodes.shape[0]):
                 elems.add_element(nodes.find_nodes(inodes[i,:]), elem_id=elem_ids[i])
+
+            for j, (idx, name) in enumerate(zip(group_ids, group_names)):
+                egroup = []
+                for i in range(elem_info.shape[0]):
+                    if elem_info[i,2] == idx:
+                        egroup.append(i)
+                globdat[gn.EGROUPS][name] = ElementGroup(elems, egroup)
 
         # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
         globdat[gn.NSET] = nodes.to_nodeset()

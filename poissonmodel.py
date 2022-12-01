@@ -62,9 +62,9 @@ class PoissonModel(Model):
 
     def _get_matrix(self, params, globdat):
 
-        for elem in self._elems:
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
             coords = self._nodes.get_some_coords(inodes)
 
@@ -92,9 +92,9 @@ class PoissonModel(Model):
         if unit_matrix:
             M = np.identity(1)
 
-        for elem in self._elems:
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
             coords = self._nodes.get_some_coords(inodes)
 

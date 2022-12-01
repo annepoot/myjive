@@ -5,7 +5,6 @@ E_PROP = 'E'
 NU_PROP = 'nu'
 RHO_PROP = 'rho'
 AREA_PROP = 'area'
-THICKNESS_PROP = 'thickness'
 ANMODEL_PROP = 'anmodel'
 BAR = 'bar'
 PLANE_STRESS = 'plane_stress'
@@ -29,8 +28,6 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1:
             self._area = 1.0
-        elif self._rank == 2:
-            self._thickness = 1.0
 
         self._stiff_matrix = np.zeros((self._strcount, self._strcount))
         self._mass_matrix = np.zeros((self._rank, self._rank))
@@ -47,8 +44,6 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1:
             self._area = float(props.get(AREA_PROP, self._area))
-        elif self._rank == 2:
-            self._thickness = float(props.get(THICKNESS_PROP, self._thickness))
 
         self._stiff_matrix = self._compute_stiff_matrix()
         self._mass_matrix = self._compute_mass_matrix()
@@ -63,8 +58,6 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1:
             config[AREA_PROP] = self._area
-        elif self._rank == 2:
-            config[THICKNESS_PROP] = self._thickness
 
         return config
 
@@ -75,9 +68,6 @@ class IsotropicMaterial(Material):
         if self._rank == 1:
             area = self._get_area(ipoint)
             stress /= area
-        elif self._rank == 2:
-            thickness = self._get_thickness(ipoint)
-            stress /= thickness
 
         return stress
 
@@ -91,14 +81,16 @@ class IsotropicMaterial(Material):
         if self._rank == 1:
             area = self._get_area(ipoint)
             weight *= area
-        elif self._rank == 2:
-            thickness = self._get_thickness(ipoint)
-            weight *= thickness
 
         return weight
 
     def mass_at_point(self, ipoint=None):
         return self._mass_matrix
+
+    def update(self, strain, ipoint=None):
+        stiff = self.stiff_at_point(ipoint)
+        stress = self.stress_at_point(strain, ipoint)
+        return stiff, stress
 
     def _compute_stiff_matrix(self, ipoint=None):
         E = self._get_E(ipoint)
@@ -107,22 +99,20 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1:
             area = self._get_area(ipoint)
-        elif self._rank == 2:
-            thickness = self._get_thickness(ipoint)
 
         if self._anmodel == BAR:
             stiff[0, 0] = E * area
 
         elif self._anmodel == PLANE_STRESS:
-            stiff[[0, 1], [0, 1]] = E / (1 - nu ** 2) * thickness
-            stiff[[0, 1], [1, 0]] = (nu * E) / (1 - nu ** 2) * thickness
-            stiff[2, 2] = 0.5 * E / (1 + nu) * thickness
+            stiff[[0, 1], [0, 1]] = E / (1 - nu ** 2)
+            stiff[[0, 1], [1, 0]] = (nu * E) / (1 - nu ** 2)
+            stiff[2, 2] = 0.5 * E / (1 + nu)
 
         elif self._anmodel == PLANE_STRAIN:
             d = (1 + nu) * (1 - 2 * nu)
-            stiff[[0, 1], [0, 1]] = E * (1 - nu) / d * thickness
-            stiff[[0, 1], [1, 0]] = E * nu / d * thickness
-            stiff[2, 2] = 0.5 * E / (1 + nu) * thickness
+            stiff[[0, 1], [0, 1]] = E * (1 - nu) / d
+            stiff[[0, 1], [1, 0]] = E * nu / d
+            stiff[2, 2] = 0.5 * E / (1 + nu)
 
         elif self._anmodel == SOLID:
             d = (1 + nu) * (1 - 2 * nu)
@@ -150,7 +140,7 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1 and self._anmodel == BAR:
             valid = True
-        elif self._rank == 2 and (self._anmodel == PLANE_STRESS or self._anmodel == PLANE_STRESS):
+        elif self._rank == 2 and (self._anmodel == PLANE_STRESS or self._anmodel == PLANE_STRAIN):
             valid = True
         elif self._rank == 3 and self._anmodel == SOLID:
             valid = True
@@ -168,6 +158,3 @@ class IsotropicMaterial(Material):
 
     def _get_area(self, ipoint=None):
         return self._area
-
-    def _get_thickness(self, ipoint=None):
-        return self._thickness

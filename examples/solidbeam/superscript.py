@@ -41,6 +41,7 @@ weight_exact = H * L * t * rho
 props['solver']['storeMatrix'] = 'True'
 props['model']['neum']['values'] = '[0.0]'
 props['model']['solid']['material']['rho'] = str(rho)
+props['model']['solid']['gravity'] = 'True'
 
 
 globdat = main.jive(props)

@@ -106,7 +106,7 @@ for fineness in fine_list:
         elems = globdat['elemSet']
         nodes = globdat['nodeSet']
         u = globdat['u_post']
-        std_u_post = np.sqrt(globdat['var_u_post'])
+        std_u_post = np.sqrt(globdat['var_u_post'].diagonal())
         std_u_bottom = []
 
     x_bottom = []

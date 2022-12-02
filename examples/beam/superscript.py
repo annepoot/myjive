@@ -9,7 +9,7 @@ props = pu.parse_file('beam.pro')
 
 H = 2
 L = 10
-t = float(props['model']['solid']['material']['thickness'])
+t = float(props['model']['solid']['thickness'])
 E = float(props['model']['solid']['material']['E'])
 EI = E*H**3*t/12
 F = 1
@@ -40,6 +40,7 @@ weight_exact = H * L * t * rho
 props['solver']['storeMatrix'] = 'True'
 props['model']['neum']['values'] = '[0.0]'
 props['model']['solid']['material']['rho'] = str(rho)
+props['model']['solid']['gravity'] = 'True'
 
 
 globdat = main.jive(props)

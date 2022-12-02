@@ -64,6 +64,8 @@ model =
       rho = 0.1;
     };
 
+    gravity = True;
+
     shape =
     {
       type = Line2;

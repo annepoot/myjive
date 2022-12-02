@@ -73,6 +73,7 @@ model =
     };
 
     thickness = 0.2;
+    gravity = True;
 
     shape =
     {

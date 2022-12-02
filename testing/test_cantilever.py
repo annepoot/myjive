@@ -17,7 +17,9 @@ def change_test_dir(monkeypatch):
 def props():
     return pu.parse_file('beam.pro')
 
-
+@pytest.mark.rank2
+@pytest.mark.cantilever
+@pytest.mark.core
 def test_cantilever(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'

@@ -21,7 +21,9 @@ def props1():
 def props2():
     return pu.parse_file('2partbeam.pro')
 
-
+@pytest.mark.rank2
+@pytest.mark.solidbeam
+@pytest.mark.core
 def test_solidbeam(props1):
     props1['solver']['storeMatrix'] = 'True'
     props1['solver']['storeConstraints'] = 'True'
@@ -60,7 +62,9 @@ def test_solidbeam(props1):
     assert np.isclose(sum(reactions_y), 1)
     assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
 
-
+@pytest.mark.rank2
+@pytest.mark.solidbeam
+@pytest.mark.core
 def test_2partbeam(props2):
     props2['solver']['storeMatrix'] = 'True'
     props2['solver']['storeConstraints'] = 'True'

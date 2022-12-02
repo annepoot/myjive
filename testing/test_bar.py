@@ -38,6 +38,9 @@ def mesher_quad(L, n):
         for i in range(n):
             fmesh.write('%d %d %d\n' % (2 * i, 2 * i + 1, 2 * i + 2))
 
+@pytest.mark.rank1
+@pytest.mark.bar
+@pytest.mark.core
 def test_lin(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'
@@ -74,6 +77,9 @@ def test_lin(props):
     assert np.isclose(min(u), u_left)
     assert np.isclose(max(u), 0)
 
+@pytest.mark.rank1
+@pytest.mark.bar
+@pytest.mark.core
 def test_quad(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'

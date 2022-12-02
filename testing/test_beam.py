@@ -17,7 +17,9 @@ def change_test_dir(monkeypatch):
 def props():
     return pu.parse_file('beam.pro')
 
-
+@pytest.mark.rank2
+@pytest.mark.beam
+@pytest.mark.core
 def test_point_load(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'
@@ -52,7 +54,9 @@ def test_point_load(props):
     assert np.isclose(sum(reactions_y), 1)
     assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
 
-
+@pytest.mark.rank2
+@pytest.mark.beam
+@pytest.mark.core
 def test_point_load_roll(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'
@@ -91,7 +95,9 @@ def test_point_load_roll(props):
     assert np.isclose(sum(reactions_y), 1)
     assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
 
-
+@pytest.mark.rank2
+@pytest.mark.beam
+@pytest.mark.core
 def test_body_load(props):
     props['solver']['storeMatrix'] = 'True'
     props['solver']['storeConstraints'] = 'True'

@@ -43,7 +43,7 @@ class GPSolverModule(LinsolveModule):
 
         # Optionally get the mass matrix
         if self._get_unit_mass_matrix:
-            M = spsp.csr_array((dc, dc))
+            M = self._get_empty_matrix(globdat)
             params = {
                 pn.MATRIX2: M,
                 pn.UNITMATRIX: True
@@ -89,7 +89,10 @@ class GPSolverModule(LinsolveModule):
         # Store the prior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_prior'] = params[gppn.PRIORCOVARIANCE]
-            globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]))
+
+            self._solver.precon_mode = True
+            globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]).T)
+            self._solver.precon_mode = False
         else:
             globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
             globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
@@ -100,7 +103,10 @@ class GPSolverModule(LinsolveModule):
         # Store the posterior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_post'] = params[gppn.POSTERIORCOVARIANCE]
-            globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]))
+
+            self._solver.precon_mode = True
+            globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]).T)
+            self._solver.precon_mode = False
         else:
             globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
             globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()

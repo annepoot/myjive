@@ -31,8 +31,12 @@ class IterativeSolver(Solver):
             self._precon.update(self._matrix)
 
     def improve(self, lhs, rhs):
-        f = self._conman.get_rhs(rhs)
-        u = self._conman.get_lhs(lhs)
+        if self.precon_mode:
+            f = rhs
+            u = lhs
+        else:
+            f = self._conman.get_rhs(rhs)
+            u = self._conman.get_lhs(lhs)
 
         self.start()
 

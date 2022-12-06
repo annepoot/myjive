@@ -71,54 +71,16 @@ class GPfModel(GPModel):
         # Get the prior covariance on f first
         super()._get_prior_covariance(params, globdat)
 
-        # Get the relevant matrices
-        self._get_sqrtSigma()
-
-        # Solve the system for each dof
-        if not '_V2' in vars(self):
-            self._V2 = spspla.spsolve(self._Kc, self._sqrtSigma)
-
-        # Convert to dense if necessary
-        if hasattr(self._V2, 'todense'):
-            self._V2 = self._V2.todense()
-
-        # Compute the full covariance matrix
-        Sigma_prior = self._V2 @ self._V2.T
-        params[gppn.PRIORCOVARIANCE] = Sigma_prior
-
         # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
+        params[gppn.FIELD] = 'f'
 
     def _get_posterior_covariance(self, params, globdat):
 
         # Get the posterior covariance on f first
         super()._get_posterior_covariance(params, globdat)
 
-        # Check if the prior variance is given in the params, otherwise, take an action to obtain it
-        if not gppn.PRIORCOVARIANCE in params:
-            self.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
-
-        # Get the prior variance from the params
-        var_prior = params[gppn.PRIORCOVARIANCE]
-
-        # Get the relevant matrices
-        self._get_V1()
-
-        # Solve the system for each coarse dof
-        if not '_V3' in vars(self):
-            self._V3 = spspla.spsolve(self._Kc, self._V1.T)
-
-        # Convert to dense if necessary
-        if hasattr(self._V3, 'todense'):
-            self._V3 = self._V3.todense()
-
-        # If so, compute the full covariance matrix
-        Sigma_post = var_prior.copy()
-        Sigma_post -= self._V3 @ self._V3.T
-        params[gppn.POSTERIORCOVARIANCE] = Sigma_post
-
         # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
+        params[gppn.FIELD] = 'f'
 
     def _get_prior_samples(self, params, globdat):
 

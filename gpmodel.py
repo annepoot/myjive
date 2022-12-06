@@ -437,7 +437,8 @@ class GPModel(Model):
         Sigmac = Sigma.copy()
 
         # Set the covariance of the DBCs to 0
-        Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
+        Sigmac[self._cdofs,:] *= 0.0
+        Sigmac[:,self._cdofs] *= 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         if hasattr(Sigma, 'todense'):

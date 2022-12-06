@@ -25,6 +25,8 @@ class Solver:
     def __init__(self):
         self._precision = 1e-10
 
+        self.precon_mode = False
+
     def configure(self, props):
         self._precision = props.get(PRECISION, self._precision)
 
@@ -35,11 +37,24 @@ class Solver:
         pass
 
     def solve(self, rhs):
-        lhs = np.zeros_like(rhs)
-        return self.improve(lhs, rhs)
+
+        if hasattr(rhs, 'toarray'):
+            r = rhs.toarray()
+        else:
+            r = rhs
+
+        lhs = np.zeros_like(r)
+
+        if len(r.shape) == 1:
+            lhs = self.improve(lhs, r)
+        else:
+            for j in range(r.shape[1]):
+                lhs[:,j] = self.solve(r[:,j])
+
+        return lhs
 
     def improve(self, lhs, rhs):
-        return lhs
+        return NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_matrix(self):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)

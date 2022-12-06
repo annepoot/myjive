@@ -21,6 +21,7 @@ def props():
 @pytest.mark.rank2
 @pytest.mark.beam
 @pytest.mark.gp
+@pytest.mark.slow
 def test_moments(props):
     globdat = main.jive(props)
 
@@ -119,10 +120,10 @@ def test_samples(props):
 
     # Check if the sample mean deviates less than 0.15 std from the true mean
     tol = 0.15
-    assert np.all(abs((np.mean(samples_f_prior, axis=1)-f_prior) / std_f_prior) < tol)
-    assert np.all(abs((np.mean(samples_u_prior, axis=1)-u_prior) / std_u_prior) < tol)
-    assert np.all(abs((np.mean(samples_f_post, axis=1)-f_post) / std_f_post) < tol)
-    assert np.all(abs((np.mean(samples_u_post, axis=1)-u_post) / std_u_post) < tol)
+    assert np.all(abs(np.delete((np.mean(samples_f_prior, axis=1)-f_prior) / std_f_prior, cdofs)) < tol)
+    assert np.all(abs(np.delete((np.mean(samples_u_prior, axis=1)-u_prior) / std_u_prior, cdofs)) < tol)
+    assert np.all(abs(np.delete((np.mean(samples_f_post, axis=1)-f_post) / std_f_post, cdofs)) < tol)
+    assert np.all(abs(np.delete((np.mean(samples_u_post, axis=1)-u_post) / std_u_post, cdofs)) < tol)
 
     # Check if the sample std deviates less than 0.1 std from the true std
     tol = 0.1

@@ -15,6 +15,8 @@ from jive.implicit import solvermodule
 from jive.implicit import linsolvemodule
 from jive.solver import solver
 from jive.solver import directsolver
+from jive.solver import sparsecholesky
+from jive.solver import cholmod
 from jive.solver import iterativesolver
 from jive.solver import cg
 from jive.solver import preconditioner
@@ -98,6 +100,8 @@ def declare_solvers(globdat):
     iterativesolver.declare(factory)
     cg.declare(factory)
     directsolver.declare(factory)
+    sparsecholesky.declare(factory)
+    cholmod.declare(factory)
 
     globdat[gn.SOLVERFACTORY] = factory
 

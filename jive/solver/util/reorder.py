@@ -6,7 +6,9 @@ from sksparse import cholmod as cm
 def get_reorder(A, ordering_method=None):
     if ordering_method is None:
         ordering_method='amd'
-    chol = cm.analyze(A, ordering_method=ordering_method)
+
+    # Transpose to convert the matrix from csr to csc
+    chol = cm.analyze(A.T, ordering_method=ordering_method)
     reorder = chol.P()
 
     N = len(reorder)

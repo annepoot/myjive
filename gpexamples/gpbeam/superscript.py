@@ -76,11 +76,11 @@ plt.show()
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
-for i, sample in enumerate(samples_u_prior.T):
+for i, sample in enumerate(samples_u_prior.T[:3]):
 
     QuickViewer(sample, globdat, scale=10.0, title=r'Prior samples from $u$ (sample {})'.format(i+1))
 
-for i, sample in enumerate(samples_u_post.T):
+for i, sample in enumerate(samples_u_post.T[:3]):
 
     QuickViewer(sample, globdat, scale=10.0, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
 

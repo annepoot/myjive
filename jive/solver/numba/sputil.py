@@ -15,7 +15,9 @@ def idx2rowcol(indices, indptr, idx):
 def rowcol2idx(indices, indptr, row, col):
     cols = indices[indptr[row]:indptr[row+1]]
     for i, c in enumerate(cols):
-        if c == col:
+        if c > col:
+            return -1
+        elif c == col:
             idx = i
             break
     idx = indptr[row] + idx

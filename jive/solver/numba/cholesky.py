@@ -22,6 +22,7 @@ def sparse_cholesky(A):
     if not spsp.isspmatrix_csr(A):
         raise ValueError('A has to be a sparse matrix in csr format')
 
+    A.sort_indices()
     Ldata, Lindices, Lindptr = sparse_cholesky_jit(A.data, A.indices, A.indptr)
     L = spsp.csr_array((Ldata, Lindices, Lindptr), dtype=A.dtype)
 

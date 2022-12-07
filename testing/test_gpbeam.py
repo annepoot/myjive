@@ -66,18 +66,18 @@ def test_moments(props):
     pdnoise = 1e-8
 
     assert np.isclose(std_f_prior[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_f_prior, cdofs)), 0.016049220130768718)
-    assert np.isclose(max(np.delete(std_f_prior, cdofs)), 0.0277980650673971)
+    assert np.isclose(min(np.delete(std_f_prior, cdofs)), 0.010944043765354355)
+    assert np.isclose(max(np.delete(std_f_prior, cdofs)), 0.01895563984188281)
     assert np.isclose(std_u_prior[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_u_prior, cdofs)), 0.0005739037812811659)
-    assert np.isclose(max(np.delete(std_u_prior, cdofs)), 0.014858058354835457)
+    assert np.isclose(min(np.delete(std_u_prior, cdofs)), 0.0003913478691337096)
+    assert np.isclose(max(np.delete(std_u_prior, cdofs)), 0.010131784571359227)
 
     assert np.isclose(std_f_post[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_f_post, cdofs)), 0.015283859669512692)
-    assert np.isclose(max(np.delete(std_f_post, cdofs)), 0.027777846184013986)
+    assert np.isclose(min(np.delete(std_f_post, cdofs)), 0.010422140625598358)
+    assert np.isclose(max(np.delete(std_f_post, cdofs)), 0.01894185273985648)
     assert np.isclose(std_u_post[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_u_post, cdofs)), 0.00012210831218971617)
-    assert np.isclose(max(np.delete(std_u_post, cdofs)), 0.0003598736662344794)
+    assert np.isclose(min(np.delete(std_u_post, cdofs)), 0.0000832662709979621)
+    assert np.isclose(max(np.delete(std_u_post, cdofs)), 0.00024539965935899366)
 
 @pytest.mark.rank2
 @pytest.mark.beam

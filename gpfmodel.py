@@ -1,9 +1,8 @@
 import numpy as np
 import scipy.sparse as spsp
-import scipy.linalg as spla
-import scipy.sparse.linalg as spspla
 
-from jive.fem.names import GPActions as gpact
+from jive.solver.numba.cholesky import sparse_cholesky
+from jive.solver.numba.spsolve import solve_triangular
 from jive.fem.names import GPParamNames as gppn
 from jive.fem.names import GlobNames as gn
 from gpmodel import GPModel
@@ -20,11 +19,12 @@ class GPfModel(GPModel):
 
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
 
-
     def _configure_prior(self, params, globdat):
 
         # Get the observation operator
+        self._Phic = spsp.csr_array(self._Phic)
         self._H = self._Phic.T
+        self._H = self._H.tocsr()
 
         # Define the mean in terms of the force vector as well
         self._m = self._mf
@@ -112,11 +112,37 @@ class GPfModel(GPModel):
     def _get_param_opt(self, Sigma_fc):
 
         # Determine the optimal value of alpha
-        L = np.linalg.cholesky(self._H @ Sigma_fc @ self._H.T)
-        v = spla.solve_triangular(L, self._y)
+        L = sparse_cholesky(self._H @ Sigma_fc @ self._H.T)
+        v = self._solve_triangular(L, self._y, lower=True)
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)
+
+    def _apply_covariance_bcs(self, Sigma):
+        Sigmac = Sigma.copy()
+
+        # Set the covariance of the DBCs to 0
+        Sigmac[self._cdofs,:] *= 0.0
+        Sigmac[:,self._cdofs] *= 0.0
+
+        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
+        Sigmac += self._pdnoise2 * spsp.identity(self._dc)
+
+        return Sigmac
+
+    def _solve_triangular(self, A, b, lower):
+        return solve_triangular(A.tocsr(), b, lower=lower)
+
+    def _get_Sigma_obs(self):
+
+        if not '_Sigma_obs' in vars(self):
+            self._Sigma_obs = self._H @ self._Sigma @ self._H.T + spsp.identity(self._nobs) * self._noise2
+
+    def _get_sqrtObs(self):
+
+        if not '_sqrtObs' in vars(self):
+            self._get_Sigma_obs()
+            self._sqrtObs = sparse_cholesky(self._Sigma_obs)
 
     def _get_sqrtSigma(self):
 
@@ -124,10 +150,13 @@ class GPfModel(GPModel):
             if self._diagonalized:
                 self._sqrtSigma = spsp.diags(np.sqrt(self._Sigma.sum(axis=1)), format='csr')
             else:
-                if hasattr(self._Sigma, 'todense'):
-                    self._sqrtSigma = spsp.csr_array(np.linalg.cholesky(self._Sigma.todense()))
-                else:
-                    self._sqrtSigma = np.linalg.cholesky(self._Sigma)
+                self._sqrtSigma = sparse_cholesky(self._Sigma)
+
+    def _get_sqrtNoise(self):
+
+        if not '_sqrtNoise' in vars(self):
+            self._sqrtNoise = np.sqrt(self._noise2) * spsp.identity(self._nobs)
+
 
 
 def declare(factory):

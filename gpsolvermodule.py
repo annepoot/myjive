@@ -61,6 +61,8 @@ class GPSolverModule(LinsolveModule):
         # Define a dictionary for the output params
         params = {}
 
+        self._solver.precon_mode = True
+
         # Get the prior mean
         model.take_action(gpact.GETPRIORMEAN, params, globdat)
 
@@ -89,10 +91,7 @@ class GPSolverModule(LinsolveModule):
         # Store the prior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_prior'] = params[gppn.PRIORCOVARIANCE]
-
-            self._solver.precon_mode = True
             globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]).T)
-            self._solver.precon_mode = False
         else:
             globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
             globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
@@ -103,10 +102,7 @@ class GPSolverModule(LinsolveModule):
         # Store the posterior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_post'] = params[gppn.POSTERIORCOVARIANCE]
-
-            self._solver.precon_mode = True
             globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]).T)
-            self._solver.precon_mode = False
         else:
             globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
             globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
@@ -134,10 +130,10 @@ class GPSolverModule(LinsolveModule):
             for i in range(params[gppn.NSAMPLE]):
                 globdat['samples_f_prior'][:,i] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES][:,i]
 
-        # Get the prior samples
-        model.take_action(gpact.GETPOSTERIORSAMPLES, params, globdat)
+        # Update the prior samples to posterior samples
+        model.take_action(gpact.KALMANUPDATE, params, globdat)
 
-        # Store the prior samples in globdat
+        # Store the updated samples in globdat
         if params[gppn.FIELD] == 'f':
             globdat['samples_f_post'] = params[gppn.POSTERIORSAMPLES]
             globdat['samples_u_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
@@ -148,6 +144,8 @@ class GPSolverModule(LinsolveModule):
             globdat['samples_f_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
             for i in range(params[gppn.NSAMPLE]):
                 globdat['samples_f_post'][:,i] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES][:,i]
+
+        self._solver.precon_mode = False
 
         return output
 

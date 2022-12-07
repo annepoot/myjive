@@ -29,6 +29,9 @@ class GPfModel(GPModel):
         # Define the mean in terms of the force vector as well
         self._m = self._mf
 
+        # Get the centered observation vector (as a deviation from the prior mean)
+        self._y = self._g - self._Phic.T @ self._m
+
         # Check if alpha or beta should be optimized
         if len(self._hyperparams) == 1:
             key, value = list(self._hyperparams.items())[0]
@@ -92,8 +95,16 @@ class GPfModel(GPModel):
 
     def _get_posterior_samples(self, params, globdat):
 
-        # Get the prior samples on f
+        # Get the posterior samples on f
         super()._get_posterior_samples(params, globdat)
+
+        # Inform GPSolverModule that force-related info is returned
+        params[gppn.FIELD] = 'f'
+
+    def _kalman_update(self, params, globdat):
+
+        # Perform the Kalman update on f
+        super()._kalman_update(params, globdat)
 
         # Inform GPSolverModule that force-related info is returned
         params[gppn.FIELD] = 'f'

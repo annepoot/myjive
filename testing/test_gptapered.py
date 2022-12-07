@@ -21,7 +21,6 @@ def props():
 @pytest.mark.rank1
 @pytest.mark.tapered
 @pytest.mark.gp
-@pytest.mark.sampling
 def test_moments(props):
     globdat = main.jive(props)
 
@@ -46,14 +45,14 @@ def test_moments(props):
     f_post = globdat['f_post']
     u_post = globdat['u_post']
 
-    assert np.isclose(f_prior, 0).all()
+    assert np.isclose(f_prior[:-2], 0).all()
     assert np.isclose(u_prior[[0,p25,mid,p75,-1]],
                       [0,0.08152985674807625,0.19461968909080446,0.38045804531309960,1]).all()
     assert np.isclose(max(u_prior), 1)
     assert np.isclose(min(u_prior), 0)
 
     assert np.isclose(f_post[[0,p25,mid,p75,-1]],
-                      [0,0.019810267809282217,0.013532366060860505,0.019810267809282276,0]).all()
+                      [0,0.019810267809282217,0.013532366060860505,0.019810267809282276,1]).all()
     assert np.isclose(u_post[[0,p25,mid,p75,-1]],
                       [0,0.653934988731335,1.2239871504443058,1.6050644073146396,1]).all()
 
@@ -121,11 +120,13 @@ def test_samples(props):
     assert np.all(abs((np.mean(samples_f_post, axis=1)-f_post) / std_f_post) < tol)
     assert np.all(abs((np.mean(samples_u_post, axis=1)-u_post) / std_u_post) < tol)
 
+    pdnoise = 1e-8
+    
     # Check if the sample std deviates less than 0.1 std from the true std
     tol = 0.1
     assert np.all(abs((np.std(samples_f_prior, axis=1)-std_f_prior) / std_f_prior)[1:-1] < tol)
-    assert np.isclose(np.std(samples_u_prior[[0,-1]], axis=1), 0).all()
+    assert np.isclose(np.std(samples_u_prior[[0,-1]], axis=1), pdnoise).all()
     assert np.all(abs((np.std(samples_u_prior, axis=1)-std_u_prior) / std_u_prior)[1:-1] < tol)
     assert np.all(abs((np.std(samples_f_post, axis=1)-std_f_post) / std_f_post)[1:-1] < tol)
-    assert np.isclose(np.std(samples_u_post[[0,-1]], axis=1), 0).all()
+    assert np.isclose(np.std(samples_u_post[[0,-1]], axis=1), pdnoise).all()
     assert np.all(abs((np.std(samples_u_post, axis=1)-std_u_post) / std_u_post)[1:-1] < tol)

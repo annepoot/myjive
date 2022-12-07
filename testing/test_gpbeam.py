@@ -125,11 +125,13 @@ def test_samples(props):
     assert np.all(abs(np.delete((np.mean(samples_f_post, axis=1)-f_post) / std_f_post, cdofs)) < tol)
     assert np.all(abs(np.delete((np.mean(samples_u_post, axis=1)-u_post) / std_u_post, cdofs)) < tol)
 
+    pdnoise = 1e-8
+
     # Check if the sample std deviates less than 0.1 std from the true std
     tol = 0.1
     assert np.all(abs((np.std(samples_f_prior, axis=1)-std_f_prior) / std_f_prior) < tol)
-    assert np.isclose(np.std(samples_u_prior[cdofs], axis=1), 0).all()
+    assert np.isclose(np.std(samples_u_prior[cdofs], axis=1), pdnoise).all()
     assert np.all(abs(np.delete((np.std(samples_u_prior, axis=1)-std_u_prior) / std_u_prior, cdofs)) < tol)
     assert np.all(abs((np.std(samples_f_post, axis=1)-std_f_post) / std_f_post) < tol)
-    assert np.isclose(np.std(samples_u_post[cdofs], axis=1), 0).all()
+    assert np.isclose(np.std(samples_u_post[cdofs], axis=1), pdnoise).all()
     assert np.all(abs(np.delete((np.std(samples_u_post, axis=1)-std_u_post) / std_u_post, cdofs)) < tol)

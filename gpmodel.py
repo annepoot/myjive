@@ -43,6 +43,8 @@ class GPModel(Model):
             self._get_prior_samples(params, globdat)
         elif action == gpact.GETPOSTERIORSAMPLES:
             self._get_posterior_samples(params, globdat)
+        elif action == gpact.KALMANUPDATE:
+            self._kalman_update(params, globdat)
         elif action == gpact.GETLOGLIKELIHOOD:
             self._get_log_likelihood(params, globdat)
         elif action == act.GETTABLE:
@@ -106,13 +108,15 @@ class GPModel(Model):
         # The posterior mean force vector has to contain the Dirichlet and Neumann BCs
         mf = np.zeros_like(f)
         mf = conmanK.apply_neumann(mf)
+        mf = conmanK.get_rhs(mf)
 
         # Get the actual constrained stiffness matrix and force vector
         self._Mc = conmanM.get_output_matrix()
         self._Kc = conmanK.get_output_matrix()
+        fc = conmanK.get_rhs(f)
 
         self._mf = mf
-        self._m = spspla.spsolve(self._Kc, conmanK.get_rhs(self._mf))
+        self._m = spspla.spsolve(self._Kc, self._mf)
         self._cdofs = c.get_constraints()[0]
 
         # Get the phi matrix, and constrain the Dirichlet BCs
@@ -143,9 +147,11 @@ class GPModel(Model):
         # Get the observation operator
         self._H = self._Phic.T @ self._Kc
 
-        # Get the observed force vector (as a deviation from the prior mean)
-        self._y = self._Phic.T @ conmanK.get_rhs(f) - self._H @ self._m
+        # Get the observed force vector
+        self._g = self._Phic.T @ fc
 
+        # Get the centered observation vector (as a deviation from the prior mean)
+        self._y = self._g - self._H @ self._m
 
     def _configure_prior(self, params, globdat):
 
@@ -342,6 +348,54 @@ class GPModel(Model):
 
         # Inform GPSolverModule that displacement-related info is returned
         params[gppn.FIELD] = 'u'
+
+    def _kalman_update(self, params, globdat):
+
+        samples_prior = params[gppn.PRIORSAMPLES]
+        rng = params.get(gppn.RNG, np.random.default_rng())
+
+        #####################
+        # POSTERIOR SAMPLES #
+        #####################
+
+        # u = m + sqrt(Sigma) * z1 + Sigma * H.T * inv(H * Sigma * H + Sigma_e) * (y - H * sqrt(Sigma) * z1 + sqrt(Sigma_e) * z2)
+
+        # Get the relevant matrices
+        self._get_sqrtObs()
+        self._get_sqrtNoise()
+
+        # Define the array that stores the samples
+        samples_post = np.zeros(samples_prior.shape, dtype=samples_prior.dtype)
+
+        # Get a loop to create all samples
+        for i, u_prior in enumerate(samples_prior.T):
+
+            # Center the prior sample
+            u_centered = u_prior - self._m
+
+            # Get x ~ N(0, Sigma_e)
+            z = rng.standard_normal(self._nobs)
+            x = self._sqrtNoise @ z
+
+            # Compute the perturbed observation
+            u_pert = self._y - self._H @ u_centered + x
+
+            # Multiply the perturbed observation by the Kalman gain
+            tmp = spla.solve_triangular(self._sqrtObs, u_pert, lower=True)
+            tmp = spla.solve_triangular(self._sqrtObs.T, tmp, lower=False)
+            u_post = self._premul_Sigma(self._H.T @ tmp)
+
+            # Add the prior sample and mean
+            u_post += u_centered + self._m
+
+            samples_post[:,i] = u_post
+
+        # Return the array of samples
+        params[gppn.POSTERIORSAMPLES] = samples_post
+
+        # Inform GPSolverModule that displacement-related info is returned
+        params[gppn.FIELD] = 'u'
+
 
     def _get_log_likelihood(self, params, globdat):
 

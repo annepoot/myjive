@@ -64,17 +64,17 @@ def test_moments(props):
     pdnoise = 1e-8
 
     assert np.isclose(std_f_prior[[0,-1]], pdnoise).all()
-    assert np.isclose(std_f_prior[1:-1], 0.049514007157186166).all()
+    assert np.isclose(std_f_prior[1:-1], 0.042257712736427).all()
     assert np.isclose(std_u_prior[[0,-1]], pdnoise).all()
     assert np.isclose(std_u_prior[[p25,mid,p75]],
-                      [0.3044290651558541,0.574543364169389,0.7347500354133456]).all()
+                      [0.2598148831528713,0.4903438406957145,0.6270721703256379]).all()
 
     assert np.isclose(std_f_post[[0,-1]], pdnoise).all()
     assert np.isclose(std_f_post[[p25,mid,p75]],
-                      [0.04581972397793565,0.045582927956165295,0.04581972397764517]).all()
+                      [0.039104828004667795,0.03890273451993343,0.039104828004667795]).all()
     assert np.isclose(std_u_post[[0,-1]], pdnoise).all()
     assert np.isclose(std_u_post[[p25,mid,p75]],
-                      [0.022150508336711568,0.05134911035792135,0.10832989885724671]).all()
+                      [0.018904345151760656,0.04382388288712968,0.09245411734312245]).all()
 
 @pytest.mark.rank1
 @pytest.mark.tapered
@@ -121,7 +121,7 @@ def test_samples(props):
     assert np.all(abs((np.mean(samples_u_post, axis=1)-u_post) / std_u_post) < tol)
 
     pdnoise = 1e-8
-    
+
     # Check if the sample std deviates less than 0.1 std from the true std
     tol = 0.1
     assert np.all(abs((np.std(samples_f_prior, axis=1)-std_f_prior) / std_f_prior)[1:-1] < tol)

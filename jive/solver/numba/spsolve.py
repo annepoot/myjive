@@ -10,7 +10,22 @@ def solve_triangular(A, b, lower=True):
     if not spsp.isspmatrix_csr(A):
         raise ValueError('A has to be a sparse matrix in csr format')
 
-    return solve_triangular_jit(A.data, A.indices, A.indptr, b, lower)
+    if spsp.issparse(b):
+        B = b.toarray()
+    else:
+        B = b
+
+    X = np.zeros_like(B)
+
+    if len(B.shape) == 1:
+        X[:] = solve_triangular_jit(A.data, A.indices, A.indptr, B, lower)
+    elif len(B.shape) == 2:
+        for i in range(B.shape[1]):
+            X[:,i] = solve_triangular_jit(A.data, A.indices, A.indptr, B[:,i], lower)
+    else:
+        raise ValueError('b has to be either 1d or 2d')
+
+    return X
 
 
 ##########################

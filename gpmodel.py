@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse as spsp
 import scipy.linalg as spla
 import scipy.sparse.linalg as spspla
 
@@ -214,7 +213,7 @@ class GPModel(Model):
 
         # Get the posterior of the force field
         if not '_u_post' in vars(self):
-            self._u_post = self._m + self._premul_Sigma(self._H.T @ spla.solve_triangular(self._sqrtObs.T, self._v0, lower=False))
+            self._u_post = self._m + self._premul_Sigma(self._H.T @ self._solve_triangular(self._sqrtObs.T, self._v0, lower=False))
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
@@ -334,8 +333,8 @@ class GPModel(Model):
             u_pert = self._y - self._H @ x1 + x2
 
             # Multiply the perturbed observation by the Kalman gain
-            u = spla.solve_triangular(self._sqrtObs, u_pert, lower=True)
-            u = spla.solve_triangular(self._sqrtObs.T, u, lower=False)
+            u = self._solve_triangular(self._sqrtObs, u_pert, lower=True)
+            u = self._solve_triangular(self._sqrtObs.T, u, lower=False)
             u = self._premul_Sigma(self._H.T @ u)
 
             # Add the prior sample and mean
@@ -381,8 +380,8 @@ class GPModel(Model):
             u_pert = self._y - self._H @ u_centered + x
 
             # Multiply the perturbed observation by the Kalman gain
-            tmp = spla.solve_triangular(self._sqrtObs, u_pert, lower=True)
-            tmp = spla.solve_triangular(self._sqrtObs.T, tmp, lower=False)
+            tmp = self._solve_triangular(self._sqrtObs, u_pert, lower=True)
+            tmp = self._solve_triangular(self._sqrtObs.T, tmp, lower=False)
             u_post = self._premul_Sigma(self._H.T @ tmp)
 
             # Add the prior sample and mean
@@ -395,7 +394,6 @@ class GPModel(Model):
 
         # Inform GPSolverModule that displacement-related info is returned
         params[gppn.FIELD] = 'u'
-
 
     def _get_log_likelihood(self, params, globdat):
 
@@ -491,14 +489,10 @@ class GPModel(Model):
         Sigmac = Sigma.copy()
 
         # Set the covariance of the DBCs to 0
-        Sigmac[self._cdofs,:] *= 0.0
-        Sigmac[:,self._cdofs] *= 0.0
+        Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        if hasattr(Sigma, 'todense'):
-            Sigmac += self._pdnoise2 * spsp.identity(self._dc, format='csr')
-        else:
-            Sigmac += self._pdnoise2 * np.identity(self._dc)
+        Sigmac += self._pdnoise2 * np.identity(self._dc)
 
         return Sigmac
 
@@ -552,6 +546,9 @@ class GPModel(Model):
 
         params[pn.TABLENAME] = name
 
+    def _solve_triangular(self, A, b, lower):
+        return spla.solve_triangular(A, b, lower=lower)
+
     def _get_Sigma_obs(self):
 
         if not '_Sigma_obs' in vars(self):
@@ -566,10 +563,7 @@ class GPModel(Model):
     def _get_sqrtSigma(self):
 
         if not '_sqrtSigma' in vars(self):
-            if hasattr(self._Sigma, 'todense'):
-                self._sqrtSigma = spsp.csr_array(np.linalg.cholesky(self._Sigma.todense()))
-            else:
-                self._sqrtSigma = np.linalg.cholesky(self._Sigma)
+            self._sqrtSigma = np.linalg.cholesky(self._Sigma)
 
     def _get_sqrtNoise(self):
 
@@ -580,13 +574,13 @@ class GPModel(Model):
 
         if not '_v0' in vars(self):
             self._get_sqrtObs()
-            self._v0 = spla.solve_triangular(self._sqrtObs, self._y, lower=True)
+            self._v0 = self._solve_triangular(self._sqrtObs, self._y, lower=True)
 
     def _get_V1(self):
 
         if not '_V1' in vars(self):
             self._get_sqrtObs()
-            self._V1 = self._postmul_Sigma(spla.solve_triangular(self._sqrtObs, self._H, lower=True))
+            self._V1 = self._postmul_Sigma(self._solve_triangular(self._sqrtObs, self._H, lower=True))
 
     def _premul_Sigma(self, X):
 

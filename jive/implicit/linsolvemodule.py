@@ -32,7 +32,7 @@ class LinsolveModule(SolverModule):
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        solver = myprops.get(SOLVER, 'direct')
+        solver = myprops.get(SOLVER, 'cholmod')
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
 
         self._precon = None

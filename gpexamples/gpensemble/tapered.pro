@@ -36,7 +36,7 @@ gpsolver =
 {
   type = GPSolver;
   nsample = 30;
-  seed = None;
+  seed = 0;
   storeMatrix = True;
   storeConstraints = True;
   getUnitMassMatrix = True;
@@ -81,6 +81,7 @@ model =
     };
 
     ensemble = 1000;
+    seed = 0;
     obsNoise = 1e-5;
 
     shape =

@@ -155,10 +155,9 @@ class GPModel(Model):
     def _configure_prior(self, params, globdat):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
-        eval_dict.update(self._hyperparams)
+        eval_dict = self._get_eval_dict()
 
-        # Check if we have a kernel or SPDE covariance
+        # Check if we have a kernel covariance
         if self._prior == 'kernel':
 
             # Get the covariance matrix by looping over all dofs
@@ -180,10 +179,6 @@ class GPModel(Model):
                     self._Sigma[np.ix_(idofs, jdofs)] = eval(self._kernel, eval_dict)
 
         else:
-
-            # Add the mass and stiffness matrices to the dictionary
-            eval_dict['M'] = self._Mc
-            eval_dict['K'] = self._Kc
 
             # Get the covariance matrix by 1 matrix evaluation
             self._Sigma = eval(self._covariance, eval_dict)
@@ -410,6 +405,21 @@ class GPModel(Model):
         l = - 0.5 * self._v0.T @ self._v0 - np.sum(np.log(self._sqrtObs.diagonal())) - 0.5 * self._nobs * np.log(2*np.pi)
 
         params[gppn.LOGLIKELIHOOD] = l
+
+    def _get_eval_dict(self):
+
+        # Define a dictionary with relevant functions
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict.update(self._hyperparams)
+
+        # Check if we have an SPDE covariance
+        if self._prior == 'SPDE':
+
+            # Add the mass and stiffness matrices to the dictionary
+            eval_dict['M'] = self._Mc
+            eval_dict['K'] = self._Kc
+
+        return eval_dict
 
     def _get_phi(self, globdat):
 

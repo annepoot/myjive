@@ -35,6 +35,16 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
+  solver =
+  {
+    type = CG;
+    maxIter = 100;
+    allowMaxIter = False;
+  };
+  preconditioner =
+  {
+    type = ichol;
+  };
   nsample = 3;
   seed = 0;
   storeMatrix = True;

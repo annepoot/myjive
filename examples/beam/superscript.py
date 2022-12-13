@@ -33,15 +33,12 @@ urol = u[globdat['dofSpace'].get_dof(3,'dy')]
 
 print('\n\nPoint load check: exact %f, constrained %f, roller %f\n\n' %(uexact,uref,urol))
 
-
 rho = 1
 q = rho * H * t
 weight_exact = H * L * t * rho
-props['solver']['storeMatrix'] = 'True'
 props['model']['neum']['values'] = '[0.0]'
 props['model']['solid']['material']['rho'] = str(rho)
 props['model']['solid']['gravity'] = 'True'
-
 
 globdat = main.jive(props)
 K = globdat['matrix0']

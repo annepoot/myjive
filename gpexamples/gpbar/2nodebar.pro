@@ -37,10 +37,6 @@ gpsolver =
   type = GPSolver;
   nsample = 30;
   seed = 0;
-  storeMatrix = True;
-  storeConstraints = True;
-  getUnitMassMatrix = True;
-  getForceResults = True;
 };
 
 model =

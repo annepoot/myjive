@@ -13,10 +13,7 @@ from jive.util.table import Table
 SOLVER = 'solver'
 PRECONDITIONER = 'preconditioner'
 TYPE = 'type'
-STOREMATRIX = 'storeMatrix'
-STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
-GETUNITMASSMATRIX = 'getUnitMassMatrix'
 TABLES = 'tables'
 
 class LinsolveModule(SolverModule):
@@ -25,8 +22,6 @@ class LinsolveModule(SolverModule):
         super().init(props, globdat)
 
         myprops = props[self._name]
-        self._store_matrix = bool(eval(myprops.get(STOREMATRIX,'False')))
-        self._store_constraints = bool(eval(myprops.get(STORECONSTRAINTS,'False')))
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
         self._tnames = pu.parse_list(myprops.get(TABLES, '[]'))
 
@@ -72,17 +67,13 @@ class LinsolveModule(SolverModule):
         globdat[gn.EXTFORCE] = f
         globdat[gn.STATE0] = u
 
-        # Optionally store stiffness matrix in Globdat
-        if self._store_matrix:
-            globdat[gn.MATRIX0] = K
+        # Store stiffness matrix and constraints in Globdat
+        globdat[gn.MATRIX0] = K
+        globdat[gn.CONSTRAINTS] = c
 
-            # Optionally store mass matrix in Globdat
-            if self._get_mass_matrix:
-                globdat[gn.MATRIX2] = M
-
-        # Optionally store the constrainer in Globdat
-        if self._store_constraints:
-            globdat[gn.CONSTRAINTS] = c
+        # Optionally store mass matrix in Globdat
+        if self._get_mass_matrix:
+            globdat[gn.MATRIX2] = M
 
         # Compute stresses, strains, etc.
         globdat[gn.TABLES] = {}

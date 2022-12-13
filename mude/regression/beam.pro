@@ -68,7 +68,7 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ lb, lb, rb ];
     dofs   = [ dx, dy, dy ];
@@ -78,8 +78,7 @@ model =
 
 solver =
 {
-  nsteps = 1;
-  storeMatrix = True;
+  type = Linsolve;
   tables = [stiffness];
 };
 

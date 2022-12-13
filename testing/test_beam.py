@@ -21,9 +21,6 @@ def props():
 @pytest.mark.beam
 @pytest.mark.core
 def test_point_load(props):
-    props['solver']['storeMatrix'] = 'True'
-    props['solver']['storeConstraints'] = 'True'
-
     globdat = main.jive(props)
 
     K = globdat['matrix0']
@@ -58,9 +55,6 @@ def test_point_load(props):
 @pytest.mark.beam
 @pytest.mark.core
 def test_point_load_roll(props):
-    props['solver']['storeMatrix'] = 'True'
-    props['solver']['storeConstraints'] = 'True'
-
     props['model']['diri']['groups'] = '[lb,lb,rb]'
     props['model']['diri']['dofs'] = '[dx,dy,dy]'
     props['model']['diri']['values'] = '[0,0,0]'
@@ -99,9 +93,6 @@ def test_point_load_roll(props):
 @pytest.mark.beam
 @pytest.mark.core
 def test_body_load(props):
-    props['solver']['storeMatrix'] = 'True'
-    props['solver']['storeConstraints'] = 'True'
-
     props['model']['diri']['groups'] = '[lb,lb,rb]'
     props['model']['diri']['dofs'] = '[dx,dy,dy]'
     props['model']['diri']['values'] = '[0,0,0]'

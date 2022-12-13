@@ -63,5 +63,4 @@ model =
 solver =
 {
   type = Linsolve;
-  storeMatrix = True;
 };

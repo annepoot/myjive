@@ -32,10 +32,6 @@ init =
 solver =
 {
   type = Linsolve;
-
-  nsteps = 1;
-  storeMatrix = True;
-  storeConstraints = True;
 };
 
 model =

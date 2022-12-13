@@ -33,8 +33,6 @@ solver =
 {
   type = Linsolve;
   solver = CG;
-  storeMatrix = True;
-  storeConstraints = True;
 };
 
 model =

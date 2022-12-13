@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse as spsp
 
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
@@ -8,10 +7,8 @@ from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 
 from jive.implicit.linsolvemodule import LinsolveModule
-from jive.solver.constrainer import Constrainer
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
-GETFORCERESULTS = 'getForceResults'
 GETFULLCOVARIANCE = 'getFullCovariance'
 NSAMPLE = 'nsample'
 SEED = 'seed'
@@ -24,8 +21,7 @@ class GPSolverModule(LinsolveModule):
         super().init(props, globdat)
 
         myprops = props[self._name]
-        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'False')))
-        self._get_force_results = bool(eval(myprops.get(GETFORCERESULTS, 'False')))
+        self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
         self._get_full_covariance = bool(eval(myprops.get(GETFULLCOVARIANCE, 'False')))
 
         self._nsample = int(myprops.get(NSAMPLE,1))
@@ -49,9 +45,8 @@ class GPSolverModule(LinsolveModule):
             }
             model.take_action(act.GETMATRIX2, params, globdat)
 
-            # Optionally store mass matrix in Globdat
-            if self._store_matrix:
-                globdat[gn.MATRIX2] = M
+            # Store mass matrix in Globdat
+            globdat[gn.MATRIX2] = M
 
         # Configure the GP based on the fine FEM results
         model.take_action(gpact.CONFIGUREFEM, params, globdat)

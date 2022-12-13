@@ -42,9 +42,6 @@ def mesher_quad(L, n):
 @pytest.mark.bar
 @pytest.mark.core
 def test_lin(props):
-    props['solver']['storeMatrix'] = 'True'
-    props['solver']['storeConstraints'] = 'True'
-
     props['model']['bar']['shape']['type'] = 'Line2'
     props['model']['bar']['shape']['intScheme'] = 'Gauss2'
 
@@ -81,9 +78,6 @@ def test_lin(props):
 @pytest.mark.bar
 @pytest.mark.core
 def test_quad(props):
-    props['solver']['storeMatrix'] = 'True'
-    props['solver']['storeConstraints'] = 'True'
-
     props['model']['bar']['shape']['type'] = 'Line3'
     props['model']['bar']['shape']['intScheme'] = 'Gauss3'
     mesher_quad(10, 64)

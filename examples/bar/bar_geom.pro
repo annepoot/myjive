@@ -2,7 +2,7 @@ init =
 {
   nodeGroups = [ left, right ];
 
-  mesh = 
+  mesh =
   {
     type = geo;
     file = bar.geom;
@@ -37,14 +37,14 @@ model =
 
   diri =
   {
-    type = Dirichlet; 
+    type = Dirichlet;
 
     groups = [ right ];
     dofs   = [ dx ];
     values = [ 0.0 ];
   };
 
-  neum = 
+  neum =
   {
     type = Neumann;
 
@@ -56,6 +56,5 @@ model =
 
 solver =
 {
-  nsteps = 1;
-  storeMatrix = True;
+  type = Linsolve;
 };

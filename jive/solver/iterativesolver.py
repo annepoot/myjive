@@ -1,9 +1,11 @@
 import numpy as np
+import warnings
 
 from jive.solver.solver import Solver
 from jive.solver.constrainer import Constrainer
 
 MAXITER = 'maxIter'
+ALLOWMAXITER = 'allowMaxIter'
 NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
 class IterativeSolver(Solver):
@@ -17,10 +19,13 @@ class IterativeSolver(Solver):
         self._precon = None
 
         self._maxiter = 2000
+        self._allowmaxiter = False
 
-    def configure(self, props):
-        super().configure(props)
-        self._maxiter = props.get(MAXITER, self._maxiter)
+    def configure(self, props, globdat):
+        super().configure(props, globdat)
+        self._maxiter = int(props.get(MAXITER, self._maxiter))
+        if ALLOWMAXITER in props:
+            self._allowmaxiter = bool(eval(props[ALLOWMAXITER]))
 
     def update(self, matrix, constraints, preconditioner=None):
         self._cons = constraints
@@ -50,7 +55,10 @@ class IterativeSolver(Solver):
             du = self.iterate(res)
             u += du
         else:
-            raise RuntimeError('maximum number of iterations {} exceeded'.format(self._maxiter))
+            if self._allowmaxiter:
+                warnings.warn('maximum number of iterations {} exceeded'.format(self._maxiter), RuntimeWarning)
+            else:
+                raise RuntimeError('maximum number of iterations {} exceeded'.format(self._maxiter))
 
         self.finish()
 

@@ -23,7 +23,7 @@ class Preconditioner:
     def __init__(self):
         self._maxiter = 1000
 
-    def configure(self, props):
+    def configure(self, props, globdat):
         self._precision = props.get(PRECISION, self._precision)
 
     def update(self, sourcematrix):

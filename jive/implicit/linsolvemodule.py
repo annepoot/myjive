@@ -35,10 +35,13 @@ class LinsolveModule(SolverModule):
         solver = myprops.get(SOLVER, 'cholmod')
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
 
+        self._solver.configure(myprops, globdat)
+
         self._precon = None
         precon = myprops.get(PRECONDITIONER)
         if precon is not None:
             self._precon = globdat[gn.PRECONFACTORY].get_precon(precon)
+
 
     def solve(self, globdat):
 

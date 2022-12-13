@@ -12,6 +12,7 @@ from jive.util.table import Table
 
 SOLVER = 'solver'
 PRECONDITIONER = 'preconditioner'
+TYPE = 'type'
 STOREMATRIX = 'storeMatrix'
 STORECONSTRAINTS = 'storeConstraints'
 GETMASSMATRIX = 'getMassMatrix'
@@ -32,16 +33,17 @@ class LinsolveModule(SolverModule):
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        solver = myprops.get(SOLVER, 'cholmod')
+        solverprops = myprops.get(SOLVER, {})
+        solver = solverprops.get(TYPE, 'cholmod')
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
+        self._solver.configure(solverprops, globdat)
 
-        self._solver.configure(myprops, globdat)
-
+        preconprops = myprops.get(PRECONDITIONER, {})
         self._precon = None
-        precon = myprops.get(PRECONDITIONER)
+        precon = preconprops.get(TYPE)
         if precon is not None:
             self._precon = globdat[gn.PRECONFACTORY].get_precon(precon)
-
+            self._precon.configure(preconprops, globdat)
 
     def solve(self, globdat):
 

@@ -38,7 +38,6 @@ class GPSolverModule(LinsolveModule):
         # Run solvermodule first
         output = super().run(globdat)
 
-        dc = globdat[gn.DOFSPACE].dof_count()
         model = globdat[gn.MODEL]
 
         # Optionally get the mass matrix

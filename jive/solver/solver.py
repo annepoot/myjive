@@ -23,11 +23,11 @@ class SolverFactory:
 class Solver:
 
     def __init__(self):
-        self._precision = 1e-10
+        self._precision = 1e-8
 
         self.precon_mode = False
 
-    def configure(self, props):
+    def configure(self, props, globdat):
         self._precision = props.get(PRECISION, self._precision)
 
     def start(self):

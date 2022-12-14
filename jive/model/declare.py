@@ -38,7 +38,7 @@ import xelasticmodel
 import xpoissonmodel
 
 import gpinitmodule
-import gpsolvermodule
+import gpexactmodule
 import nonlinmodule
 import vtkoutmodule
 import linbuckmodule
@@ -72,7 +72,7 @@ def declare_modules(globdat):
     solvermodule.declare(factory)
     linsolvemodule.declare(factory)
     gpinitmodule.declare(factory)
-    gpsolvermodule.declare(factory)
+    gpexactmodule.declare(factory)
     nonlinmodule.declare(factory)
     arclenmodule.declare(factory)
     outputmodule.declare(factory)

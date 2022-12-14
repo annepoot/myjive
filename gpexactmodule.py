@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.sparse as spsp
 
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
@@ -9,11 +10,11 @@ from jive.fem.names import GPParamNames as gppn
 from jive.implicit.linsolvemodule import LinsolveModule
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
-GETFULLCOVARIANCE = 'getFullCovariance'
+EXPLICITINVERSE = 'explicitInverse'
 NSAMPLE = 'nsample'
 SEED = 'seed'
 
-class GPSolverModule(LinsolveModule):
+class GPExactModule(LinsolveModule):
 
     def init(self, props, globdat):
 
@@ -22,7 +23,7 @@ class GPSolverModule(LinsolveModule):
 
         myprops = props[self._name]
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
-        self._get_full_covariance = bool(eval(myprops.get(GETFULLCOVARIANCE, 'False')))
+        self._explicit_inverse = bool(eval(myprops.get(EXPLICITINVERSE, 'True')))
 
         self._nsample = int(myprops.get(NSAMPLE,1))
         self._seed = eval(myprops.get(SEED,'None'))
@@ -57,13 +58,21 @@ class GPSolverModule(LinsolveModule):
 
         self._solver.precon_mode = True
 
+        # Get K_inv if necessary
+        if self._explicit_inverse:
+            I = spsp.identity(self._solver.get_matrix().shape[0])
+            K_inv = self._solver.solve(I)
+
         # Get the prior mean
         model.take_action(gpact.GETPRIORMEAN, params, globdat)
 
         # Store the prior mean in globdat
         if params[gppn.FIELD] == 'f':
             globdat['f_prior'] = params[gppn.PRIORMEAN]
-            globdat['u_prior'] = self._solver.solve(params[gppn.PRIORMEAN])
+            if self._explicit_inverse:
+                globdat['u_prior'] = K_inv @ params[gppn.PRIORMEAN]
+            else:
+                globdat['u_prior'] = self._solver.solve(params[gppn.PRIORMEAN])
         else:
             globdat['u_prior'] = params[gppn.PRIORMEAN]
             globdat['f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORMEAN]
@@ -74,7 +83,10 @@ class GPSolverModule(LinsolveModule):
         # Store the posterior mean in globdat
         if params[gppn.FIELD] == 'f':
             globdat['f_post'] = params[gppn.POSTERIORMEAN]
-            globdat['u_post'] = self._solver.solve(params[gppn.POSTERIORMEAN])
+            if self._explicit_inverse:
+                globdat['u_post'] = K_inv @ params[gppn.POSTERIORMEAN]
+            else:
+                globdat['u_post'] = self._solver.solve(params[gppn.POSTERIORMEAN])
         else:
             globdat['u_post'] = params[gppn.POSTERIORMEAN]
             globdat['f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORMEAN]
@@ -85,7 +97,10 @@ class GPSolverModule(LinsolveModule):
         # Store the prior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_prior'] = params[gppn.PRIORCOVARIANCE]
-            globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]).T)
+            if self._explicit_inverse:
+                globdat['var_u_prior'] = K_inv @ params[gppn.PRIORCOVARIANCE] @ K_inv
+            else:
+                globdat['var_u_prior'] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]).T)
         else:
             globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
             globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
@@ -96,7 +111,10 @@ class GPSolverModule(LinsolveModule):
         # Store the posterior covariance in globdat
         if params[gppn.FIELD] == 'f':
             globdat['var_f_post'] = params[gppn.POSTERIORCOVARIANCE]
-            globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]).T)
+            if self._explicit_inverse:
+                globdat['var_u_post'] = K_inv @ params[gppn.POSTERIORCOVARIANCE] @ K_inv
+            else:
+                globdat['var_u_post'] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]).T)
         else:
             globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
             globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
@@ -115,14 +133,13 @@ class GPSolverModule(LinsolveModule):
         # Store the prior samples in globdat
         if params[gppn.FIELD] == 'f':
             globdat['samples_f_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_u_prior'] = np.zeros_like(params[gppn.PRIORSAMPLES])
-            for i in range(params[gppn.NSAMPLE]):
-                globdat['samples_u_prior'][:,i] = self._solver.solve(params[gppn.PRIORSAMPLES][:,i])
+            if self._explicit_inverse:
+                globdat['samples_u_prior'] = K_inv @ params[gppn.PRIORSAMPLES]
+            else:
+                globdat['samples_u_prior'] = self._solver.solve(params[gppn.PRIORSAMPLES])
         else:
             globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_f_prior'] = np.zeros_like(params[gppn.PRIORSAMPLES])
-            for i in range(params[gppn.NSAMPLE]):
-                globdat['samples_f_prior'][:,i] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES][:,i]
+            globdat['samples_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
 
         # Update the prior samples to posterior samples
         model.take_action(gpact.KALMANUPDATE, params, globdat)
@@ -130,14 +147,13 @@ class GPSolverModule(LinsolveModule):
         # Store the updated samples in globdat
         if params[gppn.FIELD] == 'f':
             globdat['samples_f_post'] = params[gppn.POSTERIORSAMPLES]
-            globdat['samples_u_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
-            for i in range(params[gppn.NSAMPLE]):
-                globdat['samples_u_post'][:,i] = self._solver.solve(params[gppn.POSTERIORSAMPLES][:,i])
+            if self._explicit_inverse:
+                globdat['samples_u_post'] = K_inv @ params[gppn.POSTERIORSAMPLES]
+            else:
+                globdat['samples_u_post'] = self._solver.solve(params[gppn.POSTERIORSAMPLES])
         else:
             globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
-            globdat['samples_f_post'] = np.zeros_like(params[gppn.POSTERIORSAMPLES])
-            for i in range(params[gppn.NSAMPLE]):
-                globdat['samples_f_post'][:,i] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES][:,i]
+            globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
 
         self._solver.precon_mode = False
 
@@ -148,4 +164,4 @@ class GPSolverModule(LinsolveModule):
 
 
 def declare(factory):
-    factory.declare_module('GPSolver', GPSolverModule)
+    factory.declare_module('GPSolver', GPExactModule)

@@ -40,7 +40,6 @@ gpsolver =
   type = GPSolver;
   nsample = 3;
   seed = 0;
-  getFullCovariance = True;
   tables = [ stress, strain ];
 };
 

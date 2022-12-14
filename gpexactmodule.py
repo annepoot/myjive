@@ -105,6 +105,10 @@ class GPExactModule(LinsolveModule):
             globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
             globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
 
+        # Compute the prior standard deviations
+        globdat['std_f_prior'] = np.sqrt(globdat['var_f_prior'].diagonal())
+        globdat['std_u_prior'] = np.sqrt(globdat['var_u_prior'].diagonal())
+
         # Get the posterior covariance
         model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
 
@@ -118,6 +122,10 @@ class GPExactModule(LinsolveModule):
         else:
             globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
             globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
+
+        # Compute the posterior standard deviations
+        globdat['std_f_post'] = np.sqrt(globdat['var_f_post'].diagonal())
+        globdat['std_u_post'] = np.sqrt(globdat['var_u_post'].diagonal())
 
         # Get the log likelihood and store it in globdat
         model.take_action(gpact.GETLOGLIKELIHOOD, params, globdat)

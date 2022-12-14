@@ -37,7 +37,6 @@ gpsolver =
   type = GPSolver;
   nsample = 30;
   seed = 0;
-  getFullCovariance = True;
 };
 
 model =

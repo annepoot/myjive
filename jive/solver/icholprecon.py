@@ -1,5 +1,4 @@
 from jive.solver.preconditioner import Preconditioner
-
 from jive.solver.numba.cholesky import incomplete_cholesky
 from jive.solver.numba.spsolve import solve_triangular
 

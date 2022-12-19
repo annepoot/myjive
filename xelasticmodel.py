@@ -21,7 +21,7 @@ PS_STATE = 'plane_stress'
 
 class XElasticModel(ElasticModel):
     def take_action(self, action, params, globdat):
-        print('XElasticModel taking action', action)
+        showmsg = True
 
         # Refer the core actions to the parent class
         super().take_action(action, params, globdat)
@@ -29,6 +29,11 @@ class XElasticModel(ElasticModel):
         # Add extended actions below
         if action == act.GETUNITMATRIX2:
             self._get_unit_mass_matrix(params, globdat)
+        else:
+            showmsg = False
+
+        if showmsg:
+            print('XElasticModel taking action', action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

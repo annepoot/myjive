@@ -104,18 +104,13 @@ class GPModel(Model):
         conmanK = Constrainer(c, K)
         conmanM = Constrainer(c, M)
 
-        # The posterior mean force vector has to contain the Dirichlet and Neumann BCs
-        mf = np.zeros_like(f)
-        mf = conmanK.apply_neumann(mf)
-        mf = conmanK.get_rhs(mf)
-
         # Get the actual constrained stiffness matrix and force vector
         self._Mc = conmanM.get_output_matrix()
         self._Kc = conmanK.get_output_matrix()
         fc = conmanK.get_rhs(f)
 
-        self._mf = mf
-        self._m = spspla.spsolve(self._Kc, self._mf)
+        # Get the prior mean
+        self._m = params[gppn.PRIORMEAN]
         self._cdofs = c.get_constraints()[0]
 
         # Get the phi matrix, and constrain the Dirichlet BCs

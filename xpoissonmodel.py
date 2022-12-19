@@ -3,7 +3,6 @@ import numpy as np
 from jive.fem.names import Actions    as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames  as gn
-from jive.fem.names import PropNames  as prn
 from poissonmodel import PoissonModel
 import jive.util.proputils as pu
 
@@ -19,16 +18,21 @@ DOFTYPES = ['u']
 
 class XPoissonModel(PoissonModel):
     def take_action(self, action, params, globdat):
-        print('XElasticModel taking action', action)
+        showmsg = True
 
         # Refer the core actions to the parent class
         super().take_action(action, params, globdat)
 
         # Add extended actions below
-        if action == act.GETUNITMATRIX2:
-            self._get_unit_mass_matrix(params, globdat)
         if action == act.GETEXTFORCE:
             self._get_body_force(params, globdat)
+        elif action == act.GETUNITMATRIX2:
+            self._get_unit_mass_matrix(params, globdat)
+        else:
+            showmsg = False
+
+        if showmsg:
+            print('XElasticModel taking action', action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

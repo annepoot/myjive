@@ -21,7 +21,7 @@ GRAVITY = 'gravity'
 
 class SolidModel(Model):
     def take_action(self, action, params, globdat):
-        print('SolidModel taking action', action)
+        showmsg = True
 
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
@@ -32,10 +32,17 @@ class SolidModel(Model):
         elif action == act.GETTABLE:
             if 'stress' in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
-            if 'strain' in params[pn.TABLENAME]:
+            elif 'strain' in params[pn.TABLENAME]:
                 self._get_strains(params, globdat)
-            if 'stiffness' in params[pn.TABLENAME]:
+            elif 'stiffness' in params[pn.TABLENAME]:
                 self._get_stiffness(params, globdat)
+            else:
+                showmsg = False
+        else:
+            showmsg = False
+
+        if showmsg:
+            print('SolidModel taking action', action)
 
     def configure(self, props, globdat):
 

@@ -18,12 +18,17 @@ DOFTYPES = ['dx']
 
 class BarModel(Model):
     def take_action(self, action, params, globdat):
-        print('BarModel taking action', action)
+        showmsg = True
 
         if action == act.GETMATRIX0:
             self._get_matrix(params, globdat)
         elif action == act.GETMATRIX2:
             self._get_mass_matrix(params, globdat)
+        else:
+            showmsg = False
+
+        if showmsg:
+            print('BarModel taking action', action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

@@ -24,7 +24,7 @@ INTSCHEME = 'intScheme'
 class GPModel(Model):
 
     def take_action(self, action, params, globdat):
-        print('GPModel taking action', action)
+        showmsg = True
 
         if action == gpact.CONFIGUREFEM:
             self._configure_fem(params, globdat)
@@ -51,7 +51,13 @@ class GPModel(Model):
                 self._get_variances(params, globdat)
             elif 'std' in params[pn.TABLENAME]:
                 self._get_standard_deviations(params, globdat)
+            else:
+                showmsg = False
+        else:
+            showmsg = False
 
+        if showmsg:
+            print('GPModel taking action', action)
 
     def configure(self, props, globdat):
         self._dc = globdat[gn.DOFSPACE].dof_count()

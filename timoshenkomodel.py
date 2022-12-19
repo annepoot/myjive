@@ -16,10 +16,15 @@ TYPE = 'type'
 
 class TimoshenkoModel(Model):
     def take_action(self, action, params, globdat):
-        print('Model taking action', action)
+        showmsg = True
 
         if action == act.GETMATRIX0:
             self.__stiffness(params, globdat)
+        else:
+            showmsg = False
+
+        if showmsg:
+            print('TimoshenkoModel taking action', action)
 
     def configure(self, props, globdat):
         self._EI = float(props[EI])

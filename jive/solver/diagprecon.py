@@ -1,6 +1,8 @@
 import scipy.sparse as spsp
 
-class DiagPrecon:
+from jive.solver.preconditioner import Preconditioner
+
+class DiagPrecon(Preconditioner):
 
     def __init__(self):
         super().__init__()

@@ -27,7 +27,7 @@ class GPfModel(GPModel):
         self._H = self._H.tocsr()
 
         # Define the mean in terms of the force vector as well
-        self._m = self._mf
+        self._m = self._Kc @ self._m
 
         # Get the centered observation vector (as a deviation from the prior mean)
         self._y = self._g - self._Phic.T @ self._m
@@ -51,7 +51,6 @@ class GPfModel(GPModel):
                 self._hyperparams[key] = self._get_param_opt(Sigma)
 
         super()._configure_prior(params, globdat)
-
 
     def _get_prior_mean(self, params, globdat):
 

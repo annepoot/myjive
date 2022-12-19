@@ -101,6 +101,14 @@ class LinsolveModule(SolverModule):
 
         return f_ext
 
+    def get_neumann_vector(self, globdat):
+        f_neum = np.zeros(self._dc)
+        params = {pn.NEUMANNFORCE: f_neum}
+
+        self._model.take_action(act.GETNEUMANNFORCE, params, globdat)
+
+        return f_neum
+
     def update_matrix(self, globdat):
         K = self._get_empty_matrix(globdat)
         f_int = np.zeros(self._dc)

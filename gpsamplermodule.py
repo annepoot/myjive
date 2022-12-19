@@ -49,6 +49,11 @@ class GPSamplerModule(LinsolveModule):
             # Store mass matrix in Globdat
             globdat[gn.MATRIX2] = M
 
+        # Get the rhs prior mean
+        mf = self.get_neumann_vector(globdat)
+        m = self._solver.solve(mf)
+        params[gppn.PRIORMEAN] = m
+
         # Configure the GP based on the fine FEM results
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
         model.take_action(gpact.CONFIGUREPRIOR, params, globdat)

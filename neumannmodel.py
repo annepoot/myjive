@@ -19,6 +19,8 @@ class NeumannModel(Model):
             self._get_constraints(params, globdat)
         elif action == act.GETEXTFORCE:
             self._get_ext_force(params, globdat)
+        elif action == act.GETNEUMANNFORCE:
+            self._get_neumann_force(params, globdat)
         elif action == act.GETUNITFORCE:
             self._get_unit_force(params, globdat)
         elif action == act.ADVANCE:
@@ -31,7 +33,7 @@ class NeumannModel(Model):
         self._initLoad = self._vals
         if INCR in props:
             self._loadIncr = pu.parse_list(props[INCR], float)
-        else: 
+        else:
             self._loadIncr = np.zeros(len(self._vals))
 
     def _get_constraints(self, params, globdat):
@@ -47,6 +49,13 @@ class NeumannModel(Model):
             for node in globdat[gn.NGROUPS][group]:
                 idof = ds.get_dof(node, dof)
                 params[pn.EXTFORCE][idof] += val
+
+    def _get_neumann_force(self, params, globdat):
+        ds = globdat[gn.DOFSPACE]
+        for group, dof, val in zip(self._groups, self._dofs, self._vals):
+            for node in globdat[gn.NGROUPS][group]:
+                idof = ds.get_dof(node, dof)
+                params[pn.NEUMANNFORCE][idof] += val
 
     def _get_unit_force(self, params, globdat):
         ds = globdat[gn.DOFSPACE]

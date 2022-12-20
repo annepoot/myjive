@@ -32,7 +32,7 @@ class XPoissonModel(PoissonModel):
             showmsg = False
 
         if showmsg:
-            print('XElasticModel taking action', action)
+            print('XPoissonModel taking action', action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

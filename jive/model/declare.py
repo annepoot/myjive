@@ -20,6 +20,7 @@ from jive.solver import cholmod
 from jive.solver import iterativesolver
 from jive.solver import cg
 from jive.solver import preconditioner
+from jive.solver import idprecon
 from jive.solver import diagprecon
 from jive.solver import icholprecon
 
@@ -111,6 +112,7 @@ def declare_solvers(globdat):
 def declare_precons(globdat):
     factory = preconditioner.PreconFactory()
 
+    idprecon.declare(factory)
     diagprecon.declare(factory)
     icholprecon.declare(factory)
 

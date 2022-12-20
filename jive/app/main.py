@@ -1,15 +1,12 @@
-from jive.model import declare
+from jive.app.declare import declare_all
 from jive.fem.names import GlobNames as gn
 
 def jive(props):
     # Initialize global database, declare models and modules
     globdat = {}
 
-    declare.declare_models(globdat)
-    declare.declare_modules(globdat)
-    declare.declare_shapes(globdat)
-    declare.declare_solvers(globdat)
-    declare.declare_precons(globdat)
+    # Import the jive models and modules
+    declare_all(globdat)
 
     # Build main Module chain
     print('Initializing module chain...')

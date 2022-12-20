@@ -91,7 +91,6 @@ class GPParamNames:
     PRIORSAMPLES = 'priorSamples'
     POSTERIORSAMPLES = 'posteriorSamples'
     LOGLIKELIHOOD = 'logLikelihood'
-    FIELD = 'field'
     FULLCOVARIANCE = 'fullCovariance'
     NSAMPLE = 'nsamples'
     SEED = 'seed'

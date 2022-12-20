@@ -192,9 +192,6 @@ class GPModel(Model):
         # Return the prior of the force field
         params[gppn.PRIORMEAN] = self._m
 
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
-
     def _get_posterior_mean(self, params, globdat):
 
         ##################
@@ -214,9 +211,6 @@ class GPModel(Model):
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
 
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
-
     def _get_prior_covariance(self, params, globdat):
 
         ####################
@@ -226,9 +220,6 @@ class GPModel(Model):
         # Compute the full covariance matrix
         Sigma_prior = self._Sigma
         params[gppn.PRIORCOVARIANCE] = Sigma_prior
-
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
 
     def _get_posterior_covariance(self, params, globdat):
 
@@ -252,9 +243,6 @@ class GPModel(Model):
         Sigma_post = var_prior.copy()
         Sigma_post -= self._V1.T @ self._V1
         params[gppn.POSTERIORCOVARIANCE] = Sigma_post
-
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
 
     def _get_prior_samples(self, params, globdat):
 
@@ -288,9 +276,6 @@ class GPModel(Model):
 
         # Return the array of samples
         params[gppn.PRIORSAMPLES] = samples
-
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
 
     def _get_posterior_samples(self, params, globdat):
 
@@ -341,9 +326,6 @@ class GPModel(Model):
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples
 
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
-
     def _kalman_update(self, params, globdat):
 
         samples_prior = params[gppn.PRIORSAMPLES]
@@ -387,9 +369,6 @@ class GPModel(Model):
 
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples_post
-
-        # Inform GPSolverModule that displacement-related info is returned
-        params[gppn.FIELD] = 'u'
 
     def _get_log_likelihood(self, params, globdat):
 

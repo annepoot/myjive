@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse as spsp
 
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
@@ -63,31 +62,19 @@ class GPSamplerModule(LinsolveModule):
         params[gppn.NSAMPLE] = self._nsample
         params[gppn.RNG] = np.random.default_rng(self._seed)
 
-        self._solver.precon_mode = True
-
         # Get the prior samples
         model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
 
         # Store the prior samples in globdat
-        if params[gppn.FIELD] == 'f':
-            globdat['samples_f_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_u_prior'] = self._solver.solve(params[gppn.PRIORSAMPLES])
-        else:
-            globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
+        globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
+        globdat['samples_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
 
         # Update the prior samples to posterior samples
         model.take_action(gpact.KALMANUPDATE, params, globdat)
 
         # Store the updated samples in globdat
-        if params[gppn.FIELD] == 'f':
-            globdat['samples_f_post'] = params[gppn.POSTERIORSAMPLES]
-            globdat['samples_u_post'] = self._solver.solve(params[gppn.POSTERIORSAMPLES])
-        else:
-            globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
-            globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
-
-        self._solver.precon_mode = False
+        globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
+        globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
 
         # Compute the prior and posterior mean
         globdat['f_prior'] = np.mean(globdat['samples_f_prior'], axis=1)

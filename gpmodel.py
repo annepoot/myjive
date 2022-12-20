@@ -104,6 +104,7 @@ class GPModel(Model):
         # Get K, M and f from globdat
         K = globdat.get(gn.MATRIX0)
         M = globdat.get(gn.MATRIX2)
+        u = globdat.get(gn.STATE0)
         f = globdat.get(gn.EXTFORCE)
         c = globdat.get(gn.CONSTRAINTS)
 
@@ -152,6 +153,9 @@ class GPModel(Model):
 
         # Get the centered observation vector (as a deviation from the prior mean)
         self._y = self._g - self._H @ self._m
+
+        # Get the coarse solution vector
+        self._uc = self._Phic @ np.linalg.solve(self._H @ self._Phic, self._g)
 
     def _configure_prior(self, params, globdat):
 

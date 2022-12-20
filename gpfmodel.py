@@ -10,6 +10,7 @@ from gpmodel import GPModel
 
 PRIOR = 'prior'
 EXPLICITINVERSE = 'explicitInverse'
+COARSEINIT = 'coarseInit'
 DIAGONALIZED = 'diagonalized'
 SOLVER = 'solver'
 PRECONDITIONER = 'preconditioner'
@@ -21,7 +22,8 @@ class GPfModel(GPModel):
 
         super().configure(props, globdat)
 
-        self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'True')))
+        self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'False')))
+        self._coarse_init = bool(eval(props.get(COARSEINIT, 'False')))
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
 
         solverprops = props.get(SOLVER, {})
@@ -108,7 +110,13 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.POSTERIORMEAN] = self._Kinv @ params[gppn.POSTERIORMEAN]
         else:
-            params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
+            if self._coarse_init:
+                orig_guess = self._solver.get_init_guess
+                self._solver.set_init_guess(self._uc)
+                params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
+                self._solver.set_init_guess(orig_guess)
+            else:
+                params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
 
     def _get_prior_covariance(self, params, globdat):
 
@@ -119,7 +127,7 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.PRIORCOVARIANCE] = self._Kinv @ params[gppn.PRIORCOVARIANCE] @ self._Kinv
         else:
-            params[gppn.PRIORCOVARIANCE] = self._solver.solve(self._solver.solve(params[gppn.PRIORCOVARIANCE]).T)
+            params[gppn.PRIORCOVARIANCE] = self._solver.multisolve(self._solver.multisolve(params[gppn.PRIORCOVARIANCE]).T)
 
     def _get_posterior_covariance(self, params, globdat):
 
@@ -136,7 +144,7 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.POSTERIORCOVARIANCE] = self._Kinv @ params[gppn.POSTERIORCOVARIANCE] @ self._Kinv
         else:
-            params[gppn.POSTERIORCOVARIANCE] = self._solver.solve(self._solver.solve(params[gppn.POSTERIORCOVARIANCE]).T)
+            params[gppn.POSTERIORCOVARIANCE] = self._solver.multisolve(self._solver.multisolve(params[gppn.POSTERIORCOVARIANCE]).T)
 
         # Store the original prior covariance back
         params[gppn.PRIORCOVARIANCE] = tmp
@@ -150,7 +158,7 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.PRIORSAMPLES] = self._Kinv @ params[gppn.PRIORSAMPLES]
         else:
-            params[gppn.PRIORSAMPLES] = self._solver.solve(params[gppn.PRIORSAMPLES])
+            params[gppn.PRIORSAMPLES] = self._solver.multisolve(params[gppn.PRIORSAMPLES])
 
     def _get_posterior_samples(self, params, globdat):
 
@@ -161,7 +169,13 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
         else:
-            params[gppn.POSTERIORSAMPLES] = self._solver.solve(params[gppn.POSTERIORSAMPLES])
+            if self._coarse_init:
+                orig_guess = self._solver.get_init_guess
+                self._solver.set_init_guess(self._uc)
+                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
+                self._solver.set_init_guess(orig_guess)
+            else:
+                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
 
     def _kalman_update(self, params, globdat):
 
@@ -176,7 +190,13 @@ class GPfModel(GPModel):
         if self._explicit_inverse:
             params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
         else:
-            params[gppn.POSTERIORSAMPLES] = self._solver.solve(params[gppn.POSTERIORSAMPLES])
+            if self._coarse_init:
+                orig_guess = self._solver.get_init_guess
+                self._solver.set_init_guess(self._uc)
+                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
+                self._solver.set_init_guess(orig_guess)
+            else:
+                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
 
         # Store the original prior samples back
         params[gppn.PRIORSAMPLES] = tmp

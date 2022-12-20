@@ -24,7 +24,6 @@ class Solver:
 
     def __init__(self):
         self._precision = 1e-8
-
         self.precon_mode = False
 
     def configure(self, props, globdat):
@@ -38,18 +37,23 @@ class Solver:
 
     def solve(self, rhs):
 
+        lhs = np.zeros_like(rhs)
+
+        lhs = self.improve(lhs, rhs)
+
+        return lhs
+
+    def multisolve(self, rhs):
+
         if hasattr(rhs, 'toarray'):
-            r = rhs.toarray()
+            rhs_mat = rhs.toarray()
         else:
-            r = rhs
+            rhs_mat = rhs
 
-        lhs = np.zeros_like(r)
+        lhs = np.zeros_like(rhs_mat)
 
-        if len(r.shape) == 1:
-            lhs = self.improve(lhs, r)
-        else:
-            for j in range(r.shape[1]):
-                lhs[:,j] = self.solve(r[:,j])
+        for j in range(rhs_mat.shape[1]):
+            lhs[:,j] = self.solve(rhs_mat[:,j])
 
         return lhs
 

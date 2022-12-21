@@ -64,41 +64,41 @@ QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
-# Use a direct solver for reference
-props['model']['gp']['solver']['type'] = 'cholmod'
-globdat_ref = main.jive(props)
+# # Use a direct solver for reference
+# props['model']['gp']['solver']['type'] = 'cholmod'
+# globdat_ref = main.jive(props)
 
-data = []
+# data = []
 
-for preconditioner in ['id', 'diag', 'ichol']:
-    for coarse_init in [True, False]:
-        for max_iter in 2**np.arange(8):
-            props['model']['gp']['solver']['type'] = 'CG'
-            props['model']['gp']['solver']['allowMaxIter'] = 'True'
-            props['model']['gp']['solver']['maxIter'] = str(max_iter)
-            props['model']['gp']['preconditioner']['type'] = preconditioner
-            props['model']['gp']['coarseInit'] = str(coarse_init)
+# for preconditioner in ['id', 'diag', 'ichol']:
+#     for coarse_init in [True, False]:
+#         for max_iter in 2**np.arange(8):
+#             props['model']['gp']['solver']['type'] = 'CG'
+#             props['model']['gp']['solver']['allowMaxIter'] = 'True'
+#             props['model']['gp']['solver']['maxIter'] = str(max_iter)
+#             props['model']['gp']['preconditioner']['type'] = preconditioner
+#             props['model']['gp']['coarseInit'] = str(coarse_init)
 
-            globdat = main.jive(props)
+#             globdat = main.jive(props)
 
-            sample = globdat['samples_u_post'][:,0]
-            sample_ref = globdat_ref['samples_u_post'][:,0]
-            sample_rmse = np.sqrt(np.sum((sample-sample_ref)**2))
+#             sample = globdat['samples_u_post'][:,0]
+#             sample_ref = globdat_ref['samples_u_post'][:,0]
+#             sample_rmse = np.sqrt(np.sum((sample-sample_ref)**2))
 
-            std = globdat['std_u_post']
-            std_ref = globdat_ref['std_u_post']
-            std_rmse = np.sqrt(np.sum((std-std_ref)**2))
+#             std = globdat['std_u_post']
+#             std_ref = globdat_ref['std_u_post']
+#             std_rmse = np.sqrt(np.sum((std-std_ref)**2))
 
-            data.append([max_iter, preconditioner, coarse_init, sample_rmse, std_rmse])
+#             data.append([max_iter, preconditioner, coarse_init, sample_rmse, std_rmse])
 
-            # QuickViewer(globdat['samples_u_post'][:,0], globdat,
-            #             fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-            #             title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+#             # QuickViewer(globdat['samples_u_post'][:,0], globdat,
+#             #             fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+#             #             title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
 
-            # QuickViewer(globdat['std_u_post'], globdat,
-            #             fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-            #             title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+#             # QuickViewer(globdat['std_u_post'], globdat,
+#             #             fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+#             #             title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
 
-df = pd.DataFrame(data, columns=['maxIter', 'preconditioner', 'coarseInit', 'rmse_sample', 'rmse_std'])
+# df = pd.DataFrame(data, columns=['maxIter', 'preconditioner', 'coarseInit', 'rmse_sample', 'rmse_std'])
 
-df.to_csv('rmse_data.csv')
+# df.to_csv('rmse_data.csv')

@@ -2,6 +2,9 @@ import sys
 sys.path.append('../../')
 
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
 from jive.app import main
 import jive.util.proputils as pu
 from quickviewer import QuickViewer
@@ -55,18 +58,47 @@ QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
 
 QuickViewer(globdat_c['state0'], globdat_c, title=r'Coarse solution ($u_c$)')
 
-QuickViewer(Phi @ globdat_c['state0'], globdat, title=r'Projected coarse solution ($u_c$)')
-
 QuickViewer(u, globdat, title=r'Fine solution ($u_f$)')
 
 QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
 
-for i, sample in enumerate(samples_u_prior.T):
+# Use a direct solver for reference
+props['model']['gp']['solver']['type'] = 'cholmod'
+globdat_ref = main.jive(props)
 
-    QuickViewer(sample, globdat, title=r'Prior samples from $u$ (sample {})'.format(i+1))
+data = []
 
-for i, sample in enumerate(samples_u_post.T):
+for preconditioner in ['id', 'diag', 'ichol']:
+    for coarse_init in [True, False]:
+        for max_iter in 2**np.arange(8):
+            props['model']['gp']['solver']['type'] = 'CG'
+            props['model']['gp']['solver']['allowMaxIter'] = 'True'
+            props['model']['gp']['solver']['maxIter'] = str(max_iter)
+            props['model']['gp']['preconditioner']['type'] = preconditioner
+            props['model']['gp']['coarseInit'] = str(coarse_init)
 
-    QuickViewer(sample, globdat, title=r'Posterior samples from $u$ (sample {})'.format(i+1))
+            globdat = main.jive(props)
+
+            sample = globdat['samples_u_post'][:,0]
+            sample_ref = globdat_ref['samples_u_post'][:,0]
+            sample_rmse = np.sqrt(np.sum((sample-sample_ref)**2))
+
+            std = globdat['std_u_post']
+            std_ref = globdat_ref['std_u_post']
+            std_rmse = np.sqrt(np.sum((std-std_ref)**2))
+
+            data.append([max_iter, preconditioner, coarse_init, sample_rmse, std_rmse])
+
+            # QuickViewer(globdat['samples_u_post'][:,0], globdat,
+            #             fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+            #             title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+
+            # QuickViewer(globdat['std_u_post'], globdat,
+            #             fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+            #             title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+
+df = pd.DataFrame(data, columns=['maxIter', 'preconditioner', 'coarseInit', 'rmse_sample', 'rmse_std'])
+
+df.to_csv('rmse_data.csv')

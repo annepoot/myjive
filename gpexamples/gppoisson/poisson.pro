@@ -34,18 +34,12 @@ gpinit =
 
 gpsolver =
 {
-  type = GPSolver;
+  type = GPSampler;
   solver =
   {
-    type = CG;
-    maxIter = 100;
-    allowMaxIter = False;
+    type = cholmod;
   };
-  preconditioner =
-  {
-    type = ichol;
-  };
-  nsample = 3;
+  nsample = 100;
   seed = 0;
 };
 
@@ -72,10 +66,12 @@ model =
     };
   };
 
-
   gp =
   {
     type = GPf;
+
+    explicitInverse = False;
+    coarseInit = False;
 
     prior =
     {
@@ -85,6 +81,18 @@ model =
       {
         alpha = opt;
       };
+    };
+
+    solver =
+    {
+      type = CG;
+      maxIter = 200;
+      allowMaxIter = False;
+    };
+
+    preconditioner =
+    {
+      type = diag;
     };
 
     obsNoise = 1e-5;

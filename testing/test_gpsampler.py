@@ -5,13 +5,14 @@ import numpy as np
 
 import jive.util.proputils as pu
 from jive.app import main
-from jive.solver.constrainer import Constrainer
 
 def compare_gpexact_gpsampler(props):
     # First run the exact solve
     props['gpsolver']['type'] = 'GPSolver'
     props['gpsolver']['nsample'] = '0'
     props['gpsolver']['seed'] = '0'
+    props['gpsolver']['solver'] = {'type':'cholmod'}
+    props['model']['gp']['explicitInverse'] = 'True'
 
     globdat = main.jive(props)
 
@@ -34,6 +35,9 @@ def compare_gpexact_gpsampler(props):
     props['gpsolver']['type'] = 'GPSampler'
     props['gpsolver']['nsample'] = '1000'
     props['gpsolver']['seed'] = '0'
+    props['gpsolver']['solver'] = {'type':'cholmod'}
+    props['model']['gp']['explicitInverse'] = 'False'
+    props['model']['gp']['solver'] = {'type':'cholmod'}
 
     globdat = main.jive(props)
 
@@ -89,6 +93,11 @@ def props_cantilever(monkeypatch):
     return pu.parse_file('cantilever.pro')
 
 @pytest.fixture
+def props_poisson(monkeypatch):
+    change_test_dir('gppoisson', monkeypatch)
+    return pu.parse_file('poisson.pro')
+
+@pytest.fixture
 def props_tapered(monkeypatch):
     change_test_dir('gptapered', monkeypatch)
     return pu.parse_file('tapered.pro')
@@ -116,6 +125,14 @@ def test_sampler_beam(props_beam):
 @pytest.mark.slow
 def test_sampler_cantilever(props_cantilever):
     compare_gpexact_gpsampler(props_cantilever)
+
+@pytest.mark.rank2
+@pytest.mark.poisson
+@pytest.mark.gp
+@pytest.mark.sampling
+@pytest.mark.slow
+def test_sampler_poisson(props_poisson):
+    compare_gpexact_gpsampler(props_poisson)
 
 @pytest.mark.rank1
 @pytest.mark.tapered

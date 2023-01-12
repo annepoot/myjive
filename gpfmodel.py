@@ -111,7 +111,7 @@ class GPfModel(GPModel):
             params[gppn.POSTERIORMEAN] = self._Kinv @ params[gppn.POSTERIORMEAN]
         else:
             if self._coarse_init:
-                orig_guess = self._solver.get_init_guess
+                orig_guess = self._solver.get_init_guess()
                 self._solver.set_init_guess(self._uc)
                 params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
                 self._solver.set_init_guess(orig_guess)
@@ -170,7 +170,7 @@ class GPfModel(GPModel):
             params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
         else:
             if self._coarse_init:
-                orig_guess = self._solver.get_init_guess
+                orig_guess = self._solver.get_init_guess()
                 self._solver.set_init_guess(self._uc)
                 params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
                 self._solver.set_init_guess(orig_guess)
@@ -191,7 +191,7 @@ class GPfModel(GPModel):
             params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
         else:
             if self._coarse_init:
-                orig_guess = self._solver.get_init_guess
+                orig_guess = self._solver.get_init_guess()
                 self._solver.set_init_guess(self._uc)
                 params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
                 self._solver.set_init_guess(orig_guess)

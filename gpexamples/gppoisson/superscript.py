@@ -69,6 +69,8 @@ QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\b
 # for preconditioner in ['id', 'diag', 'ichol']:
 #     for coarse_init in [True, False]:
 #         for max_iter in 2**np.arange(8):
+#             print(preconditioner, coarse_init, max_iter)
+
 #             props['model']['gp']['solver']['type'] = 'CG'
 #             props['model']['gp']['solver']['allowMaxIter'] = 'True'
 #             props['model']['gp']['solver']['maxIter'] = str(max_iter)
@@ -87,13 +89,13 @@ QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\b
 
 #             data.append([max_iter, preconditioner, coarse_init, sample_rmse, std_rmse])
 
-#             # QuickViewer(globdat['samples_u_post'][:,0], globdat,
-#             #             fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-#             #             title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+#             QuickViewer(globdat['samples_u_post'][:,0], globdat,
+#                         fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+#                         title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
 
-#             # QuickViewer(globdat['std_u_post'], globdat,
-#             #             fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-#             #             title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
+#             QuickViewer(globdat['std_u_post'], globdat,
+#                         fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
+#                         title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
 
 # df = pd.DataFrame(data, columns=['maxIter', 'preconditioner', 'coarseInit', 'rmse_sample', 'rmse_std'])
 

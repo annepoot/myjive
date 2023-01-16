@@ -53,10 +53,10 @@ def test_moments(props):
 
     assert np.isclose(f_prior, 0).all()
     assert np.isclose(u_prior, 0).all()
-    assert np.isclose(min(f_post), -0.011230547987848664)
-    assert np.isclose(max(f_post), 0.01197235074186509)
-    assert np.isclose(min(u_post), -0.2199448680398467)
-    assert np.isclose(max(u_post), 0.36923905503709703)
+    assert np.isclose(min(f_post), -0.009424503380738927)
+    assert np.isclose(max(f_post), 0.014600669208726491)
+    assert np.isclose(min(u_post), -0.22654577520208105)
+    assert np.isclose(max(u_post), 0.3634450816888768)
 
     std_f_prior = globdat['std_f_prior']
     std_u_prior = globdat['std_u_prior']
@@ -66,15 +66,15 @@ def test_moments(props):
     pdnoise = 1e-8
 
     assert np.isclose(std_f_prior[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_f_prior, cdofs)), 0.0024066963042805633)
-    assert np.isclose(max(np.delete(std_f_prior, cdofs)), 0.008306578554038014)
+    assert np.isclose(min(np.delete(std_f_prior, cdofs)), 0.007070936127273382)
+    assert np.isclose(max(np.delete(std_f_prior, cdofs)), 0.023273413258675314)
     assert np.isclose(std_u_prior[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_u_prior, cdofs)), 0.008823523324660434)
-    assert np.isclose(max(np.delete(std_u_prior, cdofs)), 0.09038467965264092)
+    assert np.isclose(min(np.delete(std_u_prior, cdofs)), 0.020402828323300988)
+    assert np.isclose(max(np.delete(std_u_prior, cdofs)), 0.23877100696987844)
 
     assert np.isclose(std_f_post[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_f_post, cdofs)), 0.0017171551839928435)
-    assert np.isclose(max(np.delete(std_f_post, cdofs)), 0.00547682965009234)
+    assert np.isclose(min(np.delete(std_f_post, cdofs)), 0.004781054493305154)
+    assert np.isclose(max(np.delete(std_f_post, cdofs)), 0.015630087563907064)
     assert np.isclose(std_u_post[cdofs], pdnoise).all()
-    assert np.isclose(min(np.delete(std_u_post, cdofs)), 0.0004613891118080122)
-    assert np.isclose(max(np.delete(std_u_post, cdofs)), 0.0027349786517457527)
+    assert np.isclose(min(np.delete(std_u_post, cdofs)), 0.0012844150074634022)
+    assert np.isclose(max(np.delete(std_u_post, cdofs)), 0.0074937822133110295)

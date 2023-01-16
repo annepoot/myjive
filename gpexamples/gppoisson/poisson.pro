@@ -79,7 +79,7 @@ model =
       func = alpha**2 * M;
       hyperparams =
       {
-        alpha = opt;
+        alpha = 0.3;
       };
     };
 

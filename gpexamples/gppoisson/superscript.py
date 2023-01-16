@@ -1,10 +1,6 @@
 import sys
 sys.path.append('../../')
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-
 from jive.app import main
 import jive.util.proputils as pu
 from quickviewer import QuickViewer

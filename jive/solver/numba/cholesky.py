@@ -75,6 +75,9 @@ def incomplete_cholesky_jit(data, indices, indptr):
 
         # Compute the next entry in the lower triangular matrix
         if row == col:
+            if A_ij - rowsum <= 0:
+                raise ValueError('Matrix is not positive definite')
+
             L_ij = np.sqrt(A_ij - rowsum)
         else:
             idx_jj = indptr[col+1]-1
@@ -138,6 +141,9 @@ def sparse_cholesky_jit(data, indices, indptr):
 
             # Compute the next entry in the lower triangular matrix
             if row == col:
+                if A_ij - rowsum <= 0:
+                    raise ValueError('Matrix is not positive definite')
+
                 Lij = np.sqrt(A_ij - rowsum)
 
             else:

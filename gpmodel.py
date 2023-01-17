@@ -118,7 +118,7 @@ class GPModel(Model):
 
         # Get the prior mean
         self._m = params[gppn.PRIORMEAN]
-        self._cdofs = c.get_constraints()[0]
+        self._cdofs, self._cvals = c.get_constraints()
 
         # Get the phi matrix, and constrain the Dirichlet BCs
         phi = self._get_phi(globdat)
@@ -189,7 +189,7 @@ class GPModel(Model):
             self._Sigma = eval(self._covariance, eval_dict)
 
         # Apply boundary conditions to the prior
-        self._Sigma = self._apply_covariance_bcs(self._Sigma)
+        self._m, self._Sigma = self._apply_covariance_bcs(self._m, self._Sigma)
 
     def _get_prior_mean(self, params, globdat):
 
@@ -479,16 +479,32 @@ class GPModel(Model):
 
         return phi
 
-    def _apply_covariance_bcs(self, Sigma):
+    def _apply_covariance_bcs(self, m, Sigma):
         Sigmac = Sigma.copy()
+        mc = m.copy()
 
-        # Set the covariance of the DBCs to 0
+        idofs = np.delete(np.arange(self._dc), self._cdofs)
+
+        Sigma_bb = Sigma[np.ix_(self._cdofs,self._cdofs)]
+        Sigma_bi = Sigma[np.ix_(self._cdofs,idofs)]
+        Sigma_ib = Sigma[np.ix_(idofs,self._cdofs)]
+
+        Sigma_bb_inv = np.linalg.inv(Sigma_bb)
+
+        # Update the prior mean by observing the displacement at the bcs
+        mc[idofs] += Sigma_ib @ Sigma_bb_inv @ (self._cvals - m[self._cdofs])
+        mc[self._cdofs] = self._cvals
+
+        # Update the prior covariance as well
+        Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
+
+        # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         Sigmac += self._pdnoise2 * np.identity(self._dc)
 
-        return Sigmac
+        return mc, Sigmac
 
     def _get_variances(self, params, globdat):
 

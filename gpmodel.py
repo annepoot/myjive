@@ -393,15 +393,15 @@ class GPModel(Model):
     def _get_eval_dict(self):
 
         # Define a dictionary with relevant functions
-        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict = {'inv':np.linalg.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
         eval_dict.update(self._hyperparams)
 
         # Check if we have an SPDE covariance
         if self._prior == 'SPDE':
 
             # Add the mass and stiffness matrices to the dictionary
-            eval_dict['M'] = self._Mc
-            eval_dict['K'] = self._Kc
+            eval_dict['M'] = self._Mc.toarray()
+            eval_dict['K'] = self._Kc.toarray()
 
         return eval_dict
 

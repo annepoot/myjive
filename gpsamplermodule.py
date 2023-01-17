@@ -10,6 +10,7 @@ from jive.implicit.linsolvemodule import LinsolveModule
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 EXPLICITINVERSE = 'explicitInverse'
+POSTPROJECT = 'postproject'
 NSAMPLE = 'nsample'
 SEED = 'seed'
 
@@ -23,6 +24,8 @@ class GPSamplerModule(LinsolveModule):
         myprops = props[self._name]
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
         self._explicit_inverse = bool(eval(myprops.get(EXPLICITINVERSE, 'True')))
+
+        self._postproject = bool(eval(props.get(POSTPROJECT, 'False')))
 
         self._nsample = int(myprops.get(NSAMPLE,1))
         self._seed = eval(myprops.get(SEED,'None'))
@@ -75,6 +78,14 @@ class GPSamplerModule(LinsolveModule):
         # Store the updated samples in globdat
         globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
         globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
+
+        # Project the samples over the coarse space if needed
+        if self._postproject:
+            model.take_action(gpact.PROJECTSAMPLES, params, globdat)
+
+            # Store the projected samples in globdat
+            globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
+            globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
 
         # Compute the prior and posterior mean
         globdat['f_prior'] = np.mean(globdat['samples_f_prior'], axis=1)

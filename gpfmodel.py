@@ -62,6 +62,7 @@ class GPfModel(GPModel):
 
         # Get the observation operator
         self._Phic = spsp.csr_array(self._Phic)
+        self._Phi = spsp.csr_array(self._Phi)
         self._H = self._Phic.T
         self._H = self._H.tocsr()
 
@@ -285,6 +286,10 @@ class GPfModel(GPModel):
         if not '_sqrtNoise' in vars(self):
             self._sqrtNoise = np.sqrt(self._noise2) * spsp.identity(self._nobs)
 
+    def _get_P(self):
+
+        if not '_P' in vars(self):
+            self._P = self._Phi @ spspla.inv(self._Phi.T @ self._Phi) @ self._Phi.T
 
 
 def declare(factory):

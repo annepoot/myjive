@@ -81,6 +81,7 @@ class GPActions:
     GETPOSTERIORSAMPLES = 'getPosteriorSamples'
     GETLOGLIKELIHOOD = 'getLogLikelihood'
     KALMANUPDATE = 'kalmanUpdate'
+    PROJECTSAMPLES = 'projectSamples'
 
 
 class GPParamNames:

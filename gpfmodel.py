@@ -214,6 +214,22 @@ class GPfModel(GPModel):
 
         return np.sqrt(alpha2)
 
+    def _get_eval_dict(self):
+
+        # Define a dictionary with relevant functions
+        eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
+        eval_dict.update(self._hyperparams)
+
+        # Check if we have an SPDE covariance
+        if self._prior == 'SPDE':
+
+            # Add the mass and stiffness matrices to the dictionary
+            eval_dict['M'] = self._Mc
+            eval_dict['K'] = self._Kc
+            eval_dict['Phi'] = self._Phi
+
+        return eval_dict
+
     def _apply_covariance_bcs(self, m, Sigma):
         Sigmac = Sigma.copy()
         mc = m.copy()

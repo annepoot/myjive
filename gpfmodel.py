@@ -77,10 +77,13 @@ class GPfModel(GPModel):
 
             if value == 'opt':
 
-                if key == 'alpha':
-                    Sigma = self._Mc
-                elif key == 'beta':
-                    Sigma = self._Kc
+                # Check if the only hyperparameter to optimize is a scaling in the front
+                if self._covariance.startswith(key+'**2'):
+
+                    # Get the covariance matrix without the hyperparameter
+                    eval_dict = self._get_eval_dict()
+                    Sigma = eval(self._covariance.replace(key+'**2', '1'), eval_dict)
+
                 else:
                     raise ValueError('cannot find optimal value for ' + key)
 

@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse as spsp
+import scipy.sparse.linalg as spspla
 
 from jive.solver.numba.cholesky import sparse_cholesky
 from jive.solver.numba.spsolve import solve_triangular
@@ -77,14 +78,14 @@ class GPfModel(GPModel):
             if value == 'opt':
 
                 if key == 'alpha':
-                    Sigma = globdat[gn.MATRIX2]
+                    Sigma = self._Mc
                 elif key == 'beta':
-                    Sigma = globdat[gn.MATRIX0]
+                    Sigma = self._Kc
                 else:
                     raise ValueError('cannot find optimal value for ' + key)
 
                 # Apply boundary conditions to the prior
-                Sigma = self._apply_covariance_bcs(Sigma)
+                _, Sigma = self._apply_covariance_bcs(self._m, Sigma)
 
                 self._hyperparams[key] = self._get_param_opt(Sigma)
 
@@ -210,17 +211,33 @@ class GPfModel(GPModel):
 
         return np.sqrt(alpha2)
 
-    def _apply_covariance_bcs(self, Sigma):
+    def _apply_covariance_bcs(self, m, Sigma):
         Sigmac = Sigma.copy()
+        mc = m.copy()
 
-        # Set the covariance of the DBCs to 0
+        idofs = np.delete(np.arange(self._dc), self._cdofs)
+
+        Sigma_bb = Sigma[np.ix_(self._cdofs,self._cdofs)]
+        Sigma_bi = Sigma[np.ix_(self._cdofs,idofs)]
+        Sigma_ib = Sigma[np.ix_(idofs,self._cdofs)]
+
+        Sigma_bb_inv = spspla.inv(Sigma_bb.tocsc())
+
+        # Update the prior mean by observing the displacement at the bcs
+        mc[idofs] += Sigma_ib @ Sigma_bb_inv @ (self._cvals - m[self._cdofs])
+        mc[self._cdofs] = self._cvals
+
+        # Update the prior covariance as well
+        Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
+
+        # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] *= 0.0
         Sigmac[:,self._cdofs] *= 0.0
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         Sigmac += self._pdnoise2 * spsp.identity(self._dc)
 
-        return Sigmac
+        return mc, Sigmac
 
     def _solve_triangular(self, A, b, lower):
         return solve_triangular(A.tocsr(), b, lower=lower)

@@ -16,6 +16,7 @@ PDNOISE = 'pdNoise'
 PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
+PREPROJECT = 'preproject'
 HYPERPARAMS = 'hyperparams'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
@@ -46,6 +47,8 @@ class GPModel(Model):
             self._kalman_update(params, globdat)
         elif action == gpact.GETLOGLIKELIHOOD:
             self._get_log_likelihood(params, globdat)
+        elif action == gpact.PROJECTSAMPLES:
+            self._project_samples(params, globdat)
         elif action == act.GETTABLE:
             if 'var' in params[pn.TABLENAME]:
                 self._get_variances(params, globdat)
@@ -84,6 +87,9 @@ class GPModel(Model):
                 self._hyperparams[key] = float(value)
             else:
                 self._hyperparams[key] = 'opt'
+
+        # Get the preprojection props
+        self._preproject = bool(eval(props.get(PREPROJECT, 'False')))
 
         # Get the dofs of the fine mesh
         self._dof_types = globdat[gn.DOFSPACE].get_types()
@@ -273,6 +279,11 @@ class GPModel(Model):
             # For example, if Ensemble Kalman is used, it is equal to self._nens instead.
             z = rng.standard_normal(self._sqrtSigma.shape[1])
 
+            # Perform an initial projection over the coarse space
+            if self._preproject:
+                self._get_P()
+                z = self._P @ z
+
             # Get the sample of the force field
             u = self._sqrtSigma @ z + self._m
 
@@ -309,6 +320,11 @@ class GPModel(Model):
             # For example, if Ensemble Kalman is used, it is equal to self._nens instead.
             z1 = rng.standard_normal(self._sqrtSigma.shape[1])
             z2 = rng.standard_normal(self._nobs)
+
+            # Perform an initial projection over the coarse space
+            if self._preproject:
+                self._get_P()
+                z1 = self._P @ z1
 
             # Get x1 ~ N(0, alpha^2 M) and x2 ~ N(0, Sigma_e)
             x1 = self._sqrtSigma @ z1
@@ -374,6 +390,17 @@ class GPModel(Model):
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples_post
 
+    def _project_samples(self, params, globdat):
+
+        # Get the projection matrix
+        self._get_P()
+
+        # Project the prior samples
+        params[gppn.PRIORSAMPLES] = self._P @ params[gppn.PRIORSAMPLES]
+
+        # Project the posterior samples
+        params[gppn.POSTERIORSAMPLES] = self._P @ params[gppn.POSTERIORSAMPLES]
+
     def _get_log_likelihood(self, params, globdat):
 
         ##################
@@ -402,6 +429,7 @@ class GPModel(Model):
             # Add the mass and stiffness matrices to the dictionary
             eval_dict['M'] = self._Mc.toarray()
             eval_dict['K'] = self._Kc.toarray()
+            eval_dict['Phi'] = self._Phi
 
         return eval_dict
 
@@ -591,6 +619,11 @@ class GPModel(Model):
         if not '_V1' in vars(self):
             self._get_sqrtObs()
             self._V1 = self._postmul_Sigma(self._solve_triangular(self._sqrtObs, self._H, lower=True))
+
+    def _get_P(self):
+
+        if not '_P' in vars(self):
+            self._P = self._Phi @ np.linalg.inv(self._Phi.T @ self._Phi) @ self._Phi.T
 
     def _premul_Sigma(self, X):
 

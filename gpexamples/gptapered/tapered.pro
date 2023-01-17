@@ -37,6 +37,7 @@ gpsolver =
   type = GPSolver;
   nsample = 30;
   seed = 0;
+  postproject = False;
 };
 
 model =
@@ -77,11 +78,14 @@ model =
     {
       type = SPDE;
       func = alpha**2 * M;
+//      func = alpha**2 * Phi @ inv(Phi.T @ Phi) @ Phi.T @ M @ Phi @ inv(Phi.T @ Phi) @ Phi.T;
       hyperparams =
       {
         alpha = opt;
       };
     };
+
+    preproject = False;
 
     obsNoise = 1e-5;
 

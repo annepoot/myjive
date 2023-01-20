@@ -235,6 +235,7 @@ class GPfModel(GPModel):
         Sigmac = Sigma.copy()
         mc = m.copy()
 
+        # Split Sigma along boundary and internal nodes
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
         Sigma_bb = Sigma[np.ix_(self._cdofs,self._cdofs)]

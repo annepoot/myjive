@@ -126,29 +126,14 @@ class GPModel(Model):
         self._m = params[gppn.PRIORMEAN]
         self._cdofs, self._cvals = c.get_constraints()
 
-        # Get the phi matrix, and constrain the Dirichlet BCs
-        phi = self._get_phi(globdat)
+        # Get the phi matrix
+        self._Phi = self._get_phi(globdat)
 
-        self._Phi = phi.copy()
+        # Constrain the phi matrix based on Dirichlet BCs
+        self._Phic = self._constrain_phi(self._Phi, self._cdofs)
+
+        # Store Phi and Phic in globdat
         globdat['Phi'] = self._Phi
-
-        for i in range(phi.shape[1]):
-            for cdof in self._cdofs:
-                if np.isclose(phi[cdof,i], 1):
-                    for j in range(phi.shape[0]):
-
-                        # Note: this construction is here, because the entries of phi that belong to other DBCs should not be set to 0
-                        # This specifically happens if DBCs are applied along an edge.
-                        if j == cdof:
-                            assert np.isclose(phi[j,:i], 0).all()
-                            assert np.isclose(phi[j,i+1:], 0).all()
-
-                            phi[j,i] = 1.0
-
-                        elif not j in self._cdofs:
-                            phi[j,i] = 0.0
-
-        self._Phic = phi
         globdat['Phic'] = self._Phic
 
         # Get the observation operator
@@ -442,7 +427,7 @@ class GPModel(Model):
         dofs = globdat[gn.DOFSPACE]
         dofsc = globdat[gn.COARSEMESH][gn.DOFSPACE]
 
-        phi = np.zeros((dofs.dof_count(), dofsc.dof_count()))
+        Phi = np.zeros((dofs.dof_count(), dofsc.dof_count()))
 
         # Go over the coarse mesh
         for elemc in elemsc:
@@ -496,21 +481,33 @@ class GPModel(Model):
                         if inside:
 
                             # Get the shape function values at the location of the coords
-                            svals = self._shape.eval_shape_functions(loc_point)
+                            svals = np.round(self._shape.eval_shape_functions(loc_point), 12)
 
                             # Get the dofs belonging to this node
                             idofs = dofs.get_dofs([inodes[n]], self._dof_types)
 
                             # Store the relative shape function values in the phi matrix
                             for i, idof in enumerate(idofs):
-                                phi[idof, idofsc[i::len(self._dof_types)]] = svals
+                                Phi[idof, idofsc[i::len(self._dof_types)]] = svals
 
-        return phi
+        return Phi
+
+    def _constrain_phi(self, Phi, cdofs):
+        Phic = Phi.copy()
+
+        for i in range(Phic.shape[1]):
+            for cdof in cdofs:
+                if np.isclose(Phic[cdof,i], 1):
+                    Phic[:,i] = 0.0
+                    Phic[cdof,i] = 1.0
+
+        return Phic
 
     def _apply_covariance_bcs(self, m, Sigma):
         Sigmac = Sigma.copy()
         mc = m.copy()
 
+        # Split Sigma along boundary and internal nodes
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
         Sigma_bb = Sigma[np.ix_(self._cdofs,self._cdofs)]

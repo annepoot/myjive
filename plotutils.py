@@ -66,9 +66,10 @@ def create_dat(data, headers, fname, types=None):
 
     output = np.array(output, dtype=str).T
 
-    if fname[-4] != '.dat':
+    if fname[-4:] != '.dat':
         fname += '.dat'
 
+    os.makedirs(os.path.dirname(fname), exist_ok=True)
     with open(fname, 'w') as fmesh:
         fmesh.write(' '.join(headers) + '\n')
 

@@ -7,7 +7,6 @@ from copy import deepcopy
 
 from jive.app import main
 import jive.util.proputils as pu
-from jive.solver.constrainer import Constrainer
 
 from plotutils import create_dat
 
@@ -42,17 +41,8 @@ u_coarse = globdat_c['state0']
 # Now do the actual run
 globdat = main.jive(props)
 
-# Save the results of the run
-K = globdat['matrix0']
-M = globdat['matrix2']
+# Save the fine and projected coarse displacements
 u = globdat['state0']
-f = globdat['extForce']
-c = globdat['constraints']
-
-# Use a coarse and fine linspace for plotting
-x = np.linspace(0, 1, len(u))
-
-# Get the unconstrained Phi matrix to project the coarse solution to the fine space
 Phi = globdat['Phi']
 u_coarse = Phi @ u_coarse
 
@@ -65,6 +55,9 @@ std_u_post = globdat['std_u_post']
 # Get the prior and posterior samples
 samples_u_prior = globdat['samples_u_prior']
 samples_u_post = globdat['samples_u_post']
+
+# Use a fine linspace for plotting
+x = np.linspace(0, 1, len(u))
 
 # Create figure 1 directly using matplotlib
 plt.figure()

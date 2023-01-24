@@ -5,13 +5,13 @@ gpinit =
   mesh =
   {
     type = gmsh;
-    file = beam_fine2.msh;
+    file = meshes/beam_fine2.msh;
   };
 
   coarseMesh =
   {
     type = gmsh;
-    file = beam_coarse.msh;
+    file = meshes/beam_coarse.msh;
   };
 
   nodeGroups = [ lb, rb, tm ];

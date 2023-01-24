@@ -17,7 +17,7 @@ props_c['solver'] = deepcopy(props['gpsolver'])
 props_c['solver']['type'] = 'Linsolve'
 props_c['model'] = deepcopy(props['model'])
 props_c['model']['models'] = '[ solid, diri ]'
-props_c['init']['mesh']['file'] = 'beam_coarse.msh'
+props_c['init']['mesh']['file'] = 'meshes/beam_coarse.msh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']
@@ -60,19 +60,16 @@ QuickViewer(u, globdat, title=r'Exact displacement ($u$)')
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
 QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
 plt.show()
 
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err_grad, globdat, ax=ax1, comp=0, title=r'Discretization error ($|\varepsilon_f^{xx} - \varepsilon_c^{xx}|$)')
 QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
 plt.show()
 
 fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
 QuickViewer(err_grad, globdat, ax=ax1, comp=1, title=r'Discretization error ($|\varepsilon_f^{yy} - \varepsilon_c^{yy}|$)')
 QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
 plt.show()
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
@@ -93,7 +90,7 @@ for fineness in fine_list:
 
     if fineness != 'post':
         pro = deepcopy(props_c)
-        pro['init']['mesh']['file'] = 'beam_' + fineness + '.msh'
+        pro['init']['mesh']['file'] = 'meshes/beam_' + fineness + '.msh'
         pro['solver']['type'] = 'Linsolve'
 
         glob = main.jive(pro)

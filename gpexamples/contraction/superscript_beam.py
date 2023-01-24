@@ -18,7 +18,7 @@ props_c['solver'] = deepcopy(props['gpsolver'])
 props_c['solver']['type'] = 'Linsolve'
 props_c['model'] = deepcopy(props['model'])
 props_c['model']['models'] = '[ solid, diri ]'
-props_c['init']['mesh']['file'] = 'beam_coarse.msh'
+props_c['init']['mesh']['file'] = 'meshes/beam_coarse.msh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']

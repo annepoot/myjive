@@ -23,9 +23,9 @@ model =
 {
   type = Multi;
 
-  models = [ bar, diri ];
+  models = [ poisson, diri ];
 
-  bar =
+  poisson =
   {
     type = Poisson;
 

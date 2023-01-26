@@ -47,7 +47,7 @@ model =
 {
   type = Multi;
 
-  models = [ poisson, gp, diri ];
+  models = [ poisson, gp, load, diri ];
 
   poisson =
   {
@@ -56,8 +56,6 @@ model =
     elements = all;
 
     kappa = 1.0;
-    rho = 1;
-    q = (x<1)*1+(x>1)*-0.8;
 
     shape =
     {
@@ -101,6 +99,22 @@ model =
     {
       type = Triangle3;
       intScheme = Gauss1;
+    };
+  };
+
+  load =
+  {
+    type = Load;
+
+    elements = all;
+
+    dofs   = [ u ];
+    values = [ (x<1)*1+(x>1)*-0.8 ];
+
+    shape =
+    {
+      type = Triangle6;
+      intScheme = Gauss3;
     };
   };
 

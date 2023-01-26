@@ -42,7 +42,7 @@ gpsolver =
 model =
 {
   type = Multi;
-  models = [ bar, gp, diri ];
+  models = [ bar, gp, load, diri ];
 
   bar =
   {
@@ -79,6 +79,22 @@ model =
     ensemble = 1000;
     seed = 0;
     obsNoise = 1e-5;
+
+    shape =
+    {
+      type = Line2;
+      intScheme = Gauss2;
+    };
+  };
+
+  load =
+  {
+    type = Load;
+
+    elements = all;
+
+    dofs = [ dx ];
+    values = [ 0.1 ];
 
     shape =
     {

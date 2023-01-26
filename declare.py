@@ -10,6 +10,7 @@ import poissonmodel
 import elasticmodel
 import solidmodel
 import timoshenkomodel
+import loadmodel
 import gpmodel
 import gpfmodel
 import gpenkfmodel
@@ -35,6 +36,7 @@ def declare_models(globdat):
     elasticmodel.declare(factory)
     solidmodel.declare(factory)
     timoshenkomodel.declare(factory)
+    loadmodel.declare(factory)
     gpmodel.declare(factory)
     gpfmodel.declare(factory)
     gpenkfmodel.declare(factory)

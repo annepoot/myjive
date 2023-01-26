@@ -74,16 +74,6 @@ class IsotropicMaterial(Material):
     def stiff_at_point(self, ipoint=None):
         return self._stiff_matrix
 
-    def self_weight_at_point(self, gravity, ipoint=None):
-        rho = self._get_rho(ipoint)
-        weight = rho * gravity
-
-        if self._rank == 1:
-            area = self._get_area(ipoint)
-            weight *= area
-
-        return weight
-
     def mass_at_point(self, ipoint=None):
         return self._mass_matrix
 

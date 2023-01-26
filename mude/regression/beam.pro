@@ -31,7 +31,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, diri ];
+  models = [ solid, load, diri ];
 
   solid =
   {
@@ -47,8 +47,6 @@ model =
 
       E = 10000.;
       nu = 0.2;
-      rho = 1.0;
-      thickness = 0.2;
 
       deteriorations = 1;
       scale = 0.1;
@@ -58,6 +56,24 @@ model =
       stdX = 1;
       stdY = 1;
     };
+
+    thickness = 0.2;
+
+    shape =
+    {
+      type = Triangle3;
+      intScheme = Gauss1;
+    };
+  };
+
+  load =
+  {
+    type = Load;
+
+    elements = all;
+
+    dofs   = [ dy ];
+    values = [ -0.2 ];
 
     shape =
     {

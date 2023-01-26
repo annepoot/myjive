@@ -33,7 +33,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, diri, neum ];
+  models = [ solid, load, diri, neum ];
 
   solid =
   {
@@ -52,6 +52,22 @@ model =
     };
 
     thickness = 0.2;
+
+    shape =
+    {
+      type = Triangle3;
+      intScheme = Gauss1;
+    };
+  };
+
+  load =
+  {
+    type = Load;
+
+    elements = all;
+
+    dofs   = [ dy ];
+    values = [ 0. ];
 
     shape =
     {

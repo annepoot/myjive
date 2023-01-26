@@ -16,7 +16,6 @@ INTSCHEME = 'intScheme'
 DOFTYPES = ['dx', 'dy', 'dz']
 MATERIAL = 'material'
 THICKNESS_PROP = 'thickness'
-GRAVITY = 'gravity'
 
 
 class SolidModel(Model):
@@ -27,8 +26,6 @@ class SolidModel(Model):
             self._get_matrix(params, globdat)
         elif action == act.GETMATRIX2:
             self._get_mass_matrix(params, globdat)
-        elif action == act.GETEXTFORCE:
-            self._get_body_force(params, globdat)
         elif action == act.GETTABLE:
             if 'stress' in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
@@ -72,8 +69,6 @@ class SolidModel(Model):
         if self._rank == 2:
             self._thickness = props.get(THICKNESS_PROP, self._thickness)
             self._thickness = pu.soft_cast(self._thickness, float)
-
-        self._gravity = bool(eval(props.get(GRAVITY, 'False')))
 
         # Create a new dof for every node and dof type
         for doftype in DOFTYPES[0:self._rank]:
@@ -145,46 +140,6 @@ class SolidModel(Model):
 
             # Add the element mass matrix to the global mass matrix
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
-
-    def _get_body_force(self, params, globdat):
-
-        if not self._gravity:
-            return
-
-        if self._rank == 1:
-            gravity = np.array([1])
-        elif self._rank == 2:
-            gravity = np.array([0, -1])
-        else:
-            return
-
-        for ielem in self._ielems:
-            # Get the nodal coordinates of each element
-            inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Get the shape functions, weights and coordinates of each integration point
-            sfuncs = self._shape.get_shape_functions()
-            weights = self._shape.get_integration_weights(coords)
-            ipcoords = self._shape.get_global_integration_points(coords)
-
-            if self._rank == 2:
-                weights *= self._thickness
-
-            # Reset the element force vector
-            elfor = np.zeros(self._dofcount)
-
-            for ip in range(self._ipcount):
-                # Get the N matrix and b vector for each integration point
-                N = self._get_N_matrix(sfuncs[:, ip])
-                b = self._mat.self_weight_at_point(gravity, ipcoords[:, ip])
-
-                # Compute the element force vector
-                elfor += weights[ip] * np.matmul(np.transpose(N), b)
-
-            # Add the element force vector to the global force vector
-            params[pn.EXTFORCE][idofs] += elfor
 
     def _get_strains(self, params, globdat):
         xtable = params[pn.TABLE]

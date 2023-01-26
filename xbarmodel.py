@@ -24,9 +24,7 @@ class XBarModel(BarModel):
         super().take_action(action, params, globdat)
 
         # Add extended actions below
-        if action == act.GETEXTFORCE:
-            self._get_body_force(params, globdat)
-        elif action == act.GETUNITMATRIX2:
+        if action == act.GETUNITMATRIX2:
             self._get_unit_mass_matrix(params, globdat)
         else:
             showmsg = False
@@ -64,53 +62,6 @@ class XBarModel(BarModel):
 
         # Restore the original rhoA value
         self._rhoA = rhoA_
-
-    def _get_body_force(self, params, globdat):
-
-        for elem in self._elems:
-            # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Get the shape functions, weights and coordinates of each integration point
-            sfuncs = self._shape.get_shape_functions()
-            weights = self._shape.get_integration_weights(coords)
-            ipcoords = self._shape.get_global_integration_points(coords)
-
-            # Reset the element force vector
-            elfor = np.zeros(self._dofcount)
-
-            for ip in range(self._ipcount):
-                # Get the N matrix and Q vector for each integration point
-                N = self._get_N_matrix(sfuncs[:,ip])
-                Q = self._get_Q_vector(ipcoords[:,ip])
-
-                # Compute the element force vector
-                elfor += weights[ip] * np.matmul(np.transpose(N), Q)
-
-            # Add the element force vector to the global force vector
-            params[pn.EXTFORCE][idofs] += elfor
-
-    def _get_D_matrix(self, ipcoords):
-        EA_ = pu.evaluate(self._EA, ipcoords, 1)
-        D = np.array([[EA_]])
-        return D
-
-    def _get_K_matrix(self, ipcoords):
-        k_ = pu.evaluate(self._k, ipcoords, 1)
-        K = np.array([[k_]])
-        return K
-
-    def _get_M_matrix(self, ipcoords):
-        rhoA_ = pu.evaluate(self._rhoA, ipcoords, 1)
-        M = np.array([[rhoA_]])
-        return M
-
-    def _get_Q_vector(self, ipcoords):
-        q_ = pu.evaluate(self._q, ipcoords, 1)
-        Q = np.array([q_])
-        return Q
 
 
 def declare(factory):

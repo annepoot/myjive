@@ -98,8 +98,7 @@ def test_body_load(props):
     props['model']['diri']['values'] = '[0,0,0]'
 
     props['model']['neum']['values'] = '[0.0]'
-    props['model']['solid']['material']['rho'] = '1'
-    props['model']['solid']['gravity'] = 'True'
+    props['model']['load']['values'] = '[-0.2]'
 
     globdat = main.jive(props)
 

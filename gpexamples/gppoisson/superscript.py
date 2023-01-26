@@ -22,6 +22,7 @@ u_fine = globdat_f['state0']
 props_c = deepcopy(props_f)
 props_c['init']['mesh']['file'] = 'tri3mesh.msh'
 props_c['model']['poisson']['shape']['type'] = 'Triangle3'
+props_c['model']['load']['shape']['type'] = 'Triangle3'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']

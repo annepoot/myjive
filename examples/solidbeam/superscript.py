@@ -38,8 +38,7 @@ rho = 1
 q = rho * H * t
 weight_exact = H * L * t * rho
 props['model']['neum']['values'] = '[0.0]'
-props['model']['solid']['material']['rho'] = str(rho)
-props['model']['solid']['gravity'] = 'True'
+props['model']['load']['values'] = '[-' + str(rho*t) + ']'
 
 globdat = main.jive(props)
 K = globdat['matrix0']

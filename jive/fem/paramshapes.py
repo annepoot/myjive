@@ -159,6 +159,73 @@ class Tri6Shape(Shape):
             return True
 
 
+class Quad4Shape(Shape):
+    def __init__(self, intscheme):
+        print('Creating Quad4Shape...')
+
+        # Set the nodecount and rank of the elements
+        self._ncount = 4
+        self._rank = 2
+
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
+
+    def get_local_node_coords(self):
+        # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
+        loc_coords = np.zeros((self._rank, self._ncount))
+
+        loc_coords[0, 0] = -1.0
+        loc_coords[0, 1] = 1.0
+        loc_coords[0, 2] = 1.0
+        loc_coords[0, 3] = -1.0
+        loc_coords[1, 0] = -1.0
+        loc_coords[1, 1] = -1.0
+        loc_coords[1, 2] = 1.0
+        loc_coords[1, 3] = 1.0
+
+        return loc_coords
+
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
+
+        sfuncs[0] = 0.25 * (1 - loc_point[0]) * (1 - loc_point[1])
+        sfuncs[1] = 0.25 * (1 + loc_point[0]) * (1 - loc_point[1])
+        sfuncs[2] = 0.25 * (1 + loc_point[0]) * (1 + loc_point[1])
+        sfuncs[3] = 0.25 * (1 - loc_point[0]) * (1 + loc_point[1])
+
+        return sfuncs
+
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
+
+        sgrads[0, 0] = -0.5
+        sgrads[0, 1] = -0.5
+        sgrads[1, 0] = 0.5
+        sgrads[1, 1] = -0.5
+        sgrads[2, 0] = 0.5
+        sgrads[2, 1] = 0.5
+        sgrads[3, 0] = -0.5
+        sgrads[3, 1] = 0.5
+
+        return sgrads
+
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] < -1 - tol:
+            return False
+        elif loc_point[0] > 1 + tol:
+            return False
+        elif loc_point[1] < -1 - tol:
+            return False
+        elif loc_point[1] > 1 + tol:
+            return False
+        else:
+            return True
+
+
 class Line2Shape(Shape):
     def __init__(self, intscheme):
         print('Creating Line2Shape...')
@@ -275,5 +342,6 @@ class Line3Shape(Shape):
 def declare(factory):
     factory.declare_shape('Triangle3', Tri3Shape)
     factory.declare_shape('Triangle6', Tri6Shape)
+    factory.declare_shape('Quad4', Quad4Shape)
     factory.declare_shape('Line2', Line2Shape)
     factory.declare_shape('Line3', Line3Shape)

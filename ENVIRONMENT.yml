@@ -5,7 +5,7 @@ channels:
 dependencies:
   - matplotlib=3.5.2
   - numba=0.56.4
-  - numpy=1.22.3
+  - numpy=1.23.5
   - opencv=4.6.0
   - pandas=1.4.3
   - pip=22.1.2

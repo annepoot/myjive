@@ -201,14 +201,14 @@ class Quad4Shape(Shape):
         # Note that no weights are applied!
         sgrads = np.zeros((self._ncount, self._rank))
 
-        sgrads[0, 0] = -0.5
-        sgrads[0, 1] = -0.5
-        sgrads[1, 0] = 0.5
-        sgrads[1, 1] = -0.5
-        sgrads[2, 0] = 0.5
-        sgrads[2, 1] = 0.5
-        sgrads[3, 0] = -0.5
-        sgrads[3, 1] = 0.5
+        sgrads[0, 0] = -0.25 * (1 - loc_point[1])
+        sgrads[0, 1] = -0.25 * (1 - loc_point[0])
+        sgrads[1, 0] = 0.25 * (1 - loc_point[1])
+        sgrads[1, 1] = -0.25 * (1 + loc_point[0])
+        sgrads[2, 0] = 0.25 * (1 + loc_point[1])
+        sgrads[2, 1] = 0.25 * (1 + loc_point[0])
+        sgrads[3, 0] = -0.25 * (1 + loc_point[1])
+        sgrads[3, 1] = 0.25 * (1 - loc_point[0])
 
         return sgrads
 

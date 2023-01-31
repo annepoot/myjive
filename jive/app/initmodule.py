@@ -99,8 +99,8 @@ class InitModule(Module):
                 grouplines = lines[lines.index('$PhysicalNames\n')+2:lines.index('$EndPhysicalNames\n')]
 
                 # Split the element group info
-                group_ids = np.genfromtxt(grouplines, dtype=int)[:,1]
-                group_names = np.genfromtxt(grouplines, dtype=str)[:,2]
+                group_ids = np.genfromtxt(grouplines, dtype=int, ndmin=2)[:,1]
+                group_names = np.genfromtxt(grouplines, dtype=str, ndmin=2)[:,2]
                 group_names = np.char.strip(group_names, '"')
 
             else:
@@ -108,13 +108,13 @@ class InitModule(Module):
                 group_names = []
 
             # Split the node info
-            node_ids = np.genfromtxt(nlines, dtype=int)[:,0]
-            coords = np.genfromtxt(nlines, dtype=float)[:,1:]
+            node_ids = np.genfromtxt(nlines, dtype=int, ndmin=2)[:,0]
+            coords = np.genfromtxt(nlines, dtype=float, ndmin=2)[:,1:]
 
             # Split the element info
-            elem_ids = np.genfromtxt(elines, dtype=int)[:,0]
-            elem_info = np.genfromtxt(elines, dtype=int)[:,1:5]
-            inodes = np.genfromtxt(elines, dtype=int)[:,5:]
+            elem_ids = np.genfromtxt(elines, dtype=int, ndmin=2)[:,0]
+            elem_info = np.genfromtxt(elines, dtype=int, ndmin=2)[:,1:5]
+            inodes = np.genfromtxt(elines, dtype=int, ndmin=2)[:,5:]
 
             # Get the element type, and make sure it is the only one
             eltype = elem_info[0,0]

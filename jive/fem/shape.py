@@ -87,7 +87,7 @@ class Shape:
                 if self._int == 'Gauss1':
                     self._ips[0, 0] = 0.0
                     self._ips[1, 0] = 0.0
-                    self._wts[0] = 2.0
+                    self._wts[0] = 4.0
                 elif self._int == 'Gauss4':
                     invsqrt3 = 1 / np.sqrt(3)
                     self._ips[0, 0] = -invsqrt3
@@ -98,10 +98,10 @@ class Shape:
                     self._ips[1, 2] = invsqrt3
                     self._ips[0, 3] = -invsqrt3
                     self._ips[1, 3] = invsqrt3
-                    self._wts[0] = 0.5
-                    self._wts[1] = 0.5
-                    self._wts[2] = 0.5
-                    self._wts[3] = 0.5
+                    self._wts[0] = 1.0
+                    self._wts[1] = 1.0
+                    self._wts[2] = 1.0
+                    self._wts[3] = 1.0
 
                 else:
                     raise ValueError(self._int)

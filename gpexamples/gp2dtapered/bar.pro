@@ -4,45 +4,41 @@ gpinit =
 
   mesh =
   {
-    type = manual;
-    file = 2nodebar.mesh;
+    type = gmsh;
+    file = meshes/4-node/bar_fine2.msh;
   };
 
   coarseMesh =
   {
-    type = manual;
-    file = 2nodebar_coarse.mesh;
+    type = gmsh;
+    file = meshes/4-node/bar_coarse.msh;
   };
 
-  nodeGroups = [ left, right, mid ];
+  nodeGroups = [ lb, rb ];
 
-  left =
+  lb =
   {
     xtype = min;
   };
 
-  right =
+  rb =
   {
     xtype = max;
-  };
-
-  mid =
-  {
-    xtype = mid;
   };
 };
 
 gpsolver =
 {
   type = GPSolver;
-  nsample = 30;
+  nsample = 3;
   seed = 0;
-  postproject = False;
+  tables = [ stress, strain ];
 };
 
 model =
 {
   type = Multi;
+
   models = [ solid, gp, load, diri ];
 
   solid =
@@ -54,16 +50,19 @@ model =
     material =
     {
       type = Heterogeneous;
-      rank = 1;
-      anmodel = bar;
+      rank = 2;
+      anmodel = plane_stress;
 
       E = 1.0 - 0.99 * x;
+      nu = 0.2;
     };
+
+    thickness = 4.;
 
     shape =
     {
-      type = Line2;
-      intScheme = Gauss2;
+      type = Quad4;
+      intScheme = Gauss4;
     };
   };
 
@@ -81,14 +80,12 @@ model =
       };
     };
 
-    preproject = False;
-
-    obsNoise = 1e-5;
+    obsNoise = 1e-10;
 
     shape =
     {
-      type = Line2;
-      intScheme = Gauss2;
+      type = Quad4;
+      intScheme = Gauss4;
     };
   };
 
@@ -98,13 +95,13 @@ model =
 
     elements = all;
 
-    dofs = [ dx ];
-    values = [ 3. ];
+    dofs   = [ dx ];
+    values = [ 12. ];
 
     shape =
     {
-      type = Line2;
-      intScheme = Gauss2;
+      type = Quad4;
+      intScheme = Gauss4;
     };
   };
 
@@ -112,8 +109,8 @@ model =
   {
     type = Dirichlet;
 
-    groups = [ left, right ];
-    dofs   = [ dx, dx ];
-    values = [ 0.0, 1.0 ];
+    groups = [ lb, lb, rb ];
+    dofs   = [ dx, dy, dx ];
+    values = [ 0., 0., 1. ];
   };
 };

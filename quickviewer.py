@@ -49,6 +49,10 @@ def QuickViewer(array, globdat, **kwargs):
         nelem = len(elems)
     elif shape == 'Triangle6':
         nelem = len(elems) * 4
+    elif shape == 'Quad4':
+        nelem = len(elems) * 2
+    elif shape == 'Quad9':
+        nelem = len(elems) * 8
     else:
         raise ValueError('ViewModule only supports triangles for now')
 
@@ -70,6 +74,18 @@ def QuickViewer(array, globdat, **kwargs):
             el[4 * e + 1, :] = inodes[[1, 4, 3]]
             el[4 * e + 2, :] = inodes[[2, 5, 4]]
             el[4 * e + 3, :] = inodes[[3, 4, 5]]
+        elif shape == 'Quad4':
+            el[2 * e + 0, :] = inodes[[0, 1, 3]]
+            el[2 * e + 1, :] = inodes[[1, 2, 3]]
+        elif shape == 'Quad9':
+            el[8 * e + 0, :] = inodes[[0, 4, 7]]
+            el[8 * e + 1, :] = inodes[[4, 8, 7]]
+            el[8 * e + 2, :] = inodes[[1, 8, 4]]
+            el[8 * e + 3, :] = inodes[[1, 5, 8]]
+            el[8 * e + 4, :] = inodes[[2, 5, 6]]
+            el[8 * e + 5, :] = inodes[[5, 6, 8]]
+            el[8 * e + 6, :] = inodes[[3, 8, 6]]
+            el[8 * e + 7, :] = inodes[[3, 7, 8]]
 
     dx = np.copy(x)
     dy = np.copy(y)

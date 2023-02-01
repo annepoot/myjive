@@ -33,6 +33,8 @@ class Shape:
             self._ipcount = 3
         elif self._int == 'Gauss4':
             self._ipcount = 4
+        elif self._int == 'Gauss9':
+            self._ipcount = 9
         else:
             raise ValueError(self._int)
 
@@ -64,7 +66,7 @@ class Shape:
 
         elif self._rank == 2:
 
-            if self._ncount == 3:
+            if self._ncount == 3 or self._ncount == 6:
                 if self._int == 'Gauss1':
                     self._ips[0, 0] = 1.0 / 3.0
                     self._ips[1, 0] = 1.0 / 3.0
@@ -83,7 +85,7 @@ class Shape:
                 else:
                     raise ValueError(self._int)
 
-            elif self._ncount == 4:
+            elif self._ncount == 4 or self._ncount == 9:
                 if self._int == 'Gauss1':
                     self._ips[0, 0] = 0.0
                     self._ips[1, 0] = 0.0
@@ -98,10 +100,41 @@ class Shape:
                     self._ips[1, 2] = invsqrt3
                     self._ips[0, 3] = -invsqrt3
                     self._ips[1, 3] = invsqrt3
+
                     self._wts[0] = 1.0
                     self._wts[1] = 1.0
                     self._wts[2] = 1.0
                     self._wts[3] = 1.0
+                elif self._int == 'Gauss9':
+                    invsqrt35 = 1 / np.sqrt(3.0 / 5.0)
+                    self._ips[0, 0] = -invsqrt35
+                    self._ips[1, 0] = -invsqrt35
+                    self._ips[0, 1] = 0
+                    self._ips[1, 1] = -invsqrt35
+                    self._ips[0, 2] = invsqrt35
+                    self._ips[1, 2] = -invsqrt35
+                    self._ips[0, 3] = -invsqrt35
+                    self._ips[1, 3] = 0
+                    self._ips[0, 4] = 0
+                    self._ips[1, 4] = 0
+                    self._ips[0, 5] = invsqrt35
+                    self._ips[1, 5] = 0
+                    self._ips[0, 6] = -invsqrt35
+                    self._ips[1, 6] = invsqrt35
+                    self._ips[0, 7] = 0
+                    self._ips[1, 7] = invsqrt35
+                    self._ips[0, 8] = invsqrt35
+                    self._ips[1, 8] = invsqrt35
+
+                    self._wts[0] = 25.0 / 81.0
+                    self._wts[1] = 40.0 / 81.0
+                    self._wts[2] = 25.0 / 81.0
+                    self._wts[3] = 40.0 / 81.0
+                    self._wts[4] = 64.0 / 81.0
+                    self._wts[5] = 40.0 / 81.0
+                    self._wts[6] = 25.0 / 81.0
+                    self._wts[7] = 40.0 / 81.0
+                    self._wts[8] = 25.0 / 81.0
 
                 else:
                     raise ValueError(self._int)

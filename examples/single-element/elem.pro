@@ -5,7 +5,7 @@ init =
   mesh =
   {
     type = gmsh;
-    file = elem4.msh;
+    file = elem9.msh;
   };
 
   lb =
@@ -23,7 +23,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, load, diri, neum ];
+  models = [ solid, load, diri ];
 
   solid =
   {
@@ -45,8 +45,8 @@ model =
 
     shape =
     {
-      type = Quad4;
-      intScheme = Gauss4;
+      type = Quad9;
+      intScheme = Gauss9;
     };
   };
 
@@ -56,13 +56,13 @@ model =
 
     elements = all;
 
-    dofs   = [ dy ];
-    values = [ 0. ];
+    dofs   = [ dx ];
+    values = [ 1. ];
 
     shape =
     {
-      type = Quad4;
-      intScheme = Gauss4;
+      type = Quad9;
+      intScheme = Gauss9;
     };
   };
 
@@ -73,15 +73,6 @@ model =
     groups = [ lb, lb ];
     dofs   = [ dx, dy ];
     values = [ 0., 0. ];
-  };
-
-  neum =
-  {
-    type = Neumann;
-
-    groups = [ rb ];
-    dofs   = [ dx ];
-    values = [ 1. ];
   };
 };
 

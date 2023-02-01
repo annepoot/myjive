@@ -189,10 +189,13 @@ class Quad4Shape(Shape):
         # Evalulate the shape functions in the local coordinate system
         sfuncs = np.zeros(self._ncount)
 
-        sfuncs[0] = 0.25 * (1 - loc_point[0]) * (1 - loc_point[1])
-        sfuncs[1] = 0.25 * (1 + loc_point[0]) * (1 - loc_point[1])
-        sfuncs[2] = 0.25 * (1 + loc_point[0]) * (1 + loc_point[1])
-        sfuncs[3] = 0.25 * (1 - loc_point[0]) * (1 + loc_point[1])
+        x = loc_point[0]
+        y = loc_point[1]
+
+        sfuncs[0] = 0.25 * (1 - x) * (1 - y)
+        sfuncs[1] = 0.25 * (1 + x) * (1 - y)
+        sfuncs[2] = 0.25 * (1 + x) * (1 + y)
+        sfuncs[3] = 0.25 * (1 - x) * (1 + y)
 
         return sfuncs
 
@@ -201,14 +204,119 @@ class Quad4Shape(Shape):
         # Note that no weights are applied!
         sgrads = np.zeros((self._ncount, self._rank))
 
-        sgrads[0, 0] = -0.25 * (1 - loc_point[1])
-        sgrads[0, 1] = -0.25 * (1 - loc_point[0])
-        sgrads[1, 0] = 0.25 * (1 - loc_point[1])
-        sgrads[1, 1] = -0.25 * (1 + loc_point[0])
-        sgrads[2, 0] = 0.25 * (1 + loc_point[1])
-        sgrads[2, 1] = 0.25 * (1 + loc_point[0])
-        sgrads[3, 0] = -0.25 * (1 + loc_point[1])
-        sgrads[3, 1] = 0.25 * (1 - loc_point[0])
+        x = loc_point[0]
+        y = loc_point[1]
+
+        sgrads[0, 0] = -0.25 * (1 - y)
+        sgrads[0, 1] = -0.25 * (1 - x)
+        sgrads[1, 0] = 0.25 * (1 - y)
+        sgrads[1, 1] = -0.25 * (1 + x)
+        sgrads[2, 0] = 0.25 * (1 + y)
+        sgrads[2, 1] = 0.25 * (1 + x)
+        sgrads[3, 0] = -0.25 * (1 + y)
+        sgrads[3, 1] = 0.25 * (1 - x)
+
+        return sgrads
+
+    def contains_local_point(self, loc_point, tol=0.0):
+        # Return whether or not the local point falls inside or on the element boundaries
+        if loc_point[0] < -1 - tol:
+            return False
+        elif loc_point[0] > 1 + tol:
+            return False
+        elif loc_point[1] < -1 - tol:
+            return False
+        elif loc_point[1] > 1 + tol:
+            return False
+        else:
+            return True
+
+
+class Quad9Shape(Shape):
+    def __init__(self, intscheme):
+        print('Creating Quad9Shape...')
+
+        # Set the nodecount and rank of the elements
+        self._ncount = 9
+        self._rank = 2
+
+        # Refer to the Shape class to handle the rest of the initialization
+        super().__init__(intscheme)
+
+    def get_local_node_coords(self):
+        # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
+        loc_coords = np.zeros((self._rank, self._ncount))
+
+        loc_coords[0, 0] = -1.0
+        loc_coords[0, 1] = 1.0
+        loc_coords[0, 2] = 1.0
+        loc_coords[0, 3] = -1.0
+        loc_coords[0, 4] = 0.0
+        loc_coords[0, 5] = 1.0
+        loc_coords[0, 6] = 0.0
+        loc_coords[0, 7] = -1.0
+        loc_coords[0, 8] = 0.0
+        loc_coords[1, 0] = -1.0
+        loc_coords[1, 1] = -1.0
+        loc_coords[1, 2] = 1.0
+        loc_coords[1, 3] = 1.0
+        loc_coords[1, 4] = -1.0
+        loc_coords[1, 5] = 0.0
+        loc_coords[1, 6] = 1.0
+        loc_coords[1, 7] = 0.0
+        loc_coords[1, 8] = 0.0
+
+        return loc_coords
+
+    def eval_shape_functions(self, loc_point):
+        # Evalulate the shape functions in the local coordinate system
+        sfuncs = np.zeros(self._ncount)
+
+        x = loc_point[0]
+        y = loc_point[1]
+
+        sfuncs[0] = 0.25 * x * (x - 1) * y * (y - 1)
+        sfuncs[1] = 0.25 * x * (x + 1) * y * (y - 1)
+        sfuncs[2] = 0.25 * x * (x + 1) * y * (y + 1)
+        sfuncs[3] = 0.25 * x * (x - 1) * y * (y + 1)
+
+        sfuncs[4] = 0.5 * (1 - x**2) * y * (y - 1)
+        sfuncs[5] = 0.5 * x * (x + 1) * (1 - y**2)
+        sfuncs[6] = 0.5 * (1 - x**2) * y * (y + 1)
+        sfuncs[7] = 0.5 * x * (x - 1) * (1 - y**2)
+
+        sfuncs[8] = (1 - x**2) * (1 - y**2)
+
+        return sfuncs
+
+    def eval_shape_gradients(self, loc_point):
+        # Evaluate the shape gradients in the local coordinate system
+        # Note that no weights are applied!
+        sgrads = np.zeros((self._ncount, self._rank))
+
+        x = loc_point[0]
+        y = loc_point[1]
+
+        sgrads[0, 0] = 0.5 * (x - 0.5) * y * (y - 1)
+        sgrads[0, 1] = 0.5 * x * (x - 1) * (y - 0.5)
+        sgrads[1, 0] = 0.5 * (x + 0.5) * y * (y - 1)
+        sgrads[1, 1] = 0.5 * x * (x + 1) * (y - 0.5)
+        sgrads[2, 0] = 0.5 * (x + 0.5) * y * (y + 1)
+        sgrads[2, 1] = 0.5 * x * (x + 1) * (y + 0.5)
+        sgrads[3, 0] = 0.5 * (x - 0.5) * y * (y + 1)
+        sgrads[3, 1] = 0.5 * x * (x - 1) * (y + 0.5)
+
+        sgrads[4, 0] = -x * y * (y - 1)
+        sgrads[4, 1] = (1 - x**2) * (y - 0.5)
+        sgrads[5, 0] = (x + 0.5) * (1 - y**2)
+        sgrads[5, 1] = x * (x + 1) * -y
+        sgrads[6, 0] = -x * y * (y + 1)
+        sgrads[6, 1] = (1 - x**2) * (y + 0.5)
+        sgrads[7, 0] = (x - 0.5) * (1 - y**2)
+        sgrads[7, 1] = x * (x - 1) * -y
+
+        sgrads[8, 0] = (-2 * x) * (1 - y**2)
+        sgrads[8, 1] = (1 - x**2) * (-2 * y)
 
         return sgrads
 
@@ -343,5 +451,6 @@ def declare(factory):
     factory.declare_shape('Triangle3', Tri3Shape)
     factory.declare_shape('Triangle6', Tri6Shape)
     factory.declare_shape('Quad4', Quad4Shape)
+    factory.declare_shape('Quad9', Quad9Shape)
     factory.declare_shape('Line2', Line2Shape)
     factory.declare_shape('Line3', Line3Shape)

@@ -43,8 +43,8 @@ conman = Constrainer(c, K)
 Kc = conman.get_output_matrix()
 fc = conman.get_rhs(f)
 
-xf = np.linspace(0, 10, len(u))
-xc = np.linspace(0, 10, len(u_coarse))
+xf = np.linspace(0, 1, len(u))
+xc = np.linspace(0, 1, len(u_coarse))
 
 step = int((len(xf)-1) / (len(xc)-1))
 

@@ -1,0 +1,88 @@
+import sys
+sys.path.append('../../')
+
+import matplotlib.pyplot as plt
+import numpy as np
+from jive.app import main
+import jive.util.proputils as pu
+from quickviewer import QuickViewer
+from copy import deepcopy
+
+props = pu.parse_file('cantilever-hole.pro')
+
+props_c = {}
+props_c['init'] = deepcopy(props['gpinit'])
+props_c['init']['type'] = 'Init'
+props_c['solver'] = deepcopy(props['gpsolver'])
+props_c['solver']['type'] = 'Linsolve'
+props_c['model'] = deepcopy(props['model'])
+props_c['model']['models'] = '[ solid, load, diri ]'
+props_c['init']['mesh']['file'] = 'meshes/q4/hole-9.msh'
+props_c['model']['solid']['shape']['type'] = 'Quad4'
+props_c['model']['load']['shape']['type'] = 'Quad4'
+
+globdat_c = main.jive(props_c)
+u_coarse = globdat_c['state0']
+strain_xx_c = globdat_c['tables']['strain']['xx']
+strain_yy_c = globdat_c['tables']['strain']['yy']
+strain_c = np.append(strain_xx_c, strain_yy_c)
+
+globdat = main.jive(props)
+K = globdat['matrix0']
+M = globdat['matrix2']
+u = globdat['state0']
+strain_xx = globdat['tables']['strain']['xx']
+strain_yy = globdat['tables']['strain']['yy']
+strain = np.append(strain_xx, strain_yy)
+
+f_prior = globdat['f_prior']
+u_prior = globdat['u_prior']
+f_post = globdat['f_post']
+u_post = globdat['u_post']
+
+std_f_prior = globdat['std_f_prior']
+std_u_prior = globdat['std_u_prior']
+std_f_post = globdat['std_f_post']
+std_u_post = globdat['std_u_post']
+
+samples_f_prior = globdat['samples_f_prior']
+samples_u_prior = globdat['samples_u_prior']
+samples_f_post = globdat['samples_f_post']
+samples_u_post = globdat['samples_u_post']
+
+Phi = globdat['Phi']
+
+err = abs(u - Phi @ u_coarse)
+err_grad = abs(strain - Phi @ strain_c)
+
+QuickViewer(u_post, globdat, title=r'Posterior mean diplacement ($\bar u$)')
+
+QuickViewer(u, globdat, title=r'Exact displacement ($u$)')
+
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err, globdat, ax=ax1, title=r'Discretization error ($|u_f - u_c|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
+plt.show()
+
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err_grad, globdat, ax=ax1, comp=0, title=r'Discretization error ($|\varepsilon_f^{xx} - \varepsilon_c^{xx}|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
+plt.show()
+
+fig, (ax1, ax2) = plt.subplots(2, 1, tight_layout=True)
+QuickViewer(err_grad, globdat, ax=ax1, comp=1, title=r'Discretization error ($|\varepsilon_f^{yy} - \varepsilon_c^{yy}|$)')
+QuickViewer(std_u_post, globdat, ax=ax2, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+# plt.savefig(fname='img/'+props['init']['mesh']['file'].replace('.msh','').replace('beam_', '')+'.pdf')
+plt.show()
+
+QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
+
+for i, sample in enumerate(samples_u_prior.T[:3]):
+
+    QuickViewer(sample, globdat, scale=1., title=r'Prior samples from $u$ (sample {})'.format(i+1))
+
+for i, sample in enumerate(samples_u_post.T[:3]):
+
+    QuickViewer(sample, globdat, scale=1., title=r'Posterior samples from $u$ (sample {})'.format(i+1))

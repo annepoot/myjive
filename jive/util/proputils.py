@@ -47,8 +47,12 @@ def read_level(line, i, sp):
 
 
 def parse_list(lst, typ=str):
-    stringlist = lst.strip('[').strip(']').replace(' ', '').split(',')
-    return list(map(typ, stringlist))
+    shortlist = lst.strip('[').strip(']').replace(' ', '')
+
+    if shortlist == '':
+        return []
+    else:
+        return list(map(typ, shortlist.split(',')))
 
 
 def uncomment_file(fileraw):

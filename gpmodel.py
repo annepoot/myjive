@@ -104,13 +104,17 @@ class GPModel(Model):
         # Get the number of observations (which is the number of dofs in the coarse mesh)
         self._nobs = globdat[gn.COARSEMESH][gn.DOFSPACE].dof_count()
 
+        # Get the phi matrix
+        self._Phi = self._get_phi(globdat)
+
+        # Store Phi in globdat
+        globdat['Phi'] = self._Phi
 
     def _configure_fem(self, params, globdat):
 
         # Get K, M and f from globdat
         K = globdat.get(gn.MATRIX0)
         M = globdat.get(gn.MATRIX2)
-        u = globdat.get(gn.STATE0)
         f = globdat.get(gn.EXTFORCE)
         c = globdat.get(gn.CONSTRAINTS)
 
@@ -126,14 +130,10 @@ class GPModel(Model):
         self._m = params[gppn.PRIORMEAN]
         self._cdofs, self._cvals = c.get_constraints()
 
-        # Get the phi matrix
-        self._Phi = self._get_phi(globdat)
-
         # Constrain the phi matrix based on Dirichlet BCs
         self._Phic = self._constrain_phi(self._Phi, self._cdofs)
 
-        # Store Phi and Phic in globdat
-        globdat['Phi'] = self._Phi
+        # Store Phic in globdat
         globdat['Phic'] = self._Phic
 
         # Get the observation operator

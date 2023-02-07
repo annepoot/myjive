@@ -14,40 +14,17 @@ gpinit =
     file = meshes/q4/hole-9.msh;
   };
 
-  nodeGroups = [ l, lt, lb, r, rt, rb ];
+  nodeGroups = [ l, rm ];
 
   l =
   {
     xtype = min;
   };
 
-  lt =
-  {
-    xtype = min;
-    ytype = max;
-  };
-
-  lb =
-  {
-    xtype = min;
-    ytype = min;
-  };
-
-  r =
+  rm =
   {
     xtype = max;
-  };
-
-  rt =
-  {
-    xtype = max;
-    ytype = max;
-  };
-
-  rb =
-  {
-    xtype = max;
-    ytype = min;
+    ytype = mid;
   };
 };
 
@@ -63,7 +40,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, gp, load, diri, neum ];
+  models = [ solid, gp, diri, neum];
 
   solid =
   {
@@ -100,7 +77,7 @@ model =
       func = alpha**2 * M;
       hyperparams =
       {
-        alpha = opt;
+        alpha = 1.;
       };
     };
 
@@ -113,37 +90,21 @@ model =
     };
   };
 
-  load =
-  {
-    type = Load;
-
-    elements = all;
-
-    dofs   = [ dy ];
-    values = [ 0. ];
-
-    shape =
-    {
-      type = Quad9;
-      intScheme = Gauss9;
-    };
-  };
-
   diri =
   {
     type = Dirichlet;
 
-    groups = [ l,  lb ];
-    dofs   = [ dx, dy ];
-    values = [ 0., 0. ];
+    groups = [ l,  l , rm ];
+    dofs   = [ dx, dy, dx ];
+    values = [ 0., 0., 1. ];
   };
 
   neum =
   {
     type = Neumann;
 
-    groups = [ rt ];
-    dofs   = [ dy ];
-    values = [ 1. ];
+    groups = [];
+    dofs   = [];
+    values = [];
   };
 };

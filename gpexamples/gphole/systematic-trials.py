@@ -9,39 +9,61 @@ from quickviewer import QuickViewer
 from copy import deepcopy
 from plotutils import create_dat
 
-props = pu.parse_file('cantilever-hole.pro')
+props = pu.parse_file('systematic-trials.pro')
 
 for load in ['forced displacement', 'point load']:
-    for direction in ['horizontal', 'vertical']:
+    for direction in ['horizontal', 'vertical', 'poisson']:
         for loc in [1, 3, 5, 7, 9]:
+            if direction == 'poisson':
+                model = 'poisson'
+            else:
+                model = 'solid'
+
+            props['model']['models'] = '[' + model + ',gp,diri,neum]'
+
             if load == 'forced displacement':
-                props['model']['diri']['groups'] = '[l,l,rm]'
                 props['model']['neum']['groups'] = '[]'
                 props['model']['neum']['dofs']   = '[]'
                 props['model']['neum']['values'] = '[]'
-
-                if direction == 'horizontal':
-                    props['model']['diri']['dofs']   = '[dx,dy,dx]'
-                    props['model']['diri']['values'] = '[0.,0.,1.]'
-                elif direction == 'vertical':
-                    props['model']['diri']['dofs']   = '[dx,dy,dy]'
-                    props['model']['diri']['values'] = '[0.,0.,-1.]'
+                if model == 'solid':
+                    props['model']['diri']['groups'] = '[l,l,rm]'
+                    if direction == 'horizontal':
+                        props['model']['diri']['dofs']   = '[dx,dy,dx]'
+                        props['model']['diri']['values'] = '[0.,0.,1.]'
+                    elif direction == 'vertical':
+                        props['model']['diri']['dofs']   = '[dx,dy,dy]'
+                        props['model']['diri']['values'] = '[0.,0.,-1.]'
+                    else:
+                        raise ValueError('direction must be "horizontal" or "vertical"')
+                elif model == 'poisson':
+                    props['model']['diri']['groups'] = '[l,rm]'
+                    props['model']['diri']['dofs']   = '[u,u]'
+                    props['model']['diri']['values'] = '[0.,1.]'
                 else:
-                    raise ValueError('direction must be "horizontal" or "vertical"')
+                    raise ValueError('model must be "solid" or "poisson"')
             elif load == 'point load':
-                props['model']['diri']['groups'] = '[l,l]'
-                props['model']['diri']['dofs']   = '[dx,dy]'
-                props['model']['diri']['values'] = '[0.,0.]'
-                props['model']['neum']['groups'] = '[rm]'
-
-                if direction == 'horizontal':
-                    props['model']['neum']['dofs']   = '[dx]'
+                if model == 'solid':
+                    props['model']['diri']['groups'] = '[l,l]'
+                    props['model']['diri']['dofs']   = '[dx,dy]'
+                    props['model']['diri']['values'] = '[0.,0.]'
+                    props['model']['neum']['groups'] = '[rm]'
+                    if direction == 'horizontal':
+                        props['model']['neum']['dofs']   = '[dx]'
+                        props['model']['neum']['values'] = '[1.]'
+                    elif direction == 'vertical':
+                        props['model']['neum']['dofs']   = '[dy]'
+                        props['model']['neum']['values'] = '[-1.]'
+                    else:
+                        raise ValueError('direction must be "horizontal" or "vertical"')
+                elif model == 'poisson':
+                    props['model']['diri']['groups'] = '[l]'
+                    props['model']['diri']['dofs']   = '[u]'
+                    props['model']['diri']['values'] = '[0.]'
+                    props['model']['neum']['groups'] = '[rm]'
+                    props['model']['neum']['dofs']   = '[u]'
                     props['model']['neum']['values'] = '[1.]'
-                elif direction == 'vertical':
-                    props['model']['neum']['dofs']   = '[dy]'
-                    props['model']['neum']['values'] = '[-1.]'
                 else:
-                    raise ValueError('direction must be "horizontal" or "vertical"')
+                    raise ValueError('model must be "solid" or "poisson"')
             else:
                 raise ValueError('load must be "forced displacement" or "point load"')
 
@@ -54,9 +76,9 @@ for load in ['forced displacement', 'point load']:
             props_c['solver'] = deepcopy(props['gpsolver'])
             props_c['solver']['type'] = 'Linsolve'
             props_c['model'] = deepcopy(props['model'])
-            props_c['model']['models'] = '[ solid, diri, neum ]'
+            props_c['model']['models'] = '[ ' + model + ' , diri, neum ]'
             props_c['init']['mesh']['file'] = props['gpinit']['coarseMesh']['file']
-            props_c['model']['solid']['shape']['type'] = 'Quad4'
+            props_c['model'][model]['shape']['type'] = 'Quad4'
 
             props_e = {}
             props_e['gpinit'] = deepcopy(props['gpinit'])
@@ -65,14 +87,11 @@ for load in ['forced displacement', 'point load']:
             props_e['solver'] = deepcopy(props['gpsolver'])
             props_e['solver']['type'] = 'Linsolve'
             props_e['model'] = deepcopy(props['model'])
-            props_e['model']['models'] = '[ solid, gp, diri, neum ]'
+            props_e['model']['models'] = '[ ' + model + ' , gp, diri, neum ]'
             props_e['model']['gp']['shape']['type'] = 'Quad9'
 
             globdat_c = main.jive(props_c)
             u_c = globdat_c['state0']
-            strain_xx_c = globdat_c['tables']['strain']['xx']
-            strain_yy_c = globdat_c['tables']['strain']['yy']
-            strain_c = np.append(strain_xx_c, strain_yy_c)
 
             globdat_e = main.jive(props_e)
             u_e = globdat_e['state0']
@@ -81,9 +100,6 @@ for load in ['forced displacement', 'point load']:
 
             globdat = main.jive(props)
             u = globdat['state0']
-            strain_xx = globdat['tables']['strain']['xx']
-            strain_yy = globdat['tables']['strain']['yy']
-            strain = np.append(strain_xx, strain_yy)
 
             f_prior = globdat['f_prior']
             u_prior = globdat['u_prior']
@@ -97,10 +113,8 @@ for load in ['forced displacement', 'point load']:
 
             Phi = globdat['Phi']
             u_c = Phi @ u_c
-            strain_c = Phi @ strain_c
 
             err = abs(u - u_c)
-            err_strain = abs(strain - strain_c)
             err_post = abs(u - u_post)
             err_exact = abs(u_e - u)
             err_exact_post = abs(u_e - u_post)
@@ -108,30 +122,43 @@ for load in ['forced displacement', 'point load']:
             info = '{}, {}, hole {}'.format(load, direction, loc)
             fname = info.replace(', ', '_').replace(' ', '-')
 
-            fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
-            QuickViewer(err, globdat, comp=0, ax=ax1, title=r'Discretization error ($x$) ($|u_f - u_c|$)')
-            QuickViewer(err_post, globdat, comp=0, ax=ax2, title=r'Discretization error ($x$) ($|u_f - \bar{u}|$)')
-            QuickViewer(err_exact, globdat, comp=0, ax=ax3, title=r'Discretization error ($x$) ($|u_e - u_f|$)')
-            QuickViewer(err_exact_post, globdat, comp=0, ax=ax4, title=r'Discretization error ($x$) ($|u_e - \bar{u}|$)')
-            QuickViewer(std_u_post, globdat, comp=0, ax=ax5, title=r'Posterior standard deviation ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
-            fig.suptitle(info)
-            plt.savefig(fname='img/'+fname+'_x.png', dpi=450)
-            plt.show()
+            if model == 'solid':
+                fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
+                QuickViewer(err, globdat, comp=0, ax=ax1, title=r'Discretization error ($x$) ($|u_f - u_c|$)')
+                QuickViewer(err_post, globdat, comp=0, ax=ax2, title=r'Discretization error ($x$) ($|u_f - \bar{u}|$)')
+                QuickViewer(err_exact, globdat, comp=0, ax=ax3, title=r'Discretization error ($x$) ($|u_e - u_f|$)')
+                QuickViewer(err_exact_post, globdat, comp=0, ax=ax4, title=r'Discretization error ($x$) ($|u_e - \bar{u}|$)')
+                QuickViewer(std_u_post, globdat, comp=0, ax=ax5, title=r'Posterior standard deviation ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                fig.suptitle(info)
+                plt.savefig(fname='img/'+fname+'_x.png', dpi=450)
+                plt.show()
 
-            fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
-            QuickViewer(err, globdat, comp=1, ax=ax1, title=r'Discretization error ($y$) ($|u_f - u_c|$)')
-            QuickViewer(err_post, globdat, comp=1, ax=ax2, title=r'Discretization error ($y$) ($|u_f - \bar{u}|$)')
-            QuickViewer(err_exact, globdat, comp=1, ax=ax3, title=r'Discretization error ($y$) ($|u_e - u_f|$)')
-            QuickViewer(err_exact_post, globdat, comp=1, ax=ax4, title=r'Discretization error ($y$) ($|u_e - \bar{u}|$)')
-            QuickViewer(std_u_post, globdat, comp=1, ax=ax5, title=r'Posterior standard deviation ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
-            fig.suptitle(info)
-            plt.savefig(fname='img/'+fname+'_y.png', dpi=450)
-            plt.show()
+                fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
+                QuickViewer(err, globdat, comp=1, ax=ax1, title=r'Discretization error ($y$) ($|u_f - u_c|$)')
+                QuickViewer(err_post, globdat, comp=1, ax=ax2, title=r'Discretization error ($y$) ($|u_f - \bar{u}|$)')
+                QuickViewer(err_exact, globdat, comp=1, ax=ax3, title=r'Discretization error ($y$) ($|u_e - u_f|$)')
+                QuickViewer(err_exact_post, globdat, comp=1, ax=ax4, title=r'Discretization error ($y$) ($|u_e - \bar{u}|$)')
+                QuickViewer(std_u_post, globdat, comp=1, ax=ax5, title=r'Posterior standard deviation ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                fig.suptitle(info)
+                plt.savefig(fname='img/'+fname+'_y.png', dpi=450)
+                plt.show()
 
-            create_dat(data=[u,u_c,strain,strain_c,err,
-                             err_strain,err_post,err_exact,err_exact_post,
+            elif model == 'poisson':
+                fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
+                QuickViewer(err, globdat, comp=0, ax=ax1, title=r'Discretization error ($u$) ($|u_f - u_c|$)')
+                QuickViewer(err_post, globdat, comp=0, ax=ax2, title=r'Discretization error ($u$) ($|u_f - \bar{u}|$)')
+                QuickViewer(err_exact, globdat, comp=0, ax=ax3, title=r'Discretization error ($u$) ($|u_e - u_f|$)')
+                QuickViewer(err_exact_post, globdat, comp=0, ax=ax4, title=r'Discretization error ($u$) ($|u_e - \bar{u}|$)')
+                QuickViewer(std_u_post, globdat, comp=0, ax=ax5, title=r'Posterior standard deviation ($u$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                fig.suptitle(info)
+                plt.savefig(fname='img/'+fname+'_u.png', dpi=450)
+                plt.show()
+
+            else:
+                raise ValueError('model must be "solid" or "poisson"')
+
+            create_dat(data=[u,u_c,err,err_post,err_exact,err_exact_post,
                              u_prior,u_post,std_u_prior,std_u_post],
-                       headers=['u','u_c','strain','strain_c','error',
-                                'error_strain','error_post','error_exact','error_exact_post',
+                       headers=['u','u_c','error','error_post','error_exact','error_exact_post',
                                 'u_prior','u_post','std_u_prior','std_u_post'],
                        fname='results/'+fname+'.dat')

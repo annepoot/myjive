@@ -112,6 +112,13 @@ for load in ['forced displacement', 'point load']:
             std_u_post = globdat['std_u_post']
 
             Phi = globdat['Phi']
+            Phi_sub = np.zeros_like(Phi)
+
+            for i in range(Phi.shape[0]):
+                for j in range(Phi.shape[1]):
+                    if np.isclose(Phi[i,j], 1.):
+                        Phi_sub[i,j] = 1.
+
             u_c = Phi @ u_c
 
             err = abs(u - u_c)
@@ -119,26 +126,29 @@ for load in ['forced displacement', 'point load']:
             err_exact = abs(u_e - u)
             err_exact_post = abs(u_e - u_post)
 
+            std_u_post_proj = np.linalg.solve(Phi.T @ Phi, Phi.T @ std_u_post)
+            std_u_post_sub = Phi_sub.T @ std_u_post
+
             info = '{}, {}, hole {}'.format(load, direction, loc)
             fname = info.replace(', ', '_').replace(' ', '-')
 
             if model == 'solid':
                 fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
                 QuickViewer(err, globdat, comp=0, ax=ax1, title=r'Discretization error ($x$) ($|u_f - u_c|$)')
-                QuickViewer(err_post, globdat, comp=0, ax=ax2, title=r'Discretization error ($x$) ($|u_f - \bar{u}|$)')
-                QuickViewer(err_exact, globdat, comp=0, ax=ax3, title=r'Discretization error ($x$) ($|u_e - u_f|$)')
-                QuickViewer(err_exact_post, globdat, comp=0, ax=ax4, title=r'Discretization error ($x$) ($|u_e - \bar{u}|$)')
-                QuickViewer(std_u_post, globdat, comp=0, ax=ax5, title=r'Posterior standard deviation ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(err_exact, globdat, comp=0, ax=ax2, title=r'Discretization error ($x$) ($|u_e - u_f|$)')
+                QuickViewer(std_u_post, globdat, comp=0, ax=ax3, title=r'Posterior std ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_proj, globdat_c, comp=0, ax=ax4, title=r'Posterior std (projected) ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_sub, globdat_c, comp=0, ax=ax5, title=r'Posterior std (subselected) ($x$) ($\sqrt{\bar \Sigma_{ii}}$)')
                 fig.suptitle(info)
                 plt.savefig(fname='img/'+fname+'_x.png', dpi=450)
                 plt.show()
 
                 fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
                 QuickViewer(err, globdat, comp=1, ax=ax1, title=r'Discretization error ($y$) ($|u_f - u_c|$)')
-                QuickViewer(err_post, globdat, comp=1, ax=ax2, title=r'Discretization error ($y$) ($|u_f - \bar{u}|$)')
-                QuickViewer(err_exact, globdat, comp=1, ax=ax3, title=r'Discretization error ($y$) ($|u_e - u_f|$)')
-                QuickViewer(err_exact_post, globdat, comp=1, ax=ax4, title=r'Discretization error ($y$) ($|u_e - \bar{u}|$)')
-                QuickViewer(std_u_post, globdat, comp=1, ax=ax5, title=r'Posterior standard deviation ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(err_exact, globdat, comp=1, ax=ax2, title=r'Discretization error ($y$) ($|u_e - u_f|$)')
+                QuickViewer(std_u_post, globdat, comp=1, ax=ax3, title=r'Posterior std ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_proj, globdat_c, comp=1, ax=ax4, title=r'Posterior std (projected) ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_sub, globdat_c, comp=1, ax=ax5, title=r'Posterior std (subselected) ($y$) ($\sqrt{\bar \Sigma_{ii}}$)')
                 fig.suptitle(info)
                 plt.savefig(fname='img/'+fname+'_y.png', dpi=450)
                 plt.show()
@@ -146,10 +156,10 @@ for load in ['forced displacement', 'point load']:
             elif model == 'poisson':
                 fig, (ax1, ax2, ax3, ax4, ax5) = plt.subplots(5, 1, figsize=(8,12), tight_layout=True)
                 QuickViewer(err, globdat, comp=0, ax=ax1, title=r'Discretization error ($u$) ($|u_f - u_c|$)')
-                QuickViewer(err_post, globdat, comp=0, ax=ax2, title=r'Discretization error ($u$) ($|u_f - \bar{u}|$)')
-                QuickViewer(err_exact, globdat, comp=0, ax=ax3, title=r'Discretization error ($u$) ($|u_e - u_f|$)')
-                QuickViewer(err_exact_post, globdat, comp=0, ax=ax4, title=r'Discretization error ($u$) ($|u_e - \bar{u}|$)')
-                QuickViewer(std_u_post, globdat, comp=0, ax=ax5, title=r'Posterior standard deviation ($u$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(err_exact, globdat, comp=0, ax=ax2, title=r'Discretization error ($u$) ($|u_e - u_f|$)')
+                QuickViewer(std_u_post, globdat, comp=0, ax=ax3, title=r'Posterior std ($u$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_proj, globdat_c, comp=0, ax=ax4, title=r'Posterior std (projected) ($u$) ($\sqrt{\bar \Sigma_{ii}}$)')
+                QuickViewer(std_u_post_sub, globdat_c, comp=0, ax=ax5, title=r'Posterior std (subselected) ($u$) ($\sqrt{\bar \Sigma_{ii}}$)')
                 fig.suptitle(info)
                 plt.savefig(fname='img/'+fname+'_u.png', dpi=450)
                 plt.show()

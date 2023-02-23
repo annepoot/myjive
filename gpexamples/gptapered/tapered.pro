@@ -35,9 +35,9 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
+  priorMean = dirichlet;
   nsample = 30;
   seed = 0;
-  postproject = False;
 };
 
 model =
@@ -98,7 +98,7 @@ model =
 
     elements = all;
 
-    dofs = [ dx ];
+    dofs   = [ dx ];
     values = [ 3. ];
 
     shape =

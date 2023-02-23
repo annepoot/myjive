@@ -10,6 +10,7 @@ from jive.implicit.linsolvemodule import LinsolveModule
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 POSTPROJECT = 'postproject'
+PRIORMEAN = 'priorMean'
 NSAMPLE = 'nsample'
 SEED = 'seed'
 
@@ -24,6 +25,10 @@ class GPExactModule(LinsolveModule):
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
 
         self._postproject = bool(eval(myprops.get(POSTPROJECT, 'False')))
+
+        self._priormean = myprops.get(PRIORMEAN, 'zero')
+        if self._priormean not in ['zero', 'dirichlet', 'neumann']:
+            raise ValueError('priorMean has to be "zero", "dirichlet" or "neumann".')
 
         self._nsample = int(myprops.get(NSAMPLE,1))
         self._seed = eval(myprops.get(SEED,'None'))
@@ -50,8 +55,18 @@ class GPExactModule(LinsolveModule):
             globdat[gn.MATRIX2] = M
 
         # Get the rhs prior mean
-        mf = self.get_neumann_vector(globdat)
-        m = self._solver.solve(mf)
+        if self._priormean == 'zero':
+            m = np.zeros_like(globdat[gn.STATE0])
+        else:
+            if self._priormean == 'dirichlet':
+                mf = np.zeros_like(globdat[gn.EXTFORCE])
+            elif self._priormean == 'neumann':
+                mf = self.get_neumann_vector(globdat)
+            else:
+                raise ValueError('priorMean has to be "zero", "dirichlet" or "neumann".')
+
+            m = self._solver.solve(mf)
+
         params[gppn.PRIORMEAN] = m
 
         # Configure the GP based on the fine FEM results

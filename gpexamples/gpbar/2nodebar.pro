@@ -35,6 +35,7 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
+  priorMean = neumann;
   nsample = 30;
   seed = 0;
 };
@@ -113,7 +114,7 @@ model =
     type = Neumann;
 
     groups = [ mid ];
-    dofs = [ dx ];
+    dofs   = [ dx ];
     values = [ 5.0 ];
   };
 };

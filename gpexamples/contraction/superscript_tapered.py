@@ -1,12 +1,13 @@
 import sys
 sys.path.append('../../')
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+from copy import deepcopy
+
 from jive.app import main
 import jive.util.proputils as pu
 from jive.solver.constrainer import Constrainer
-from copy import deepcopy
 
 def mesher_lin(L, n, fname='2nodebar_coarse'):
     dx = L / n
@@ -54,6 +55,9 @@ u_prior = globdat['u_prior']
 f_post = globdat['f_post']
 u_post = globdat['u_post']
 
+Sigma_prior = globdat['var_u_prior']
+Sigma_post = globdat['var_u_post']
+
 std_f_prior = globdat['std_f_prior']
 std_u_prior = globdat['std_u_prior']
 std_f_post = globdat['std_f_post']
@@ -63,26 +67,6 @@ samples_f_prior = globdat['samples_f_prior']
 samples_u_prior = globdat['samples_u_prior']
 samples_f_post = globdat['samples_f_post']
 samples_u_post = globdat['samples_u_post']
-
-def get_error_rel(u, u_coarse, Phi):
-    error = Phi @ u_coarse - u
-    error_rel = np.zeros(u.size)
-
-    for i in range(len(u)):
-        if np.isclose(u[i], 0):
-            if np.isclose(error[i], 0):
-                error_rel[i] = 0
-            else:
-                error_rel[i] = np.nan
-        else:
-            error_rel[i] = error[i] / u[i]
-
-    return abs(error_rel)
-
-error = abs(Phi @ u_coarse - u)
-error_rel = get_error_rel(u, u_coarse, Phi)
-
-cont_hadamard = std_u_prior / std_u_post
 
 fig, (ax1, ax2) = plt.subplots(nrows = 2, figsize=(6,6), tight_layout=True)
 ax1.plot(xf, u_post, label='posterior mean')
@@ -94,11 +78,9 @@ ax1.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3
 ax1.plot(xf, Phi @ u_coarse, label='coarse solution')
 ax1.plot(xf, u, label='fine solution')
 ax1.legend(loc='upper left')
-ax2.plot(xf, error_rel, label=r'$(u_c - u_f)/u_f$')
-ax2.plot(xf, 1 / cont_hadamard, label=r'$\sigma_{prior} / \sigma_{post}$')
-ax2.set_ylim(0, 0.2)
+ax2.plot(xf, u - u_post, label=r'$u_f - u^*$')
+ax2.plot(xf, Sigma_post @ np.linalg.solve(Sigma_prior, u - u_prior), label=r'$\Sigma_{post} \Sigma_{prior}^{-1} u_f$')
 ax2.legend(loc='upper center')
 ax1.set_title('Prior and posterior distribution of the tapered bar problem')
-ax2.set_title('Relative error and inverse posterior contraction')
-# plt.savefig('img/bar-contraction_coarse-{}_fine-{}.pdf'.format(len(xc)-1, len(xf)-1))
+ax2.set_title('Discretization error vs posterior contraction')
 plt.show()

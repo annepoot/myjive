@@ -42,6 +42,9 @@ u_prior = globdat['u_prior']
 f_post = globdat['f_post']
 u_post = globdat['u_post']
 
+Sigma_prior = globdat['var_u_prior']
+Sigma_post = globdat['var_u_post']
+
 std_f_prior = globdat['std_f_prior']
 std_u_prior = globdat['std_u_prior']
 std_f_post = globdat['std_f_post']
@@ -52,29 +55,15 @@ samples_u_prior = globdat['samples_u_prior']
 samples_f_post = globdat['samples_f_post']
 samples_u_post = globdat['samples_u_post']
 
-def get_error_rel(u, u_coarse, Phi):
-    error = Phi @ u_coarse - u
-    error_rel = np.zeros(u.size)
+contraction = Sigma_post @ np.linalg.solve(Sigma_prior, u)
 
-    for i in range(len(u)):
-        if np.isclose(u[i], 0):
-            if np.isclose(error[i], 0):
-                error_rel[i] = 0
-            else:
-                error_rel[i] = np.nan
-        else:
-            error_rel[i] = error[i] / u[i]
+QuickViewer(u, globdat, title=r'$u_f$')
 
-    return abs(error_rel)
+QuickViewer(u_post, globdat, title=r'$u^*$')
 
-error = abs(Phi @ u_coarse - u)
-error_rel = get_error_rel(u, u_coarse, Phi)
+QuickViewer(u - u_post, globdat, title=r'$u_f - u^*$')
 
-cont_hadamard = std_u_post / std_u_prior
-
-QuickViewer(error_rel, globdat, mincolor=0, maxcolor=1, title=r'$|u_c - u_f| / u_f')
-
-QuickViewer(cont_hadamard, globdat, mincolor=0, maxcolor=0.1, title=r'$\sigma_{prior}/\sigma_{post}$')
+QuickViewer(contraction, globdat, title=r'$\Sigma^* \Sigma^{-1} u_f$')
 
 def get_bottom_values(u, globdat):
     dofs = globdat['dofSpace']
@@ -104,25 +93,19 @@ def get_bottom_values(u, globdat):
     return np.array(x_bottom), np.array(u_bottom)
 
 xf, uf = get_bottom_values(u, globdat)
+xf, mf = get_bottom_values(u_post, globdat)
 xc, uc = get_bottom_values(u_coarse, globdat_c)
-xf, ef = get_bottom_values(error_rel, globdat)
-xf, cf = get_bottom_values(cont_hadamard, globdat)
+xf, cf = get_bottom_values(contraction, globdat)
 
 fig, (ax1, ax2) = plt.subplots(nrows = 2, figsize=(6,6), tight_layout=True)
-# ax1.plot(xf, u_post, label='posterior mean')
-# ax1.plot(xf, u_prior, label='prior mean')
-# ax1.plot(xf, samples_u_post, color='gray', linewidth=0.2)
-# ax1.plot(xf, samples_u_prior, color='gray', linewidth=0.2)
-# ax1.fill_between(xf, u_post - 2*std_u_post, u_post + 2*std_u_post, alpha=0.3)
-# ax1.fill_between(xf, u_prior - 2*std_u_prior, u_prior + 2*std_u_prior, alpha=0.3)
+ax1.plot(xc, uc, label='coarse solution')
 ax1.plot(xc, uc, label='coarse solution')
 ax1.plot(xf, uf, label='fine solution')
-ax1.legend(loc='upper center')
-ax2.plot(xf, ef, label=r'$(u_c - u_f)/u_f$')
-ax2.plot(xf, cf, label=r'$\sigma_{prior} / \sigma_{post}$')
-ax2.set_ylim(0, 0.8)
-ax2.legend(loc='upper center')
+ax1.legend(loc='lower center')
+ax2.plot(xf, uf - mf, label=r'$u_f - u^*$')
+ax2.plot(xf, cf, label=r'$\Sigma^* \Sigma^{-1} u$')
+ax2.legend(loc='lower center')
 ax1.set_title('Vertical displacement at bottom beam')
-ax2.set_title('Relative error and inverse posterior contraction')
+ax2.set_title('Discretization error vs posterior contraction')
 # plt.savefig('img/beam-contraction.pdf')
 plt.show()

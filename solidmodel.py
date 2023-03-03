@@ -5,7 +5,7 @@ from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
 from jive.model.model import Model
 from material import new_material
-from jive.util.xtable import XTable
+from jive.util.xtable import XTable, to_xtable
 import jive.util.proputils as pu
 
 ELEMENTS = 'elements'
@@ -142,12 +142,11 @@ class SolidModel(Model):
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_strains(self, params, globdat):
-        xtable = params[pn.TABLE]
+        table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
         # Convert the table to an XTable and store the original class
-        cls_ = xtable.__class__
-        xtable.__class__ = XTable
+        xtable = to_xtable(table)
 
         # Get the STATE0 vector if no custom displacement field is provided
         if pn.SOLUTION in params:
@@ -204,15 +203,14 @@ class SolidModel(Model):
             xtable.set_col_values(None, jcol, values / tbwts)
 
         # Convert the table back to the original class
-        xtable.__class__ = cls_
+        params[pn.TABLE] = xtable.to_table()
 
     def _get_stresses(self, params, globdat):
-        xtable = params[pn.TABLE]
+        table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
         # Convert the table to an XTable and store the original class
-        cls_ = xtable.__class__
-        xtable.__class__ = XTable
+        xtable = to_xtable(table)
 
         # Get the STATE0 vector if no custom displacement field is provided
         if pn.SOLUTION in params:
@@ -273,15 +271,14 @@ class SolidModel(Model):
             xtable.set_col_values(None, jcol, values / tbwts)
 
         # Convert the table back to the original class
-        xtable.__class__ = cls_
+        params[pn.TABLE] = xtable.to_table()
 
     def _get_stiffness(self, params, globdat):
-        xtable = params[pn.TABLE]
+        table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
         # Convert the table to an XTable and store the original class
-        cls_ = xtable.__class__
-        xtable.__class__ = XTable
+        xtable = to_xtable(table)
 
         # Add the column of the Young's modulus to the table
         jcol = xtable.add_column('')
@@ -318,7 +315,7 @@ class SolidModel(Model):
         xtable.set_col_values(None, jcol, values / tbwts)
 
         # Convert the table back to the original class
-        xtable.__class__ = cls_
+        params[pn.TABLE] = xtable.to_table()
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._rank, self._dofcount))

@@ -4,13 +4,6 @@ from jive.util.table import Table
 
 class XTable(Table):
 
-    def __init__(self, tbl=None):
-        super().__init__()
-
-        if not tbl is None:
-            self._data = tbl._data
-            self._header = tbl._header
-
     def clear_data(self):
         self._data = np.zeros((0, self._header.size()))
 
@@ -81,3 +74,9 @@ class XTable(Table):
 
     def to_table(self):
         self.__class__ = Table
+        return self
+
+
+def to_xtable(table):
+    table.__class__ = XTable
+    return table

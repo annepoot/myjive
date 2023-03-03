@@ -2,9 +2,13 @@ import numpy as np
 
 class Table():
 
-    def __init__(self):
-        self._data = np.zeros((0,0), dtype=float)
-        self._header = np.zeros(0, dtype=str)
+    def __init__(self, tbl=None):
+        if tbl is None:
+            self._data = np.zeros((0,0), dtype=float)
+            self._header = np.zeros(0, dtype=str)
+        else:
+            self._data = tbl._data
+            self._header = tbl._header
 
     def __contains__(self, item):
         return item in self._header

@@ -47,14 +47,14 @@ Phi = globdat['Phi']
 u_coarse = Phi @ u_coarse
 
 # Get the prior and posterior means and standard deviations
-u_prior = globdat['u_prior']
-u_post = globdat['u_post']
-std_u_prior = globdat['std_u_prior']
-std_u_post = globdat['std_u_post']
+u_prior     = globdat['gp']['mean']['prior']['state0']
+u_post      = globdat['gp']['mean']['posterior']['state0']
+std_u_prior = globdat['gp']['std']['prior']['state0']
+std_u_post  = globdat['gp']['std']['posterior']['state0']
 
 # Get the prior and posterior samples
-samples_u_prior = globdat['samples_u_prior']
-samples_u_post = globdat['samples_u_post']
+samples_u_prior = globdat['gp']['samples']['prior']['state0']
+samples_u_post = globdat['gp']['samples']['posterior']['state0']
 
 # Use a fine linspace for plotting
 x = np.linspace(0, 1, len(u))

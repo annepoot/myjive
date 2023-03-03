@@ -73,6 +73,21 @@ class GPExactModule(LinsolveModule):
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
         model.take_action(gpact.CONFIGUREPRIOR, params, globdat)
 
+        # Create a dictionary for the gp output
+        globdat[gn.GP] = {}
+        globdat[gn.GP][gn.MEAN] = {}
+        globdat[gn.GP][gn.MEAN][gn.PRIOR] = {}
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR] = {}
+        globdat[gn.GP][gn.COVARIANCE] = {}
+        globdat[gn.GP][gn.COVARIANCE][gn.PRIOR] = {}
+        globdat[gn.GP][gn.COVARIANCE][gn.POSTERIOR] = {}
+        globdat[gn.GP][gn.STD] = {}
+        globdat[gn.GP][gn.STD][gn.PRIOR] = {}
+        globdat[gn.GP][gn.STD][gn.POSTERIOR] = {}
+        globdat[gn.GP][gn.SAMPLES] = {}
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR] = {}
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR] = {}
+
         # Define a dictionary for the output params
         params = {}
 
@@ -80,41 +95,41 @@ class GPExactModule(LinsolveModule):
         model.take_action(gpact.GETPRIORMEAN, params, globdat)
 
         # Store the prior mean in globdat
-        globdat['u_prior'] = params[gppn.PRIORMEAN]
-        globdat['f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORMEAN]
+        globdat[gn.GP][gn.MEAN][gn.PRIOR][gn.STATE0] = params[gppn.PRIORMEAN]
+        globdat[gn.GP][gn.MEAN][gn.PRIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.PRIORMEAN]
 
         # Get the posterior mean
         model.take_action(gpact.GETPOSTERIORMEAN, params, globdat)
 
         # Store the posterior mean in globdat
-        globdat['u_post'] = params[gppn.POSTERIORMEAN]
-        globdat['f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORMEAN]
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR][gn.STATE0] = params[gppn.POSTERIORMEAN]
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORMEAN]
 
         # Get the prior covariance
         model.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
 
         # Store the prior covariance in globdat
-        globdat['var_u_prior'] = params[gppn.PRIORCOVARIANCE]
-        globdat['var_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
+        globdat[gn.GP][gn.COVARIANCE][gn.PRIOR][gn.STATE0] = params[gppn.PRIORCOVARIANCE]
+        globdat[gn.GP][gn.COVARIANCE][gn.PRIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
 
         # Compute the prior standard deviations
-        globdat['std_f_prior'] = np.sqrt(globdat['var_f_prior'].diagonal())
-        globdat['std_u_prior'] = np.sqrt(globdat['var_u_prior'].diagonal())
+        globdat[gn.GP][gn.STD][gn.PRIOR][gn.STATE0]   = np.sqrt(globdat[gn.GP][gn.COVARIANCE][gn.PRIOR][gn.STATE0].diagonal())
+        globdat[gn.GP][gn.STD][gn.PRIOR][gn.EXTFORCE] = np.sqrt(globdat[gn.GP][gn.COVARIANCE][gn.PRIOR][gn.EXTFORCE].diagonal())
 
         # Get the posterior covariance
         model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
 
         # Store the posterior covariance in globdat
-        globdat['var_u_post'] = params[gppn.POSTERIORCOVARIANCE]
-        globdat['var_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
+        globdat[gn.GP][gn.COVARIANCE][gn.POSTERIOR][gn.STATE0] = params[gppn.POSTERIORCOVARIANCE]
+        globdat[gn.GP][gn.COVARIANCE][gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
 
         # Compute the posterior standard deviations
-        globdat['std_f_post'] = np.sqrt(globdat['var_f_post'].diagonal())
-        globdat['std_u_post'] = np.sqrt(globdat['var_u_post'].diagonal())
+        globdat[gn.GP][gn.STD][gn.POSTERIOR][gn.STATE0]   = np.sqrt(globdat[gn.GP][gn.COVARIANCE][gn.POSTERIOR][gn.STATE0].diagonal())
+        globdat[gn.GP][gn.STD][gn.POSTERIOR][gn.EXTFORCE] = np.sqrt(globdat[gn.GP][gn.COVARIANCE][gn.POSTERIOR][gn.EXTFORCE].diagonal())
 
         # Get the log likelihood and store it in globdat
         model.take_action(gpact.GETLOGLIKELIHOOD, params, globdat)
-        globdat['logLikelihood'] = params[gppn.LOGLIKELIHOOD]
+        globdat[gn.GP][gn.LOGLIKELIHOOD] = params[gppn.LOGLIKELIHOOD]
 
         # Set the params for the samples
         params[gppn.NSAMPLE] = self._nsample
@@ -124,23 +139,23 @@ class GPExactModule(LinsolveModule):
         model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
 
         # Store the prior samples in globdat
-        globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-        globdat['samples_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0]   = params[gppn.PRIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
 
         # Update the prior samples to posterior samples
         model.take_action(gpact.KALMANUPDATE, params, globdat)
 
         # Store the updated samples in globdat
-        globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
-        globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0]   = params[gppn.POSTERIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
 
         # Project the samples over the coarse space if needed
         if self._postproject:
             model.take_action(gpact.PROJECTSAMPLES, params, globdat)
 
             # Store the projected samples in globdat
-            globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
+            globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0]     = params[gppn.PRIORSAMPLES]
+            globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0] = params[gppn.POSTERIORSAMPLES]
 
         return output
 

@@ -46,31 +46,26 @@ fc = conman.get_rhs(f)
 xf = np.linspace(0, 1, len(u))
 xc = np.linspace(0, 1, len(u_coarse))
 
-step = int((len(xf)-1) / (len(xc)-1))
-
-u_post = globdat['u_post']
-
-print(u_coarse)
-print(u[::step])
-print(u_post[::step])
-
 Phi = globdat['Phi']
 Phic = globdat['Phic']
 
-f_prior = globdat['f_prior']
-u_prior = globdat['u_prior']
-f_post = globdat['f_post']
-u_post = globdat['u_post']
+mean = globdat['gp']['mean']
+u_prior = mean['prior']['state0']
+f_prior = mean['prior']['extForce']
+u_post = mean['posterior']['state0']
+f_post = mean['posterior']['extForce']
 
-std_f_prior = globdat['std_f_prior']
-std_u_prior = globdat['std_u_prior']
-std_f_post = globdat['std_f_post']
-std_u_post = globdat['std_u_post']
+std = globdat['gp']['std']
+std_u_prior = std['prior']['state0']
+std_f_prior = std['prior']['extForce']
+std_u_post = std['posterior']['state0']
+std_f_post = std['posterior']['extForce']
 
-samples_f_prior = globdat['samples_f_prior']
-samples_u_prior = globdat['samples_u_prior']
-samples_f_post = globdat['samples_f_post']
-samples_u_post = globdat['samples_u_post']
+samples = globdat['gp']['samples']
+samples_u_prior = samples['prior']['state0']
+samples_f_prior = samples['prior']['extForce']
+samples_u_post = samples['posterior']['state0']
+samples_f_post = samples['posterior']['extForce']
 
 plt.figure()
 plt.plot(xf, u_post, label='posterior mean')

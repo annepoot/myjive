@@ -28,6 +28,14 @@ class GlobNames:
     SLIDERS = 'sliders'
     ACCEPTED = 'accepted'
     LBFACTORS = 'lbFactors'
+    GP = 'gp'
+    PRIOR = 'prior'
+    POSTERIOR = 'posterior'
+    MEAN = 'mean'
+    COVARIANCE = 'covariance'
+    STD = 'std'
+    LOGLIKELIHOOD = 'logLikelihood'
+    SAMPLES = 'samples'
 
 
 class PropNames:

@@ -40,10 +40,11 @@ def test_moments(props):
     mid = (len(u)-1)//2
     p75 = (len(u)-1)//4*3
 
-    f_prior = globdat['f_prior']
-    u_prior = globdat['u_prior']
-    f_post = globdat['f_post']
-    u_post = globdat['u_post']
+    mean = globdat['gp']['mean']
+    u_prior = mean['prior']['state0']
+    f_prior = mean['prior']['extForce']
+    u_post = mean['posterior']['state0']
+    f_post = mean['posterior']['extForce']
 
     assert np.isclose(f_prior[mid], 5)
     assert np.isclose(np.delete(f_prior, mid), 0).all()
@@ -58,10 +59,11 @@ def test_moments(props):
     assert np.isclose(max(u_post), u_post[mid])
     assert np.isclose(min(u_post), 0)
 
-    std_f_prior = globdat['std_f_prior']
-    std_u_prior = globdat['std_u_prior']
-    std_f_post = globdat['std_f_post']
-    std_u_post = globdat['std_u_post']
+    std = globdat['gp']['std']
+    std_u_prior = std['prior']['state0']
+    std_f_prior = std['prior']['extForce']
+    std_u_post = std['posterior']['state0']
+    std_f_post = std['posterior']['extForce']
 
     pdnoise = 1e-8
 

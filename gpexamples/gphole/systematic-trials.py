@@ -112,18 +112,21 @@ for load in ['forced displacement', 'point load']:
                     globdat = main.jive(props)
                     u = globdat['state0']
 
-                    f_prior = globdat['f_prior']
-                    u_prior = globdat['u_prior']
-                    f_post = globdat['f_post']
-                    u_post = globdat['u_post']
+                    mean = globdat['gp']['mean']
+                    u_prior = mean['prior']['state0']
+                    f_prior = mean['prior']['extForce']
+                    u_post = mean['posterior']['state0']
+                    f_post = mean['posterior']['extForce']
 
-                    Sigma_prior = globdat['var_u_prior']
-                    Sigma_post = globdat['var_u_post']
+                    covariance = globdat['gp']['covariance']
+                    Sigma_prior = covariance['prior']['state0']
+                    Sigma_post = covariance['posterior']['state0']
 
-                    std_f_prior = globdat['std_f_prior']
-                    std_u_prior = globdat['std_u_prior']
-                    std_f_post = globdat['std_f_post']
-                    std_u_post = globdat['std_u_post']
+                    std = globdat['gp']['std']
+                    std_u_prior = std['prior']['state0']
+                    std_f_prior = std['prior']['extForce']
+                    std_u_post = std['posterior']['state0']
+                    std_f_post = std['posterior']['extForce']
 
                     Phi = globdat['Phi']
                     Phi_sub = np.zeros_like(Phi)

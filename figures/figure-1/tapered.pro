@@ -35,6 +35,7 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
+  priorMean = dirichlet;
   nsample = 30;
   seed = 0;
 };

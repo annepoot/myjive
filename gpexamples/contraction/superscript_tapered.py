@@ -50,23 +50,27 @@ xc = np.linspace(0, 10, len(u_coarse))
 Phi = globdat['Phi']
 Phic = globdat['Phic']
 
-f_prior = globdat['f_prior']
-u_prior = globdat['u_prior']
-f_post = globdat['f_post']
-u_post = globdat['u_post']
+mean = globdat['gp']['mean']
+u_prior = mean['prior']['state0']
+f_prior = mean['prior']['extForce']
+u_post = mean['posterior']['state0']
+f_post = mean['posterior']['extForce']
 
-Sigma_prior = globdat['var_u_prior']
-Sigma_post = globdat['var_u_post']
+covariance = globdat['gp']['covariance']
+Sigma_prior = covariance['prior']['state0']
+Sigma_post = covariance['posterior']['state0']
 
-std_f_prior = globdat['std_f_prior']
-std_u_prior = globdat['std_u_prior']
-std_f_post = globdat['std_f_post']
-std_u_post = globdat['std_u_post']
+std = globdat['gp']['std']
+std_u_prior = std['prior']['state0']
+std_f_prior = std['prior']['extForce']
+std_u_post = std['posterior']['state0']
+std_f_post = std['posterior']['extForce']
 
-samples_f_prior = globdat['samples_f_prior']
-samples_u_prior = globdat['samples_u_prior']
-samples_f_post = globdat['samples_f_post']
-samples_u_post = globdat['samples_u_post']
+samples = globdat['gp']['samples']
+samples_u_prior = samples['prior']['state0']
+samples_f_prior = samples['prior']['extForce']
+samples_u_post = samples['posterior']['state0']
+samples_f_post = samples['posterior']['extForce']
 
 fig, (ax1, ax2) = plt.subplots(nrows = 2, figsize=(6,6), tight_layout=True)
 ax1.plot(xf, u_post, label='posterior mean')

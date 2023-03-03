@@ -20,16 +20,18 @@ def compare_gpexact_gpsampler(props):
     cdofs = c.get_constraints()[0]
 
     # Get the exact prior and posterior means
-    f_prior = globdat['f_prior']
-    u_prior = globdat['u_prior']
-    f_post = globdat['f_post']
-    u_post = globdat['u_post']
+    mean = globdat['gp']['mean']
+    u_prior = mean['prior']['state0']
+    f_prior = mean['prior']['extForce']
+    u_post = mean['posterior']['state0']
+    f_post = mean['posterior']['extForce']
 
     # Get the exact prior and posterior standard deviations
-    std_f_prior = globdat['std_f_prior']
-    std_u_prior = globdat['std_u_prior']
-    std_f_post = globdat['std_f_post']
-    std_u_post = globdat['std_u_post']
+    std = globdat['gp']['std']
+    std_u_prior = std['prior']['state0']
+    std_f_prior = std['prior']['extForce']
+    std_u_post = std['posterior']['state0']
+    std_f_post = std['posterior']['extForce']
 
     # Now, run the sampled solve
     props['gpsolver']['type'] = 'GPSampler'
@@ -42,16 +44,18 @@ def compare_gpexact_gpsampler(props):
     globdat = main.jive(props)
 
     # Get the sampled prior and posterior mean
-    f_prior_s = globdat['f_prior']
-    u_prior_s = globdat['u_prior']
-    f_post_s = globdat['f_post']
-    u_post_s = globdat['u_post']
+    mean_s = globdat['gp']['mean']
+    u_prior_s = mean_s['prior']['state0']
+    f_prior_s = mean_s['prior']['extForce']
+    u_post_s = mean_s['posterior']['state0']
+    f_post_s = mean_s['posterior']['extForce']
 
     # Get the sampled prior and posterior standard deviations
-    std_f_prior_s = globdat['std_f_prior']
-    std_u_prior_s = globdat['std_u_prior']
-    std_f_post_s = globdat['std_f_post']
-    std_u_post_s = globdat['std_u_post']
+    std_s = globdat['gp']['std']
+    std_u_prior_s = std_s['prior']['state0']
+    std_f_prior_s = std_s['prior']['extForce']
+    std_u_post_s = std_s['posterior']['state0']
+    std_f_post_s = std_s['posterior']['extForce']
 
     # Check if the sample mean deviates less than 0.15 std from the true mean
     tol = 0.15

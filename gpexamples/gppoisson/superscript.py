@@ -32,20 +32,23 @@ K = globdat['matrix0']
 M = globdat['matrix2']
 u = globdat['state0']
 
-f_prior = globdat['f_prior']
-u_prior = globdat['u_prior']
-f_post = globdat['f_post']
-u_post = globdat['u_post']
+mean = globdat['gp']['mean']
+u_prior = mean['prior']['state0']
+f_prior = mean['prior']['extForce']
+u_post = mean['posterior']['state0']
+f_post = mean['posterior']['extForce']
 
-std_f_prior = globdat['std_f_prior']
-std_u_prior = globdat['std_u_prior']
-std_f_post = globdat['std_f_post']
-std_u_post = globdat['std_u_post']
+std = globdat['gp']['std']
+std_u_prior = std['prior']['state0']
+std_f_prior = std['prior']['extForce']
+std_u_post = std['posterior']['state0']
+std_f_post = std['posterior']['extForce']
 
-samples_f_prior = globdat['samples_f_prior']
-samples_u_prior = globdat['samples_u_prior']
-samples_f_post = globdat['samples_f_post']
-samples_u_post = globdat['samples_u_post']
+samples = globdat['gp']['samples']
+samples_u_prior = samples['prior']['state0']
+samples_f_prior = samples['prior']['extForce']
+samples_u_post = samples['posterior']['state0']
+samples_f_post = samples['posterior']['extForce']
 
 Phi = globdat['Phi']
 
@@ -60,44 +63,3 @@ QuickViewer(u, globdat, title=r'Fine solution ($u_f$)')
 QuickViewer(err, globdat, title=r'Discretization error ($|u_f - u_c|$)')
 
 QuickViewer(std_u_post, globdat, title=r'Posterior standard deviation ($\sqrt{\bar \Sigma_{ii}}$)')
-
-# # Use a direct solver for reference
-# props['model']['gp']['solver']['type'] = 'cholmod'
-# globdat_ref = main.jive(props)
-
-# data = []
-
-# for preconditioner in ['id', 'diag', 'ichol']:
-#     for coarse_init in [True, False]:
-#         for max_iter in 2**np.arange(8):
-#             print(preconditioner, coarse_init, max_iter)
-
-#             props['model']['gp']['solver']['type'] = 'CG'
-#             props['model']['gp']['solver']['allowMaxIter'] = 'True'
-#             props['model']['gp']['solver']['maxIter'] = str(max_iter)
-#             props['model']['gp']['preconditioner']['type'] = preconditioner
-#             props['model']['gp']['coarseInit'] = str(coarse_init)
-
-#             globdat = main.jive(props)
-
-#             sample = globdat['samples_u_post'][:,0]
-#             sample_ref = globdat_ref['samples_u_post'][:,0]
-#             sample_rmse = np.sqrt(np.sum((sample-sample_ref)**2))
-
-#             std = globdat['std_u_post']
-#             std_ref = globdat_ref['std_u_post']
-#             std_rmse = np.sqrt(np.sum((std-std_ref)**2))
-
-#             data.append([max_iter, preconditioner, coarse_init, sample_rmse, std_rmse])
-
-#             QuickViewer(globdat['samples_u_post'][:,0], globdat,
-#                         fname='img/sample-post/sample-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-#                         title='Single posterior sample ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
-
-#             QuickViewer(globdat['std_u_post'], globdat,
-#                         fname='img/std-post/std-post_iterMax-{}_P-{}_u0-{}.png'.format(max_iter, preconditioner, 'uc' if coarse_init else '0'),
-#                         title='Posterior std ($i_{{max}} = {}, P = {}, u_0 = {}$)'.format(max_iter, preconditioner, 'u_c' if coarse_init else '0'))
-
-# df = pd.DataFrame(data, columns=['maxIter', 'preconditioner', 'coarseInit', 'rmse_sample', 'rmse_std'])
-
-# df.to_csv('rmse_data.csv')

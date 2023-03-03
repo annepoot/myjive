@@ -75,6 +75,18 @@ class GPSamplerModule(LinsolveModule):
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
         model.take_action(gpact.CONFIGUREPRIOR, params, globdat)
 
+        # Create a dictionary for the gp output
+        globdat[gn.GP] = {}
+        globdat[gn.GP][gn.MEAN] = {}
+        globdat[gn.GP][gn.MEAN][gn.PRIOR] = {}
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR] = {}
+        globdat[gn.GP][gn.STD] = {}
+        globdat[gn.GP][gn.STD][gn.PRIOR] = {}
+        globdat[gn.GP][gn.STD][gn.POSTERIOR] = {}
+        globdat[gn.GP][gn.SAMPLES] = {}
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR] = {}
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR] = {}
+
         # Define a dictionary for the output params
         params = {}
         params[gppn.NSAMPLE] = self._nsample
@@ -84,35 +96,35 @@ class GPSamplerModule(LinsolveModule):
         model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
 
         # Store the prior samples in globdat
-        globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-        globdat['samples_f_prior'] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0]   = params[gppn.PRIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
 
         # Update the prior samples to posterior samples
         model.take_action(gpact.KALMANUPDATE, params, globdat)
 
         # Store the updated samples in globdat
-        globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
-        globdat['samples_f_post'] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0]   = params[gppn.POSTERIORSAMPLES]
+        globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
 
         # Project the samples over the coarse space if needed
         if self._postproject:
             model.take_action(gpact.PROJECTSAMPLES, params, globdat)
 
             # Store the projected samples in globdat
-            globdat['samples_u_prior'] = params[gppn.PRIORSAMPLES]
-            globdat['samples_u_post'] = params[gppn.POSTERIORSAMPLES]
+            globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0]     = params[gppn.PRIORSAMPLES]
+            globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0] = params[gppn.POSTERIORSAMPLES]
 
         # Compute the prior and posterior mean
-        globdat['f_prior'] = np.mean(globdat['samples_f_prior'], axis=1)
-        globdat['u_prior'] = np.mean(globdat['samples_u_prior'], axis=1)
-        globdat['f_post'] = np.mean(globdat['samples_f_post'], axis=1)
-        globdat['u_post'] = np.mean(globdat['samples_u_post'], axis=1)
+        globdat[gn.GP][gn.MEAN][gn.PRIOR][gn.STATE0]       = np.mean(globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0], axis=1)
+        globdat[gn.GP][gn.MEAN][gn.PRIOR][gn.EXTFORCE]     = np.mean(globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.EXTFORCE], axis=1)
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR][gn.STATE0]   = np.mean(globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0], axis=1)
+        globdat[gn.GP][gn.MEAN][gn.POSTERIOR][gn.EXTFORCE] = np.mean(globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.EXTFORCE], axis=1)
 
         # Compute the prior and posterior variance
-        globdat['std_f_prior'] = np.std(globdat['samples_f_prior'], axis=1)
-        globdat['std_u_prior'] = np.std(globdat['samples_u_prior'], axis=1)
-        globdat['std_f_post'] = np.std(globdat['samples_f_post'], axis=1)
-        globdat['std_u_post'] = np.std(globdat['samples_u_post'], axis=1)
+        globdat[gn.GP][gn.STD][gn.PRIOR][gn.STATE0]       = np.std(globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.STATE0], axis=1)
+        globdat[gn.GP][gn.STD][gn.PRIOR][gn.EXTFORCE]     = np.std(globdat[gn.GP][gn.SAMPLES][gn.PRIOR][gn.EXTFORCE], axis=1)
+        globdat[gn.GP][gn.STD][gn.POSTERIOR][gn.STATE0]   = np.std(globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.STATE0], axis=1)
+        globdat[gn.GP][gn.STD][gn.POSTERIOR][gn.EXTFORCE] = np.std(globdat[gn.GP][gn.SAMPLES][gn.POSTERIOR][gn.EXTFORCE], axis=1)
 
         return output
 

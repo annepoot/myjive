@@ -37,10 +37,9 @@ gpinit =
 
 gpsolver =
 {
-  type = GPSampler;
-  nsample = 100;
+  type = GPSolver;
+  nsample = 10000;
   seed = 0;
-  tables = [ stress, strain ];
 };
 
 model =

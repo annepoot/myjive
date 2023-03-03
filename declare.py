@@ -19,6 +19,7 @@ import xelasticmodel
 import xpoissonmodel
 
 import gpinitmodule
+import gpmodule
 import gpexactmodule
 import gpsamplermodule
 import nonlinmodule
@@ -51,6 +52,7 @@ def declare_modules(globdat):
     factory = globdat.get(gn.MODULEFACTORY, module.ModuleFactory())
 
     gpinitmodule.declare(factory)
+    gpmodule.declare(factory)
     gpexactmodule.declare(factory)
     gpsamplermodule.declare(factory)
     nonlinmodule.declare(factory)

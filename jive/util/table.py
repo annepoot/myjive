@@ -14,7 +14,7 @@ class Table():
         return item in self._header
 
     def __getitem__(self, name):
-        jcol = self.find_column(name)
+        jcol = self.get_column(name)
         return self.get_col_values(None, jcol)
 
     def __iter__(self):
@@ -51,6 +51,7 @@ class Table():
         loc = self.find_column(name)
         if loc < 0:
             raise KeyError('{} could not be found in the table headers'.format(name))
+        return loc
 
     def get_columns(self, names):
         a = np.empty_like(names, dtype=int)

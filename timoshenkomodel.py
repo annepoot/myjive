@@ -23,7 +23,9 @@ class TimoshenkoModel(Model):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('TimoshenkoModel taking action', action)
 
     def configure(self, props, globdat):

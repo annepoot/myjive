@@ -40,7 +40,9 @@ class ElasticModel(Model):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('ElasticModel taking action', action)
 
     def configure(self, props, globdat):

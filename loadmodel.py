@@ -22,7 +22,9 @@ class LoadModel(Model):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('LoadModel taking action', action)
 
     def configure(self, props, globdat):

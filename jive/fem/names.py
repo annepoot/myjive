@@ -76,6 +76,7 @@ class ParamNames:
     YOUNG = 'young'
     SPRING = 'spring'
     LOAD = 'load'
+    VERBOSE = 'verbose'
 
 
 class GPActions:

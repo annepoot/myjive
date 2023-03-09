@@ -77,6 +77,10 @@ class SolidModel(Model):
                 globdat[gn.DOFSPACE].add_dof(inode, doftype)
 
     def _get_matrix(self, params, globdat):
+        unit_matrix = params.get(pn.UNITMATRIX, False)
+
+        if unit_matrix:
+            D = np.identity(self._rank)
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -88,7 +92,7 @@ class SolidModel(Model):
             grads, weights = self._shape.get_shape_gradients(coords)
             ipcoords = self._shape.get_global_integration_points(coords)
 
-            if self._rank == 2:
+            if self._rank == 2 and not unit_matrix:
                 weights *= self._thickness
 
             # Reset the element stiffness matrix
@@ -97,7 +101,9 @@ class SolidModel(Model):
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
                 B = self._get_B_matrix(grads[:, :, ip])
-                D = self._mat.stiff_at_point(ipcoords[:, ip])
+
+                if not unit_matrix:
+                    D = self._mat.stiff_at_point(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
                 elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
@@ -122,7 +128,7 @@ class SolidModel(Model):
             weights = self._shape.get_integration_weights(coords)
             ipcoords = self._shape.get_global_integration_points(coords)
 
-            if self._rank == 2:
+            if self._rank == 2 and not unit_matrix:
                 weights *= self._thickness
 
             # Reset the element mass matrix

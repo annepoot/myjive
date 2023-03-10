@@ -63,10 +63,13 @@ class Table():
     def get_column_name(self, index):
         return self._header[index]
 
-    def get_column_names(self, indices):
-        a = np.empty_like(indices, dtype=str)
-        for i, index in enumerate(indices):
-            a[i] = self.get_column_name(index)
+    def get_column_names(self, indices=None):
+        if indices is None:
+            indices = np.arange(self.column_count())
+        a = []
+        for index in indices:
+            a.append(self.get_column_name(index))
+        a = np.array(a)
         return a
 
 

@@ -27,7 +27,9 @@ class BarModel(Model):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('BarModel taking action', action)
 
     def configure(self, props, globdat):

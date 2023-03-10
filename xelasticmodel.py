@@ -1,6 +1,7 @@
 import numpy as np
 
 from jive.fem.names import Actions as act
+from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
 from elasticmodel import ElasticModel
 import jive.util.proputils as pu
@@ -32,7 +33,9 @@ class XElasticModel(ElasticModel):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('XElasticModel taking action', action)
 
     def configure(self, props, globdat):

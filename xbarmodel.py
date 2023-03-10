@@ -29,7 +29,9 @@ class XBarModel(BarModel):
         else:
             showmsg = False
 
-        if showmsg:
+        verbose = params.get(pn.VERBOSE, True)
+
+        if showmsg and verbose:
             print('XBarModel taking action', action)
 
     def configure(self, props, globdat):

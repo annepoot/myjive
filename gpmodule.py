@@ -7,6 +7,7 @@ from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 
 from jive.implicit.linsolvemodule import LinsolveModule
+from jive.util.table import Table
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 POSTPROJECT = 'postproject'
@@ -101,6 +102,8 @@ class GPModule(LinsolveModule):
         params = {}
         params[gppn.NSAMPLE] = self._nsample
         params[gppn.RNG] = np.random.default_rng(self._seed)
+        params[gppn.PRIORSAMPLES] = np.zeros((self._dc, self._nsample))
+        params[gppn.POSTERIORSAMPLES] = np.zeros((self._dc, self._nsample))
 
         # Get the prior samples
         model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
@@ -123,6 +126,44 @@ class GPModule(LinsolveModule):
             # Store the projected samples in globdat
             samples[gn.PRIOR][gn.STATE0]     = params[gppn.PRIORSAMPLES]
             samples[gn.POSTERIOR][gn.STATE0] = params[gppn.POSTERIORSAMPLES]
+
+    def take_sample_field_action(self, samples, globdat):
+
+        model = globdat[gn.MODEL]
+
+        # Loop over the different fields
+        for name in self._tnames:
+
+            # Get the fine solution table for that field
+            globtable = globdat[gn.TABLES][name]
+
+            # Get the tables for both prior and posterior
+            for distribution in [gn.PRIOR, gn.POSTERIOR]:
+
+                # Create a new sub-dictionary
+                samples[distribution][name] = {}
+
+                # Add a sample matrix for each component
+                for comp in globtable.get_column_names():
+                    samples[distribution][name][comp] = np.zeros((globdat[gn.NSET].size(), self._nsample))
+
+                # Go over each state0 sample
+                for i, sample in enumerate(samples[distribution][gn.STATE0].T):
+
+                    # Define a dictionary for the output params
+                    params = {}
+                    params[pn.TABLE] = Table()
+                    params[pn.TABLENAME] = name
+                    params[pn.TABLEWEIGHTS] = np.zeros(len(globdat[gn.NSET]))
+                    params[pn.SOLUTION] = sample
+                    params[pn.VERBOSE] = False
+
+                    # Get the relevant fields
+                    model.take_action(act.GETTABLE, params, globdat)
+
+                    # Add the field to the sample matrices for each component
+                    for comp in params[pn.TABLE].get_column_names():
+                        samples[distribution][name][comp][:,i] = params[pn.TABLE][comp]
 
     def take_mean_action(self, mean, globdat):
 

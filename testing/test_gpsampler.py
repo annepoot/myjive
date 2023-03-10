@@ -12,6 +12,7 @@ def compare_gpexact_gpsampler(props):
     props['gpsolver']['nsample'] = '0'
     props['gpsolver']['seed'] = '0'
     props['gpsolver']['solver'] = {'type':'cholmod'}
+    props['gpsolver']['tables'] = '[]'
     props['model']['gp']['explicitInverse'] = 'True'
 
     globdat = main.jive(props)

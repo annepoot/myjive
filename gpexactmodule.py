@@ -49,6 +49,9 @@ class GPExactModule(GPModule):
         # Get the samples
         self.take_sample_action(samples, globdat)
 
+        # Get the fields belonging to the samples
+        self.take_sample_field_action(samples, globdat)
+
         return output
 
     def shutdown(self, globdat):

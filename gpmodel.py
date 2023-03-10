@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.linalg as spla
-import scipy.sparse.linalg as spspla
 
 from jive.fem.names import Actions as act
 from jive.fem.names import GPActions as gpact
@@ -245,6 +244,7 @@ class GPModel(Model):
 
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
+        samples = params.get(gppn.PRIORSAMPLES)
 
         #################
         # PRIOR SAMPLES #
@@ -254,9 +254,6 @@ class GPModel(Model):
 
         # Get the relevant matrices
         self._get_sqrtSigma()
-
-        # Define the array that stores the samples
-        samples = np.zeros((self._dc, nsamples))
 
         # Get a loop to create all samples
         for i in range(nsamples):
@@ -274,6 +271,7 @@ class GPModel(Model):
             # Get the sample of the force field
             u = self._sqrtSigma @ z + self._m
 
+            # Add the sample to the table
             samples[:,i] = u
 
         # Return the array of samples
@@ -283,6 +281,7 @@ class GPModel(Model):
 
         nsamples = params.get(gppn.NSAMPLE, 1)
         rng = params.get(gppn.RNG, np.random.default_rng())
+        samples = params.get(gppn.POSTERIORSAMPLES)
 
         #####################
         # POSTERIOR SAMPLES #
@@ -294,9 +293,6 @@ class GPModel(Model):
         self._get_sqrtObs()
         self._get_sqrtSigma()
         self._get_sqrtNoise()
-
-        # Define the array that stores the samples
-        samples = np.zeros((self._dc, nsamples))
 
         # Get a loop to create all samples
         for i in range(nsamples):
@@ -328,6 +324,7 @@ class GPModel(Model):
             # Add the prior sample and mean
             u += x1 + self._m
 
+            # Add the sample to the table
             samples[:,i] = u
 
         # Return the array of samples
@@ -337,6 +334,7 @@ class GPModel(Model):
 
         samples_prior = params[gppn.PRIORSAMPLES]
         rng = params.get(gppn.RNG, np.random.default_rng())
+        samples = params.get(gppn.POSTERIORSAMPLES)
 
         #####################
         # POSTERIOR SAMPLES #
@@ -347,9 +345,6 @@ class GPModel(Model):
         # Get the relevant matrices
         self._get_sqrtObs()
         self._get_sqrtNoise()
-
-        # Define the array that stores the samples
-        samples_post = np.zeros(samples_prior.shape, dtype=samples_prior.dtype)
 
         # Get a loop to create all samples
         for i, u_prior in enumerate(samples_prior.T):
@@ -372,10 +367,11 @@ class GPModel(Model):
             # Add the prior sample and mean
             u_post += u_centered + self._m
 
-            samples_post[:,i] = u_post
+            # Add the sample to the table
+            samples[:,i] = u_post
 
         # Return the array of samples
-        params[gppn.POSTERIORSAMPLES] = samples_post
+        params[gppn.POSTERIORSAMPLES] = samples
 
     def _project_samples(self, params, globdat):
 

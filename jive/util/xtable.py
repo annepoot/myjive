@@ -13,14 +13,12 @@ class XTable(Table):
 
     def reserve(self, rowcount):
         if self.row_count() < rowcount:
-            tmp = np.zeros((rowcount, self.column_count()))
-            tmp[:self.row_count(), :self.column_count()] = self._data
-            self._data = tmp
+            self._data.resize((rowcount, self.column_count()), refcheck=False)
 
     def add_column(self, name):
         if self.find_column(name) < 0:
             self._header = np.append(self._header, name)
-            self._data.resize((self.row_count(), self.column_count() + 1))
+            self._data.resize((self.row_count(), self.column_count() + 1), refcheck=False)
         return self.find_column(name)
 
     def add_columns(self, names):
@@ -60,6 +58,7 @@ class XTable(Table):
 
     def set_col_values(self, irows, jcol, values):
         if irows is None:
+            self.reserve(values.shape[0])
             self._data[:, jcol] = values
         else:
             self.reserve(max(irows)+1)
@@ -67,6 +66,7 @@ class XTable(Table):
 
     def add_col_values(self, irows, jcol, values):
         if irows is None:
+            self.reserve(values.shape[0])
             self._data[:, jcol] += values
         else:
             self.reserve(max(irows)+1)

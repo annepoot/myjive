@@ -25,6 +25,9 @@ class GPSamplerModule(GPModule):
         # Get the samples
         self.take_sample_action(samples, globdat)
 
+        # Get the fields belonging to the samples
+        self.take_sample_field_action(samples, globdat)
+
         # Compute the prior and posterior mean from the samples
         mean[gn.PRIOR][gn.STATE0]       = np.mean(samples[gn.PRIOR][gn.STATE0], axis=1)
         mean[gn.PRIOR][gn.EXTFORCE]     = np.mean(samples[gn.PRIOR][gn.EXTFORCE], axis=1)

@@ -331,22 +331,30 @@ class InitModule(Module):
 
     def _create_ngroups(self, groups, props, globdat):
         coords = globdat[gn.NSET].get_coords()
+        cmax = np.max(coords, axis=1)
+        cmin = np.min(coords, axis=1)
+        cmid = 0.5 * (cmax + cmin)
         for g in groups:
             group = globdat[gn.NGROUPS]['all'].get_indices()
             gprops = props[g]
             if isinstance(gprops,dict):
                 for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
                     if axis in gprops:
-                        if gprops[axis] == 'min':
-                            ubnd = np.min(coords[i, :]) + self._ctol
+                        loc = str(gprops[axis])
+                        if loc.isnumeric():
+                            lbnd = float(loc) - self._ctol
+                            ubnd = float(loc) + self._ctol
+                            group = group[coords[i, group] > lbnd]
+                            group = group[coords[i, group] < ubnd]
+                        elif gprops[axis] == 'min':
+                            ubnd = cmin[i] + self._ctol
                             group = group[coords[i, group] < ubnd]
                         elif gprops[axis] == 'max':
-                            lbnd = np.max(coords[i, :]) - self._ctol
+                            lbnd = cmax[i] - self._ctol
                             group = group[coords[i, group] > lbnd]
                         elif gprops[axis] == 'mid':
-                            mid = 0.5 * (np.max(coords[i, :]) - np.min(coords[i, :]))
-                            lbnd = mid - self._ctol
-                            ubnd = mid + self._ctol
+                            lbnd = cmid[i] - self._ctol
+                            ubnd = cmid[i] + self._ctol
                             group = group[coords[i, group] > lbnd]
                             group = group[coords[i, group] < ubnd]
                         else:

@@ -182,7 +182,7 @@ def QuickViewer(array, globdat, **kwargs):
         for contour in [mappable]:
             for c in contour.collections:
                 c.set_edgecolor("face")
-                c.set_linewidth(0)
+                c.set_linewidth(1e-10)
 
     if not title is None:
         ax.set_title(title)

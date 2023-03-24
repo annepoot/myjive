@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.optimize import fsolve
+from warnings import warn
 
 NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
@@ -201,6 +202,9 @@ class Shape:
 
         # The initial guess is the local coordinate in the middle of the element
         x0 = np.mean(self.get_local_node_coords(), axis=1)
+
+        # Raise an error that scipy.optimize.fsolve is necessary
+        warn('get_local_points needs to do a scipy.optimize.fsolve call to get a result')
 
         # Do a non-linear solve to find the corresponding local point
         loc_point = fsolve(f, x0)

@@ -341,7 +341,7 @@ class InitModule(Module):
                 for i, axis in enumerate(['xtype', 'ytype', 'ztype']):
                     if axis in gprops:
                         loc = str(gprops[axis])
-                        if loc.isnumeric():
+                        if loc.replace('.','').isnumeric():
                             lbnd = float(loc) - self._ctol
                             ubnd = float(loc) + self._ctol
                             group = group[coords[i, group] > lbnd]

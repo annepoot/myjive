@@ -1,8 +1,8 @@
 from jive.solver.directsolver import DirectSolver
 from jive.solver.constrainer import Constrainer
 from jive.solver.util import reorder as reord
-from jive.solver.numba.cholesky import sparse_cholesky
-from jive.solver.numba.spsolve import solve_triangular
+from jive.solver.jit.cholesky import sparse_cholesky
+from jive.solver.jit.spsolve import solve_triangular
 
 class SparseCholeskySolver(DirectSolver):
 

@@ -8,6 +8,8 @@ from material import new_material
 from jive.util.xtable import XTable, to_xtable
 import jive.util.proputils as pu
 
+from jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
+
 ELEMENTS = 'elements'
 RHO = 'rho'
 SHAPE = 'shape'
@@ -150,6 +152,7 @@ class SolidModel(Model):
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_strains(self, params, globdat):
+
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
@@ -326,38 +329,10 @@ class SolidModel(Model):
         params[pn.TABLE] = xtable.to_table()
 
     def _get_N_matrix(self, sfuncs):
-        N = np.zeros((self._rank, self._dofcount))
-        for i in range(self._rank):
-            N[i, i::self._rank] = sfuncs.transpose()
-        return N
+        return get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
 
     def _get_B_matrix(self, grads):
-        B = np.zeros((self._strcount, self._dofcount))
-        if self._rank == 1:
-            B = grads.transpose()
-        elif self._rank == 2:
-            for inode in range(self._shape.node_count()):
-                i = 2 * inode
-                gi = grads[inode, :]
-                B[0:3, i:(i + 2)] = [
-                    [gi[0], 0.],
-                    [0., gi[1]],
-                    [gi[1], gi[0]]
-                ]
-        elif self._rank == 3:
-            B = np.zeros((6, self._dofcount))
-            for inode in range(self._shape.node_count()):
-                i = 3 * inode
-                gi = grads[inode, :]
-                B[0:6, i:(i + 3)] = [
-                    [gi[0], 0., 0.],
-                    [0., gi[1], 0.],
-                    [0., 0., gi[2]],
-                    [gi[1], gi[0], 0.],
-                    [0., gi[2], gi[1]],
-                    [gi[2], 0., gi[0]]
-                ]
-        return B
+        return get_B_matrix_jit(grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank)
 
 
 def declare(factory):

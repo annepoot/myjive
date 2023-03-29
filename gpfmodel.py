@@ -2,8 +2,8 @@ import numpy as np
 import scipy.sparse as spsp
 import scipy.sparse.linalg as spspla
 
-from jive.solver.numba.cholesky import sparse_cholesky
-from jive.solver.numba.spsolve import solve_triangular
+from jive.solver.jit.cholesky import sparse_cholesky
+from jive.solver.jit.spsolve import solve_triangular
 from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 from jive.fem.names import GlobNames as gn

@@ -1,6 +1,6 @@
 from jive.solver.preconditioner import Preconditioner
-from jive.solver.numba.cholesky import incomplete_cholesky
-from jive.solver.numba.spsolve import solve_triangular
+from jive.solver.jit.cholesky import incomplete_cholesky
+from jive.solver.jit.spsolve import solve_triangular
 
 class ICholPrecon(Preconditioner):
 

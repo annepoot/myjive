@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 from warnings import warn
+from jive.fem.jit.shape import get_shape_gradients_jit
 
 NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
 
@@ -219,15 +220,7 @@ class Shape:
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_shape_gradients(self, glob_coords):
-        wts = np.copy(self._wts)
-        dN = np.copy(self._dN)
-
-        for ip in range(self._ipcount):
-            J = np.matmul(glob_coords, dN[:, :, ip])
-            wts[ip] *= np.linalg.det(J)
-            dN[:, :, ip] = np.matmul(dN[:, :, ip], np.linalg.inv(J))
-
-        return dN, wts
+        return get_shape_gradients_jit(glob_coords, self._dN, self._wts, self._ipcount)
 
     def eval_shape_gradients(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)

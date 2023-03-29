@@ -10,7 +10,7 @@ from jive.solver.constrainer import Constrainer
 
 import solverutils as su
 
-import jive.solver.numba.cholesky as nbchol
+import jive.solver.jit.cholesky as nbchol
 import jive.solver.util.reorder as reord
 
 props = pu.parse_file('beam.pro')

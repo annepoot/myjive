@@ -126,15 +126,15 @@ class ViewModule(Module):
         pass
 
     def _write_table(self, name, globdat):
-        nodes = globdat[gn.NSET]
+        nodecount = len(globdat[gn.NSET])
         model = globdat[self._modelname]
 
         globdat[gn.TABLES] = {}
 
         params = {}
-        params[pn.TABLE] = Table()
+        params[pn.TABLE] = Table(size=nodecount)
         params[pn.TABLENAME] = name
-        params[pn.TABLEWEIGHTS] = np.zeros(len(nodes))
+        params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
         params[pn.SOLUTION]= self._solution
 
         model.take_action(act.GETTABLE, params, globdat)

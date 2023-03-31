@@ -149,12 +149,13 @@ class GPModule(LinsolveModule):
 
                 # Go over each state0 sample
                 for i, sample in enumerate(samples[distribution][gn.STATE0].T):
+                    nodecount = len(globdat[gn.NSET])
 
                     # Define a dictionary for the output params
                     params = {}
-                    params[pn.TABLE] = Table()
+                    params[pn.TABLE] = Table(size=nodecount)
                     params[pn.TABLENAME] = name
-                    params[pn.TABLEWEIGHTS] = np.zeros(len(globdat[gn.NSET]))
+                    params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
                     params[pn.SOLUTION] = sample
                     params[pn.VERBOSE] = False
 

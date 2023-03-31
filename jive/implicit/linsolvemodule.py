@@ -79,10 +79,12 @@ class LinsolveModule(SolverModule):
         globdat[gn.TABLES] = {}
 
         for name in self._tnames:
+            nodecount = len(globdat[gn.NSET])
+
             params = {}
-            params[pn.TABLE] = Table()
+            params[pn.TABLE] = Table(size=nodecount)
             params[pn.TABLENAME] = name
-            params[pn.TABLEWEIGHTS] = np.zeros(len(globdat[gn.NSET]))
+            params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
 
             model.take_action(act.GETTABLE, params, globdat)
 

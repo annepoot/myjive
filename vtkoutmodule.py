@@ -97,16 +97,16 @@ class VTKOutModule(Module):
         pass
 
     def _write_tables(self, table_names, globdat):
-        nodes = globdat[gn.NSET]
+        nodecount = len(globdat[gn.NSET])
         model = globdat[self._modelname]
 
         globdat[gn.TABLES] = {}
 
         for name in table_names:
             params = {}
-            params[pn.TABLE] = Table()
+            params[pn.TABLE] = Table(size=nodecount)
             params[pn.TABLENAME] = name
-            params[pn.TABLEWEIGHTS] = np.zeros(len(nodes))
+            params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
 
             model.take_action(act.GETTABLE, params, globdat)
 

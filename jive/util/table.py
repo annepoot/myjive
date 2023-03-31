@@ -2,9 +2,12 @@ import numpy as np
 
 class Table():
 
-    def __init__(self, tbl=None):
+    def __init__(self, tbl=None, size=None):
         if tbl is None:
-            self._data = np.zeros((0,0), dtype=float)
+            if size is None:
+                self._data = np.zeros((0,0), dtype=float)
+            else:
+                self._data = np.zeros((size,0), dtype=float)
             self._header = np.zeros(0, dtype=str)
         else:
             self._data = tbl._data

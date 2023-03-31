@@ -1,6 +1,7 @@
 import numpy as np
 
 from jive.util.table import Table
+from jive.util.jit.xtable import set_block_jit, add_block_jit
 
 class XTable(Table):
 
@@ -36,11 +37,13 @@ class XTable(Table):
 
     def set_block(self, irows, jcols, block):
         self.reserve(max(irows)+1)
-        self._data[np.ix_(irows, jcols)] = block
+        # self._data[np.ix_(irows, jcols)] = block
+        set_block_jit(self._data, irows, jcols, block)
 
     def add_block(self, irows, jcols, block):
         self.reserve(max(irows)+1)
-        self._data[np.ix_(irows, jcols)] += block
+        # self._data[np.ix_(irows, jcols)] += block
+        add_block_jit(self._data, irows, jcols, block)
 
     def set_row_values(self, irow, jcols, values):
         self.reserve(irow+1)

@@ -83,9 +83,11 @@ QuickViewer(err, globdat, comp=1, pdf=True, title=r'Discretization error ($u_x^f
 QuickViewer(err_grad, globdat, comp=0, pdf=True, title=r'Discretization error ($\varepsilon^f_{xx} - \Phi \varepsilon^c_{xx}$)', fname='img/error_strain-xx.pdf')
 QuickViewer(err_grad, globdat, comp=1, pdf=True, title=r'Discretization error ($\varepsilon^f_{yy} - \Phi \varepsilon^c_{yy}$)', fname='img/error_strain-yy.pdf')
 
+QuickViewer(std_u_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{u_x}$)', fname='img/std_state0-x_prior.pdf')
+QuickViewer(std_u_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{u_y}$)', fname='img/std_state0-y_prior.pdf')
 QuickViewer(std_u_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{u_x}$)', fname='img/std_state0-x_posterior.pdf')
 QuickViewer(std_u_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{u_y}$)', fname='img/std_state0-y_posterior.pdf')
-QuickViewer(std_eps_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_posterior.pdf')
-QuickViewer(std_eps_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_posterior.pdf')
 QuickViewer(std_eps_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_prior.pdf')
 QuickViewer(std_eps_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_prior.pdf')
+QuickViewer(std_eps_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_posterior.pdf')
+QuickViewer(std_eps_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_posterior.pdf')

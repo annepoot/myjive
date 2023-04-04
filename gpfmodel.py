@@ -82,7 +82,7 @@ class GPfModel(GPModel):
                 if self._covariance.startswith(key+'**2'):
 
                     # Get the covariance matrix without the hyperparameter
-                    eval_dict = self._get_eval_dict()
+                    eval_dict = self._get_eval_dict(globdat)
                     Sigma = eval(self._covariance.replace(key+'**2', '1'), eval_dict)
 
                 else:
@@ -215,7 +215,7 @@ class GPfModel(GPModel):
 
         return np.sqrt(alpha2)
 
-    def _get_eval_dict(self):
+    def _get_eval_dict(self, globdat):
 
         # Define a dictionary with relevant functions
         eval_dict = {'inv':spspla.inv, 'exp':np.exp, 'norm':np.linalg.norm, 'np':np}
@@ -223,6 +223,28 @@ class GPfModel(GPModel):
 
         # Check if we have an SPDE covariance
         if self._prior == 'SPDE':
+
+            nodes = globdat[gn.NSET]
+            dofspace = globdat[gn.DOFSPACE]
+
+            if self._rank >= 1:
+                x = np.zeros(self._dc)
+            if self._rank >= 2:
+                y = np.zeros(self._dc)
+
+            for i in range(len(nodes)):
+                icoords = nodes[i].get_coords()
+                idofs = dofspace.get_dofs([i], dofspace.get_types())
+
+                if self._rank >= 1:
+                    x[idofs] = icoords[0]
+                if self._rank >= 2:
+                    y[idofs] = icoords[1]
+
+            if self._rank >= 1:
+                eval_dict['x'] = x
+            if self._rank >= 2:
+                eval_dict['y'] = y
 
             g = self._Phi @ np.linalg.solve((self._Phi.T @ self._Phi).toarray(), self._g)
 

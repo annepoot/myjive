@@ -11,8 +11,10 @@ def get_shape_gradients_jit(glob_coords, _dN, _wts, _ipcount):
     dN = np.copy(_dN)
 
     for ip in range(_ipcount):
-        J = glob_coords @ dN[:, :, ip]
+        dNip = np.copy(dN[:,:,ip])
+        J = glob_coords @ dNip
         wts[ip] *= np.linalg.det(J)
-        dN[:, :, ip] = dN[:, :, ip] @ np.linalg.inv(J)
+        dNip = dNip @ np.linalg.inv(J)
+        dN[:,:,ip] = dNip
 
     return dN, wts

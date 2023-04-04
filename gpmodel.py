@@ -12,6 +12,7 @@ from jive.solver.constrainer import Constrainer
 
 OBSNOISE = 'obsNoise'
 PDNOISE = 'pdNoise'
+BCNOISE = 'bcNoise'
 PRIOR = 'prior'
 TYPE = 'type'
 FUNC = 'func'
@@ -71,6 +72,7 @@ class GPModel(Model):
         # Get the observational noise, and pd noise
         self._noise2 = float(props.get(OBSNOISE))**2
         self._pdnoise2 = float(props.get(PDNOISE, 1e-8))**2
+        self._bcnoise2 = float(props.get(BCNOISE, 1e-8))**2
 
         # Get the prior properties
         priorprops = props[PRIOR]
@@ -553,7 +555,7 @@ class GPModel(Model):
 
         # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
-        Sigmac[self._cdofs,self._cdofs] = self._pdnoise2
+        Sigmac[self._cdofs,self._cdofs] = self._bcnoise2
 
         return mc, Sigmac
 

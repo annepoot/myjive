@@ -235,12 +235,15 @@ class GPfModel(GPModel):
         Sigmac = Sigma.copy()
         mc = m.copy()
 
+        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
+        Sigmac += self._pdnoise2 * spsp.identity(self._dc)
+
         # Split Sigma along boundary and internal nodes
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
-        Sigma_bb = Sigma[np.ix_(self._cdofs,self._cdofs)]
-        Sigma_bi = Sigma[np.ix_(self._cdofs,idofs)]
-        Sigma_ib = Sigma[np.ix_(idofs,self._cdofs)]
+        Sigma_bb = Sigmac[np.ix_(self._cdofs,self._cdofs)]
+        Sigma_bi = Sigmac[np.ix_(self._cdofs,idofs)]
+        Sigma_ib = Sigmac[np.ix_(idofs,self._cdofs)]
 
         Sigma_bb_inv = spspla.inv(Sigma_bb.tocsc())
 
@@ -254,9 +257,7 @@ class GPfModel(GPModel):
         # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] *= 0.0
         Sigmac[:,self._cdofs] *= 0.0
-
-        # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
-        Sigmac += self._pdnoise2 * spsp.identity(self._dc)
+        Sigmac[self._cdofs,self._cdofs] = self._pdnoise2
 
         return mc, Sigmac
 

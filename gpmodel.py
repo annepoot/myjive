@@ -125,6 +125,7 @@ class GPModel(Model):
         # Get the actual constrained stiffness matrix and force vector
         self._Mc = conmanM.get_output_matrix()
         self._Kc = conmanK.get_output_matrix()
+        self._f = f
         fc = conmanK.get_rhs(f)
 
         # Get the prior mean
@@ -409,9 +410,13 @@ class GPModel(Model):
         # Check if we have an SPDE covariance
         if self._prior == 'SPDE':
 
+            g = self._Phi @ np.linalg.solve(self._Phi.T @ self._Phi, self._g)
+
             # Add the mass and stiffness matrices to the dictionary
             eval_dict['M'] = self._Mc.toarray()
             eval_dict['K'] = self._Kc.toarray()
+            eval_dict['F'] = np.outer(self._f, self._f)
+            eval_dict['G'] = np.outer(g, g)
             eval_dict['Phi'] = self._Phi
 
         return eval_dict

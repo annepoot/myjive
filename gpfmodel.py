@@ -224,9 +224,13 @@ class GPfModel(GPModel):
         # Check if we have an SPDE covariance
         if self._prior == 'SPDE':
 
+            g = self._Phi @ np.linalg.solve((self._Phi.T @ self._Phi).toarray(), self._g)
+
             # Add the mass and stiffness matrices to the dictionary
             eval_dict['M'] = self._Mc
             eval_dict['K'] = self._Kc
+            eval_dict['F'] = spsp.csr_array(np.outer(self._f, self._f))
+            eval_dict['G'] = spsp.csr_array(np.outer(g, g))
             eval_dict['Phi'] = self._Phi
 
         return eval_dict

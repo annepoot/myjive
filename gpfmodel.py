@@ -283,7 +283,7 @@ class GPfModel(GPModel):
         # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] *= 0.0
         Sigmac[:,self._cdofs] *= 0.0
-        Sigmac[self._cdofs,self._cdofs] = self._pdnoise2
+        Sigmac[self._cdofs,self._cdofs] = self._bcnoise2
 
         return mc, Sigmac
 

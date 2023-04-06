@@ -7,6 +7,7 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 from jive.util.table import Table
+from jive.util.xtable import to_xtable
 
 LINEWIDTH ='linewidth'
 PLOT = 'plot'
@@ -129,7 +130,8 @@ class ViewModule(Module):
         nodecount = len(globdat[gn.NSET])
         model = globdat[self._modelname]
 
-        globdat[gn.TABLES] = {}
+        if gn.TABLES not in globdat:
+            globdat[gn.TABLES] = {}
 
         params = {}
         params[pn.TABLE] = Table(size=nodecount)
@@ -139,6 +141,13 @@ class ViewModule(Module):
 
         model.take_action(act.GETTABLE, params, globdat)
 
+        to_xtable(params[pn.TABLE])
+
+        for jcol in range(params[pn.TABLE].column_count()):
+            values = params[pn.TABLE].get_col_values(None, jcol)
+            params[pn.TABLE].set_col_values(None, jcol, values / params[pn.TABLEWEIGHTS])
+
+        params[pn.TABLE].to_table()
         globdat[gn.TABLES][name] = params[pn.TABLE]
 
 

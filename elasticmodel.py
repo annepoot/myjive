@@ -231,11 +231,6 @@ class ElasticModel(Model):
             # Add the element stresses to the global stresses
             xtable.add_block(inodes, jcols, eleps)
 
-        # Divide the strains by the shape function weights
-        for jcol in jcols:
-            values = xtable.get_col_values(None, jcol)
-            xtable.set_col_values(None, jcol, values/tbwts)
-
         # Convert the table back to the original class
         params[pn.TABLE] = xtable.to_table()
 
@@ -299,11 +294,6 @@ class ElasticModel(Model):
 
             # Add the element stresses to the global stresses
             xtable.add_block(inodes, jcols, elsig)
-
-        # Divide the stresses by the shape function weights
-        for jcol in jcols:
-            values = xtable.get_col_values(None, jcol)
-            xtable.set_col_values(None, jcol, values/tbwts)
 
         # Convert the table back to the original class
         params[pn.TABLE] = xtable.to_table()

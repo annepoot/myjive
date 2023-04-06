@@ -8,6 +8,7 @@ from jive.fem.names import GPParamNames as gppn
 
 from jive.implicit.linsolvemodule import LinsolveModule
 from jive.util.table import Table
+from jive.util.xtable import to_xtable
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 POSTPROJECT = 'postproject'
@@ -161,6 +162,14 @@ class GPModule(LinsolveModule):
 
                     # Get the relevant fields
                     model.take_action(act.GETTABLE, params, globdat)
+
+                    to_xtable(params[pn.TABLE])
+
+                    for jcol in range(params[pn.TABLE].column_count()):
+                        values = params[pn.TABLE].get_col_values(None, jcol)
+                        params[pn.TABLE].set_col_values(None, jcol, values / params[pn.TABLEWEIGHTS])
+
+                    params[pn.TABLE].to_table()
 
                     # Add the field to the sample matrices for each component
                     for comp in params[pn.TABLE].get_column_names():

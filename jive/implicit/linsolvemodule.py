@@ -9,6 +9,7 @@ import jive.util.proputils as pu
 from jive.implicit.solvermodule import SolverModule
 from jive.solver.constraints import Constraints
 from jive.util.table import Table
+from jive.util.xtable import to_xtable
 
 SOLVER = 'solver'
 PRECONDITIONER = 'preconditioner'
@@ -76,7 +77,8 @@ class LinsolveModule(SolverModule):
             globdat[gn.MATRIX2] = M
 
         # Compute stresses, strains, etc.
-        globdat[gn.TABLES] = {}
+        if gn.TABLES not in globdat:
+            globdat[gn.TABLES] = {}
 
         for name in self._tnames:
             nodecount = len(globdat[gn.NSET])
@@ -88,6 +90,13 @@ class LinsolveModule(SolverModule):
 
             model.take_action(act.GETTABLE, params, globdat)
 
+            to_xtable(params[pn.TABLE])
+
+            for jcol in range(params[pn.TABLE].column_count()):
+                values = params[pn.TABLE].get_col_values(None, jcol)
+                params[pn.TABLE].set_col_values(None, jcol, values / params[pn.TABLEWEIGHTS])
+
+            params[pn.TABLE].to_table()
             globdat[gn.TABLES][name] = params[pn.TABLE]
 
         return 'ok'

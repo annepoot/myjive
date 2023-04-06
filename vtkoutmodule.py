@@ -6,6 +6,7 @@ from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 import jive.util.proputils as pu
 from jive.util.table import Table
+from jive.util.xtable import to_xtable
 
 FILENAME = 'file'
 TABLES = 'tables'
@@ -100,7 +101,8 @@ class VTKOutModule(Module):
         nodecount = len(globdat[gn.NSET])
         model = globdat[self._modelname]
 
-        globdat[gn.TABLES] = {}
+        if gn.TABLES not in globdat:
+            globdat[gn.TABLES] = {}
 
         for name in table_names:
             params = {}
@@ -110,6 +112,13 @@ class VTKOutModule(Module):
 
             model.take_action(act.GETTABLE, params, globdat)
 
+            to_xtable(params[pn.TABLE])
+
+            for jcol in range(params[pn.TABLE].column_count()):
+                values = params[pn.TABLE].get_col_values(None, jcol)
+                params[pn.TABLE].set_col_values(None, jcol, values / params[pn.TABLEWEIGHTS])
+
+            params[pn.TABLE].to_table()
             globdat[gn.TABLES][name] = params[pn.TABLE]
 
 

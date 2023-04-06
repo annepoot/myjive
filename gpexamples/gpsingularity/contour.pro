@@ -37,9 +37,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  nsample = 50;
-  seed = 0;
-  tables = [ strain ];
   priorMean = dirichlet;
 };
 
@@ -81,7 +78,6 @@ model =
     prior =
     {
       type = SPDE;
-      //func = alpha**2 * M + beta**2 * exp(-(np.outer(abs(x-5),abs(x-5))+np.outer(abs(y-10),abs(y-10)))/(2*l**2)) * M;
       func = alpha**2 * M + beta**2 * F;
       hyperparams =
       {

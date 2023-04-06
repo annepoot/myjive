@@ -1,0 +1,45 @@
+import sys
+sys.path.append('../../')
+
+import numpy as np
+from jive.app import main
+import jive.util.proputils as pu
+from quickviewer import QuickViewer
+
+props = pu.parse_file('singularity.pro')
+
+beta_rel = np.logspace(-1,5,7)
+epsilon_rel = np.logspace(-3,1,5)
+
+for e_rel in epsilon_rel:
+    for b_rel in beta_rel:
+        alpha = 1.
+        beta = alpha * b_rel
+        epsilon = alpha * e_rel
+
+        print('Running the model for beta={:.1e}, epsilon={:.1e}'.format(beta, epsilon))
+        props['model']['gp']['prior']['func'] = 'alpha**2 * M + beta**2 * F'
+        props['model']['gp']['prior']['hyperparams']['alpha'] = str(alpha)
+        props['model']['gp']['prior']['hyperparams']['beta'] = str(beta)
+        props['model']['gp']['obsNoise'] = epsilon
+
+        globdat = main.jive(props)
+
+        samples = globdat['gp']['samples']
+
+        samples_eps_prior = samples['prior']['strain']
+        std_eps_xx_prior = np.std(samples_eps_prior['xx'], axis=1)
+        std_eps_yy_prior = np.std(samples_eps_prior['yy'], axis=1)
+        std_eps_prior = np.append(std_eps_xx_prior, std_eps_yy_prior)
+
+        samples_eps_post = samples['posterior']['strain']
+        std_eps_xx_post = np.std(samples_eps_post['xx'], axis=1)
+        std_eps_yy_post = np.std(samples_eps_post['yy'], axis=1)
+        std_eps_post = np.append(std_eps_xx_post, std_eps_yy_post)
+
+        fname = 'img/systematic-plots/alpha-{:.0e}_beta-{:.0e}_epsilon-{:.0e}_'.format(alpha, beta, epsilon)
+
+        QuickViewer(std_eps_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_prior.pdf')
+        QuickViewer(std_eps_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_prior.pdf')
+        QuickViewer(std_eps_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_posterior.pdf')
+        QuickViewer(std_eps_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_posterior.pdf')

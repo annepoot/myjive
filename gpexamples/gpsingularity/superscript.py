@@ -73,15 +73,15 @@ Phi = globdat['Phi']
 err = abs(u - Phi @ u_coarse)
 err_grad = abs(strain - Phi @ strain_c)
 
-QuickViewer(u, globdat, comp=0, pdf=True, title=r'Displacement field ($u_x$)', fname='img/state0-x.pdf')
-QuickViewer(u, globdat, comp=1, pdf=True, title=r'Displacement field ($u_y$)', fname='img/state0-y.pdf')
-QuickViewer(strain, globdat, comp=0, pdf=True, title=r'Strain field ($\varepsilon_{xx}$)', fname='img/strain-xx.pdf')
-QuickViewer(strain, globdat, comp=1, pdf=True, title=r'Strain field ($\varepsilon_{yy}$)', fname='img/strain-yy.pdf')
+QuickViewer(u, globdat, comp=0, pdf=True, title=r'Displacement field ($u_x$)', fname='img/core-plots/state0-x.pdf')
+QuickViewer(u, globdat, comp=1, pdf=True, title=r'Displacement field ($u_y$)', fname='img/core-plots/state0-y.pdf')
+QuickViewer(strain, globdat, comp=0, pdf=True, title=r'Strain field ($\varepsilon_{xx}$)', fname='img/core-plots/strain-xx.pdf')
+QuickViewer(strain, globdat, comp=1, pdf=True, title=r'Strain field ($\varepsilon_{yy}$)', fname='img/core-plots/strain-yy.pdf')
 
-QuickViewer(err, globdat, comp=0, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/error_state0-x.pdf')
-QuickViewer(err, globdat, comp=1, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/error_state0-y.pdf')
-QuickViewer(err_grad, globdat, comp=0, pdf=True, title=r'Discretization error ($\varepsilon^f_{xx} - \Phi \varepsilon^c_{xx}$)', fname='img/error_strain-xx.pdf')
-QuickViewer(err_grad, globdat, comp=1, pdf=True, title=r'Discretization error ($\varepsilon^f_{yy} - \Phi \varepsilon^c_{yy}$)', fname='img/error_strain-yy.pdf')
+QuickViewer(err, globdat, comp=0, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/core-plots/error_state0-x.pdf')
+QuickViewer(err, globdat, comp=1, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/core-plots/error_state0-y.pdf')
+QuickViewer(err_grad, globdat, comp=0, pdf=True, title=r'Discretization error ($\varepsilon^f_{xx} - \Phi \varepsilon^c_{xx}$)', fname='img/core-plots/error_strain-xx.pdf')
+QuickViewer(err_grad, globdat, comp=1, pdf=True, title=r'Discretization error ($\varepsilon^f_{yy} - \Phi \varepsilon^c_{yy}$)', fname='img/core-plots/error_strain-yy.pdf')
 
 QuickViewer(std_u_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{u_x}$)', fname='img/std_state0-x_prior.pdf')
 QuickViewer(std_u_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{u_y}$)', fname='img/std_state0-y_prior.pdf')

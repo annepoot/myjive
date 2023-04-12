@@ -30,16 +30,14 @@ for e_rel in epsilon_rel:
         samples_eps_prior = samples['prior']['strain']
         std_eps_xx_prior = np.std(samples_eps_prior['xx'], axis=1)
         std_eps_yy_prior = np.std(samples_eps_prior['yy'], axis=1)
-        std_eps_prior = np.append(std_eps_xx_prior, std_eps_yy_prior)
 
         samples_eps_post = samples['posterior']['strain']
         std_eps_xx_post = np.std(samples_eps_post['xx'], axis=1)
         std_eps_yy_post = np.std(samples_eps_post['yy'], axis=1)
-        std_eps_post = np.append(std_eps_xx_post, std_eps_yy_post)
 
         fname = 'img/systematic-plots/alpha-{:.0e}_beta-{:.0e}_epsilon-{:.0e}_'.format(alpha, beta, epsilon)
 
-        QuickViewer(std_eps_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_prior.pdf')
-        QuickViewer(std_eps_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_prior.pdf')
-        QuickViewer(std_eps_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_posterior.pdf')
-        QuickViewer(std_eps_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_posterior.pdf')
+        QuickViewer(std_eps_xx_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_prior.pdf')
+        QuickViewer(std_eps_yy_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_prior.pdf')
+        QuickViewer(std_eps_xx_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_posterior.pdf')
+        QuickViewer(std_eps_xx_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_posterior.pdf')

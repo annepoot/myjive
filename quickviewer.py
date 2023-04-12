@@ -39,7 +39,7 @@ def QuickViewer(array, globdat, **kwargs):
     shape = globdat[gn.MESHSHAPE]
 
     # Set the component to the y-component, if it exists
-    if comp is None:
+    if comp is None and len(array) > len(nodes):
         comp = min(len(types) - 1, 1)
 
     x = np.zeros(len(nodes))
@@ -90,13 +90,14 @@ def QuickViewer(array, globdat, **kwargs):
     dx = np.copy(x)
     dy = np.copy(y)
 
-    for n in range(len(nodes)):
-        idofs = dofs.get_dofs([n], types)
-        du = array[idofs]
+    if scale > 0:
+        for n in range(len(nodes)):
+            idofs = dofs.get_dofs([n], types)
+            du = array[idofs]
 
-        if len(idofs) == 2:
-            dx[n] += scale * du[0]
-            dy[n] += scale * du[1]
+            if len(idofs) == 2:
+                dx[n] += scale * du[0]
+                dy[n] += scale * du[1]
 
     # !!! This should be moved to an appropriate module once BoundaryShapes have been implemented
     if boundarywidth is not None:
@@ -151,11 +152,15 @@ def QuickViewer(array, globdat, **kwargs):
 
     triang = tri.Triangulation(dx, dy, el)
 
-    z = np.zeros(len(nodes))
+    if comp is None:
+        assert len(array) == len(nodes)
+        z = array
+    else:
+        z = np.zeros(len(nodes))
 
-    for n, node in enumerate(nodes):
-        idofs = dofs.get_dofs([n], types)
-        z[n] = array[idofs[comp]]
+        for n, node in enumerate(nodes):
+            idofs = dofs.get_dofs([n], types)
+            z[n] = array[idofs[comp]]
 
     if mincolor is None:
         mincolor = z.min()

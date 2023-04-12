@@ -447,7 +447,6 @@ class GPModel(Model):
 
     def _get_phi(self, globdat):
 
-        elems = globdat[gn.ESET]
         elemsc = globdat[gn.COARSEMESH][gn.ESET]
         nodes = globdat[gn.NSET]
         nodesc = globdat[gn.COARSEMESH][gn.NSET]
@@ -469,53 +468,28 @@ class GPModel(Model):
                 bbox[i,1] = max(coordsc[i,:])
 
             # Go over the fine mesh
-            for elem in elems:
-                inodes = elem.get_nodes()
-                coords = nodes.get_some_coords(inodes)
+            for inode, node in enumerate(nodes):
+                coords = node.get_coords()
 
-                # Check if the bounding boxes of the coarse and fine element overlap
+                # Check if the node falls inside the bounding box
                 inside = True
                 for i in range(self._rank):
-                    if max(coords[i,:]) < bbox[i,0] or min(coords[i,:]) > bbox[i,1]:
+                    if coords[i] < bbox[i,0] or coords[i] > bbox[i,1]:
                         inside = False
                         break
 
-                # Check if the elements overlap
+                # If so, check if the node falls inside the shape itself
                 if inside:
+                    loc_point = self._shape.get_local_point(coords, coordsc)
+                    inside = self._shape.contains_local_point(loc_point, tol=1e-8)
 
-                    # Go over the nodes of the fine element
-                    for n in range(len(inodes)):
+                # If so, add the relative shape function values to the Phi matrix
+                if inside:
+                    svals = np.round(self._shape.eval_shape_functions(loc_point), 12)
+                    idofs = dofs.get_dofs([inode], self._dof_types)
 
-                        # Get the nodal coords
-                        coord = coords[:, n]
-
-                        # Check if the node falls inside the bounding box
-                        inside = True
-                        for i in range(self._rank):
-                            if coord[i] < bbox[i,0] or coord[i] > bbox[i,1]:
-                                inside = False
-                                break
-
-                        if inside:
-
-                            # Get the relative position of the node
-                            loc_point = self._shape.get_local_point(coord, coordsc)
-
-                            # Check if the node actually falls within shape
-                            inside = self._shape.contains_local_point(loc_point, tol=1e-8)
-
-                        # Only continue if both checks are passed
-                        if inside:
-
-                            # Get the shape function values at the location of the coords
-                            svals = np.round(self._shape.eval_shape_functions(loc_point), 12)
-
-                            # Get the dofs belonging to this node
-                            idofs = dofs.get_dofs([inodes[n]], self._dof_types)
-
-                            # Store the relative shape function values in the phi matrix
-                            for i, idof in enumerate(idofs):
-                                Phi[idof, idofsc[i::len(self._dof_types)]] = svals
+                    for i, idof in enumerate(idofs):
+                        Phi[idof, idofsc[i::len(self._dof_types)]] = svals
 
         return Phi
 

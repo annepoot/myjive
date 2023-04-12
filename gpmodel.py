@@ -98,10 +98,9 @@ class GPModel(Model):
         self._dof_types = globdat[gn.DOFSPACE].get_types()
 
         # Add the dofs to the coarse mesh
-        nodes = np.unique([node for elem in globdat[gn.COARSEMESH][gn.ESET] for node in elem.get_nodes()])
         for doftype in self._dof_types:
             globdat[gn.COARSEMESH][gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
+            for node in range(len(globdat[gn.COARSEMESH][gn.NSET])):
                 globdat[gn.COARSEMESH][gn.DOFSPACE].add_dof(node, doftype)
 
         # Get the number of observations (which is the number of dofs in the coarse mesh)
@@ -458,7 +457,6 @@ class GPModel(Model):
         # Go over the coarse mesh
         for elemc in elemsc:
             inodesc = elemc.get_nodes()
-            idofsc = dofsc.get_dofs(inodesc, self._dof_types)
             coordsc = nodesc.get_some_coords(inodesc)
 
             # Get the bounding box of the coarse element
@@ -488,8 +486,10 @@ class GPModel(Model):
                     svals = np.round(self._shape.eval_shape_functions(loc_point), 12)
                     idofs = dofs.get_dofs([inode], self._dof_types)
 
-                    for i, idof in enumerate(idofs):
-                        Phi[idof, idofsc[i::len(self._dof_types)]] = svals
+                    for i, inodec in enumerate(inodesc):
+                        sval = svals[i]
+                        idofsc = dofsc.get_dofs([inodec], self._dof_types)
+                        Phi[idofs, idofsc] = sval
 
         return Phi
 

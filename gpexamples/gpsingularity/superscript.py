@@ -57,16 +57,13 @@ samples_f_post = samples['posterior']['extForce']
 samples_eps_prior = samples['prior']['strain']
 std_eps_xx_prior = np.std(samples_eps_prior['xx'], axis=1)
 std_eps_yy_prior = np.std(samples_eps_prior['yy'], axis=1)
-std_eps_prior = np.append(std_eps_xx_prior, std_eps_yy_prior)
 
 samples_eps_post = samples['posterior']['strain']
 std_eps_xx_post = np.std(samples_eps_post['xx'], axis=1)
 std_eps_yy_post = np.std(samples_eps_post['yy'], axis=1)
-std_eps_post = np.append(std_eps_xx_post, std_eps_yy_post)
 
 eps_xx_post = np.mean(samples_eps_post['xx'], axis=1)
 eps_yy_post = np.mean(samples_eps_post['yy'], axis=1)
-eps_post = np.append(eps_xx_post, eps_yy_post)
 
 Phi = globdat['Phi']
 
@@ -75,8 +72,8 @@ err_grad = abs(strain - Phi @ strain_c)
 
 QuickViewer(u, globdat, comp=0, pdf=True, title=r'Displacement field ($u_x$)', fname='img/core-plots/state0-x.pdf')
 QuickViewer(u, globdat, comp=1, pdf=True, title=r'Displacement field ($u_y$)', fname='img/core-plots/state0-y.pdf')
-QuickViewer(strain, globdat, comp=0, pdf=True, title=r'Strain field ($\varepsilon_{xx}$)', fname='img/core-plots/strain-xx.pdf')
-QuickViewer(strain, globdat, comp=1, pdf=True, title=r'Strain field ($\varepsilon_{yy}$)', fname='img/core-plots/strain-yy.pdf')
+QuickViewer(strain_xx, globdat, pdf=True, title=r'Strain field ($\varepsilon_{xx}$)', fname='img/core-plots/strain-xx.pdf')
+QuickViewer(strain_yy, globdat, pdf=True, title=r'Strain field ($\varepsilon_{yy}$)', fname='img/core-plots/strain-yy.pdf')
 
 QuickViewer(err, globdat, comp=0, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/core-plots/error_state0-x.pdf')
 QuickViewer(err, globdat, comp=1, pdf=True, title=r'Discretization error ($u_x^f - \Phi u_x^c$)', fname='img/core-plots/error_state0-y.pdf')
@@ -87,7 +84,7 @@ QuickViewer(std_u_prior, globdat, comp=0, pdf=True, title=r'Prior standard devia
 QuickViewer(std_u_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{u_y}$)', fname='img/std_state0-y_prior.pdf')
 QuickViewer(std_u_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{u_x}$)', fname='img/std_state0-x_posterior.pdf')
 QuickViewer(std_u_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{u_y}$)', fname='img/std_state0-y_posterior.pdf')
-QuickViewer(std_eps_prior, globdat, comp=0, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_prior.pdf')
-QuickViewer(std_eps_prior, globdat, comp=1, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_prior.pdf')
-QuickViewer(std_eps_post, globdat, comp=0, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_posterior.pdf')
-QuickViewer(std_eps_post, globdat, comp=1, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_posterior.pdf')
+QuickViewer(std_eps_xx_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_prior.pdf')
+QuickViewer(std_eps_yy_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_prior.pdf')
+QuickViewer(std_eps_xx_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname='img/std_strain-xx_posterior.pdf')
+QuickViewer(std_eps_yy_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname='img/std_strain-yy_posterior.pdf')

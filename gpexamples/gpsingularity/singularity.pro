@@ -52,7 +52,6 @@ model =
   solid =
   {
     type = Solid;
-
     elements = all;
 
     material =

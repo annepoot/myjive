@@ -94,6 +94,7 @@ class GPActions:
 
 
 class GPParamNames:
+    FIELD = 'field'
     PRIORMEAN = 'priorMean'
     PRIORCOVARIANCE = 'priorCovariance'
     POSTERIORMEAN = 'posteriorMean'

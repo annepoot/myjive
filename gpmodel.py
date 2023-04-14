@@ -189,6 +189,7 @@ class GPModel(Model):
 
         # Return the prior of the force field
         params[gppn.PRIORMEAN] = self._m
+        params[gppn.FIELD] = gn.STATE0
 
     def _get_posterior_mean(self, params, globdat):
 
@@ -208,6 +209,7 @@ class GPModel(Model):
 
         # Return the posterior of the displacement field
         params[gppn.POSTERIORMEAN] = self._u_post
+        params[gppn.FIELD] = gn.STATE0
 
     def _get_prior_covariance(self, params, globdat):
 
@@ -218,6 +220,7 @@ class GPModel(Model):
         # Compute the full covariance matrix
         Sigma_prior = self._Sigma
         params[gppn.PRIORCOVARIANCE] = Sigma_prior
+        params[gppn.FIELD] = gn.STATE0
 
     def _get_posterior_covariance(self, params, globdat):
 
@@ -241,6 +244,7 @@ class GPModel(Model):
         Sigma_post = var_prior.copy()
         Sigma_post -= self._V1.T @ self._V1
         params[gppn.POSTERIORCOVARIANCE] = Sigma_post
+        params[gppn.FIELD] = gn.STATE0
 
     def _get_prior_samples(self, params, globdat):
 
@@ -278,6 +282,7 @@ class GPModel(Model):
 
         # Return the array of samples
         params[gppn.PRIORSAMPLES] = samples
+        params[gppn.FIELD] = gn.STATE0
 
     def _get_posterior_samples(self, params, globdat):
 
@@ -331,6 +336,7 @@ class GPModel(Model):
 
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples
+        params[gppn.FIELD] = gn.STATE0
 
     def _kalman_update(self, params, globdat):
 
@@ -374,6 +380,7 @@ class GPModel(Model):
 
         # Return the array of samples
         params[gppn.POSTERIORSAMPLES] = samples
+        params[gppn.FIELD] = gn.STATE0
 
     def _project_samples(self, params, globdat):
 

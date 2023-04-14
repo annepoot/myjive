@@ -11,6 +11,7 @@ from jive.util.table import Table
 from jive.util.xtable import to_xtable
 
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
+EXPLICITINVERSE = 'explicitInverse'
 POSTPROJECT = 'postproject'
 PRIORMEAN = 'priorMean'
 NSAMPLE = 'nsample'
@@ -25,7 +26,7 @@ class GPModule(LinsolveModule):
 
         myprops = props[self._name]
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
-
+        self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'True')))
         self._postproject = bool(eval(myprops.get(POSTPROJECT, 'False')))
 
         self._priormean = myprops.get(PRIORMEAN, 'zero')
@@ -41,6 +42,10 @@ class GPModule(LinsolveModule):
 
         # Run solvermodule first
         output = super().run(globdat)
+
+        # Check if we should invert K explicitly
+        if self._explicit_inverse:
+            self._Kinv = np.linalg.inv(self._solver.get_matrix().toarray())
 
         model = globdat[gn.MODEL]
 
@@ -106,19 +111,19 @@ class GPModule(LinsolveModule):
         params[gppn.PRIORSAMPLES] = np.zeros((self._dc, self._nsample))
         params[gppn.POSTERIORSAMPLES] = np.zeros((self._dc, self._nsample))
 
-        # Get the prior samples
+        # Get the prior and posterior samples
         model.take_action(gpact.GETPRIORSAMPLES, params, globdat)
-
-        # Store the prior samples in globdat
-        samples[gn.PRIOR][gn.STATE0]   = params[gppn.PRIORSAMPLES]
-        samples[gn.PRIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.PRIORSAMPLES]
-
-        # Update the prior samples to posterior samples
         model.take_action(gpact.KALMANUPDATE, params, globdat)
 
-        # Store the updated samples in globdat
-        samples[gn.POSTERIOR][gn.STATE0]   = params[gppn.POSTERIORSAMPLES]
-        samples[gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORSAMPLES]
+        # Store the prior and posterior samples in globdat
+        field = params[gppn.FIELD]
+
+        samples[gn.PRIOR][field]     = params[gppn.PRIORSAMPLES]
+        samples[gn.POSTERIOR][field] = params[gppn.POSTERIORSAMPLES]
+
+        # Convert state0 to extForce or vice versa
+        self._state0_extforce_conversion(samples[gn.PRIOR], field, 'samples')
+        self._state0_extforce_conversion(samples[gn.POSTERIOR], field, 'samples')
 
         # Project the samples over the coarse space if needed
         if self._postproject:
@@ -187,10 +192,14 @@ class GPModule(LinsolveModule):
         model.take_action(gpact.GETPOSTERIORMEAN, params, globdat)
 
         # Store the prior and posterior mean in globdat
-        mean[gn.PRIOR][gn.STATE0]       = params[gppn.PRIORMEAN]
-        mean[gn.PRIOR][gn.EXTFORCE]     = self._solver.get_matrix() @ params[gppn.PRIORMEAN]
-        mean[gn.POSTERIOR][gn.STATE0]   = params[gppn.POSTERIORMEAN]
-        mean[gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORMEAN]
+        field = params[gppn.FIELD]
+
+        mean[gn.PRIOR][field]     = params[gppn.PRIORMEAN]
+        mean[gn.POSTERIOR][field] = params[gppn.POSTERIORMEAN]
+
+        # Convert state0 to extForce or vice versa
+        self._state0_extforce_conversion(mean[gn.PRIOR], field, 'vector')
+        self._state0_extforce_conversion(mean[gn.POSTERIOR], field, 'vector')
 
     def take_variance_action(self, cov, globdat):
 
@@ -204,10 +213,46 @@ class GPModule(LinsolveModule):
         model.take_action(gpact.GETPOSTERIORCOVARIANCE, params, globdat)
 
         # Store the prior and posterior covariance in globdat
-        cov[gn.PRIOR][gn.STATE0]       = params[gppn.PRIORCOVARIANCE]
-        cov[gn.PRIOR][gn.EXTFORCE]     = self._solver.get_matrix() @ params[gppn.PRIORCOVARIANCE] @ self._solver.get_matrix()
-        cov[gn.POSTERIOR][gn.STATE0]   = params[gppn.POSTERIORCOVARIANCE]
-        cov[gn.POSTERIOR][gn.EXTFORCE] = self._solver.get_matrix() @ params[gppn.POSTERIORCOVARIANCE] @ self._solver.get_matrix()
+        field = params[gppn.FIELD]
+
+        cov[gn.PRIOR][field]     = params[gppn.PRIORCOVARIANCE]
+        cov[gn.POSTERIOR][field] = params[gppn.POSTERIORCOVARIANCE]
+
+        # Convert state0 to extForce or vice versa
+        self._state0_extforce_conversion(cov[gn.PRIOR], field, 'matrix')
+        self._state0_extforce_conversion(cov[gn.POSTERIOR], field, 'matrix')
+
+    def _state0_extforce_conversion(self, target, field, shape):
+        assert shape in ['vector', 'matrix', 'samples']
+
+        if field == gn.STATE0:
+            if shape == 'vector' or shape == 'samples':
+                target[gn.EXTFORCE] = self._solver.get_matrix() @ target[gn.STATE0]
+            elif shape == 'matrix':
+                target[gn.EXTFORCE] = self._solver.get_matrix() @ target[gn.STATE0] @ self._solver.get_matrix()
+            else:
+                raise ValueError('shape should be "vector", "matrix" or "samples"')
+        elif field == gn.EXTFORCE:
+            if self._explicit_inverse:
+                if shape == 'vector' or shape == 'samples':
+                    target[gn.STATE0] = self._Kinv @ target[gn.EXTFORCE]
+                elif shape == 'matrix':
+                    target[gn.STATE0] = self._Kinv @ target[gn.EXTFORCE] @ self._Kinv
+                else:
+                    raise ValueError('shape should be "vector", "matrix" or "samples"')
+            else:
+                self._solver.precon_mode = True
+                if shape == 'vector':
+                    target[gn.STATE0] = self._solver.solve(target[gn.EXTFORCE])
+                elif shape == 'samples':
+                    target[gn.STATE0] = self._solver.multisolve(target[gn.EXTFORCE])
+                elif shape == 'matrix':
+                    target[gn.STATE0] = self._solver.multisolve(self._solver.multisolve(target[gn.EXTFORCE]).T)
+                else:
+                    raise ValueError('shape should be "vector", "matrix" or "samples"')
+                self._solver.precon_mode = False
+        else:
+            raise ValueError('field should be either STATE0 or EXTFORCE')
 
 
 def declare(factory):

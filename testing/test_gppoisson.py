@@ -22,8 +22,6 @@ def props():
     props['gpsolver']['type'] = 'GPSolver'
     props['gpsolver']['solver'] = {'type':'cholmod'}
 
-    props['model']['gp']['explicitInverse'] = 'True'
-
     return props
 
 @pytest.mark.rank2

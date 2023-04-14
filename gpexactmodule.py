@@ -6,12 +6,6 @@ from jive.fem.names import GPParamNames as gppn
 
 from gpmodule import GPModule
 
-GETUNITMASSMATRIX = 'getUnitMassMatrix'
-POSTPROJECT = 'postproject'
-PRIORMEAN = 'priorMean'
-NSAMPLE = 'nsample'
-SEED = 'seed'
-
 class GPExactModule(GPModule):
 
     def run(self, globdat):

@@ -4,12 +4,6 @@ from jive.fem.names import GlobNames as gn
 
 from gpmodule import GPModule
 
-GETUNITMASSMATRIX = 'getUnitMassMatrix'
-POSTPROJECT = 'postproject'
-PRIORMEAN = 'priorMean'
-NSAMPLE = 'nsample'
-SEED = 'seed'
-
 class GPSamplerModule(GPModule):
 
     def run(self, globdat):

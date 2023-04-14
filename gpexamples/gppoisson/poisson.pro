@@ -68,9 +68,6 @@ model =
   {
     type = GPf;
 
-    explicitInverse = False;
-    coarseInit = False;
-
     prior =
     {
       type = SPDE;
@@ -79,18 +76,6 @@ model =
       {
         alpha = 0.3;
       };
-    };
-
-    solver =
-    {
-      type = CG;
-      maxIter = 200;
-      allowMaxIter = False;
-    };
-
-    preconditioner =
-    {
-      type = diag;
     };
 
     obsNoise = 1e-5;

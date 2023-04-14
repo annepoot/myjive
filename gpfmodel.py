@@ -10,11 +10,7 @@ from jive.fem.names import GlobNames as gn
 from gpmodel import GPModel
 
 PRIOR = 'prior'
-EXPLICITINVERSE = 'explicitInverse'
-COARSEINIT = 'coarseInit'
 DIAGONALIZED = 'diagonalized'
-SOLVER = 'solver'
-PRECONDITIONER = 'preconditioner'
 TYPE = 'type'
 
 class GPfModel(GPModel):
@@ -23,40 +19,11 @@ class GPfModel(GPModel):
 
         super().configure(props, globdat)
 
-        self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'False')))
-        self._coarse_init = bool(eval(props.get(COARSEINIT, 'False')))
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
-
-        solverprops = props.get(SOLVER, {})
-        solver = solverprops.get(TYPE, 'cholmod')
-        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
-        self._solver.configure(solverprops, globdat)
-
-        preconprops = props.get(PRECONDITIONER, {})
-        self._precon = None
-        precon = preconprops.get(TYPE)
-        if precon is not None:
-            self._precon = globdat[gn.PRECONFACTORY].get_precon(precon)
-            self._precon.configure(preconprops, globdat)
 
     def _configure_fem(self, params, globdat):
 
         super()._configure_fem(params, globdat)
-
-        if self._explicit_inverse:
-            # Check if K^-1 should just be precomputed once explictly
-            self._Kinv = np.linalg.inv(self._Kc.toarray())
-        else:
-            # Otherwise, configure the solver
-            K = globdat.get(gn.MATRIX0)
-            c = globdat.get(gn.CONSTRAINTS)
-
-            # Update the solver
-            self._solver.update(K, c, self._precon)
-
-            # Make sure that the solver is in precon mode
-            # (so it does not add the DBC contribution to the rhs)
-            self._solver.precon_mode = True
 
     def _configure_prior(self, params, globdat):
 
@@ -99,112 +66,43 @@ class GPfModel(GPModel):
 
         # Get the prior mean on f
         super()._get_prior_mean(params, globdat)
-
-        # Solve to get the prior mean on u
-        if self._explicit_inverse:
-            params[gppn.PRIORMEAN] = self._Kinv @ params[gppn.PRIORMEAN]
-        else:
-            params[gppn.PRIORMEAN] = self._solver.solve(params[gppn.PRIORMEAN])
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_posterior_mean(self, params, globdat):
 
         # Get the posterior mean on f
         super()._get_posterior_mean(params, globdat)
-
-        # Solve to get the posterior mean on u
-        if self._explicit_inverse:
-            params[gppn.POSTERIORMEAN] = self._Kinv @ params[gppn.POSTERIORMEAN]
-        else:
-            if self._coarse_init:
-                orig_guess = self._solver.get_init_guess()
-                self._solver.set_init_guess(self._uc)
-                params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
-                self._solver.set_init_guess(orig_guess)
-            else:
-                params[gppn.POSTERIORMEAN] = self._solver.solve(params[gppn.POSTERIORMEAN])
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_prior_covariance(self, params, globdat):
 
         # Get the prior covariance on f
         super()._get_prior_covariance(params, globdat)
-
-        # Solve to get the prior covariance on u
-        if self._explicit_inverse:
-            params[gppn.PRIORCOVARIANCE] = self._Kinv @ params[gppn.PRIORCOVARIANCE] @ self._Kinv
-        else:
-            params[gppn.PRIORCOVARIANCE] = self._solver.multisolve(self._solver.multisolve(params[gppn.PRIORCOVARIANCE]).T)
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_posterior_covariance(self, params, globdat):
 
-        # Unsolve to get the prior covariance on f
-        if not gppn.PRIORCOVARIANCE in params:
-            self.take_action(gpact.GETPRIORCOVARIANCE, params, globdat)
-        tmp = params[gppn.PRIORCOVARIANCE]
-        params[gppn.PRIORCOVARIANCE] = self._Kc @ params[gppn.PRIORCOVARIANCE] @ self._Kc
-
         # Get the posterior covariance on f
         super()._get_posterior_covariance(params, globdat)
-
-        # Solve to get the posterior covariance on u
-        if self._explicit_inverse:
-            params[gppn.POSTERIORCOVARIANCE] = self._Kinv @ params[gppn.POSTERIORCOVARIANCE] @ self._Kinv
-        else:
-            params[gppn.POSTERIORCOVARIANCE] = self._solver.multisolve(self._solver.multisolve(params[gppn.POSTERIORCOVARIANCE]).T)
-
-        # Store the original prior covariance back
-        params[gppn.PRIORCOVARIANCE] = tmp
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_prior_samples(self, params, globdat):
 
         # Get the prior samples on f
         super()._get_prior_samples(params, globdat)
-
-        # Solve to get the prior samples on u
-        if self._explicit_inverse:
-            params[gppn.PRIORSAMPLES] = self._Kinv @ params[gppn.PRIORSAMPLES]
-        else:
-            params[gppn.PRIORSAMPLES] = self._solver.multisolve(params[gppn.PRIORSAMPLES])
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_posterior_samples(self, params, globdat):
 
         # Get the posterior samples on f
         super()._get_posterior_samples(params, globdat)
-
-        # Solve to get the posterior samples on u
-        if self._explicit_inverse:
-            params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
-        else:
-            if self._coarse_init:
-                orig_guess = self._solver.get_init_guess()
-                self._solver.set_init_guess(self._uc)
-                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
-                self._solver.set_init_guess(orig_guess)
-            else:
-                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _kalman_update(self, params, globdat):
 
-        # Unsolve to get the prior samples on f
-        tmp = params[gppn.PRIORSAMPLES]
-        params[gppn.PRIORSAMPLES] = self._Kc @ params[gppn.PRIORSAMPLES]
-
         # Perform the Kalman update on f
         super()._kalman_update(params, globdat)
-
-        # Solve to get the posterior samples on u
-        if self._explicit_inverse:
-            params[gppn.POSTERIORSAMPLES] = self._Kinv @ params[gppn.POSTERIORSAMPLES]
-        else:
-            if self._coarse_init:
-                orig_guess = self._solver.get_init_guess()
-                self._solver.set_init_guess(self._uc)
-                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
-                self._solver.set_init_guess(orig_guess)
-            else:
-                params[gppn.POSTERIORSAMPLES] = self._solver.multisolve(params[gppn.POSTERIORSAMPLES])
-
-        # Store the original prior samples back
-        params[gppn.PRIORSAMPLES] = tmp
+        params[gppn.FIELD] = gn.EXTFORCE
 
     def _get_param_opt(self, Sigma_fc):
 

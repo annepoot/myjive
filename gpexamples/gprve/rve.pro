@@ -93,6 +93,14 @@ model =
     pdNoise = 0;
     bcNoise = 1e-8;
 
+    boundary =
+    {
+      type = dirichlet;
+      groups = [ r , t ];
+      dofs   = [ dx, dy ];
+      covs   = [ 0.1, 0.1 ];
+    };
+
     shape =
     {
       type = Triangle3;

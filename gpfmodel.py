@@ -7,9 +7,15 @@ from jive.solver.jit.spsolve import solve_triangular
 from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 from jive.fem.names import GlobNames as gn
+import jive.util.proputils as pu
+
 from gpmodel import GPModel
 
 PRIOR = 'prior'
+BOUNDARY = 'boundary'
+GROUPS = 'groups'
+DOFS = 'dofs'
+COVS = 'covs'
 DIAGONALIZED = 'diagonalized'
 TYPE = 'type'
 
@@ -18,6 +24,15 @@ class GPfModel(GPModel):
     def configure(self, props, globdat):
 
         super().configure(props, globdat)
+
+        # Get the type of BC enforcement
+        bcprops = props.get(BOUNDARY, {})
+        self._bctype = bcprops.get(TYPE, 'dirichlet')
+        if self._bctype not in ['direct', 'dirichlet']:
+            raise ValueError('boundary has to be "dirichlet" or "direct"')
+        self._bcgroups = pu.parse_list(bcprops.get(GROUPS,'[]'))
+        self._bcdofs = pu.parse_list(bcprops.get(DOFS, '[]'))
+        self._bccovs = pu.parse_list(bcprops.get(COVS,'[]'), float)
 
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
 
@@ -32,12 +47,6 @@ class GPfModel(GPModel):
         self._Phi = spsp.csr_array(self._Phi)
         self._H = self._Phic.T
         self._H = self._H.tocsr()
-
-        # Define the mean in terms of the force vector as well
-        self._m = self._Kc @ self._m
-
-        # Get the centered observation vector (as a deviation from the prior mean)
-        self._y = self._g - self._Phic.T @ self._m
 
         # Check if alpha or beta should be optimized
         if len(self._hyperparams) == 1:
@@ -56,9 +65,9 @@ class GPfModel(GPModel):
                     raise ValueError('cannot find optimal value for ' + key)
 
                 # Apply boundary conditions to the prior
-                _, Sigma = self._apply_covariance_bcs(self._m, Sigma)
+                m, Sigma = self._apply_covariance_bcs(Sigma, globdat)
 
-                self._hyperparams[key] = self._get_param_opt(Sigma)
+                self._hyperparams[key] = self._get_param_opt(m, Sigma)
 
         super()._configure_prior(params, globdat)
 
@@ -104,11 +113,12 @@ class GPfModel(GPModel):
         super()._kalman_update(params, globdat)
         params[gppn.FIELD] = gn.EXTFORCE
 
-    def _get_param_opt(self, Sigma_fc):
+    def _get_param_opt(self, m_fc, Sigma_fc):
 
         # Determine the optimal value of alpha
+        y = self._g - self._Phic.T @ m_fc
         L = sparse_cholesky(self._H @ Sigma_fc @ self._H.T)
-        v = self._solve_triangular(L, self._y, lower=True)
+        v = self._solve_triangular(L, y, lower=True)
         alpha2 = v.T @ v / self._nobs
 
         return np.sqrt(alpha2)
@@ -155,33 +165,55 @@ class GPfModel(GPModel):
 
         return eval_dict
 
-    def _apply_covariance_bcs(self, m, Sigma):
+    def _apply_covariance_bcs(self, Sigma, globdat):
         Sigmac = Sigma.copy()
-        mc = m.copy()
+        mc = np.zeros(self._dc)
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         Sigmac += self._pdnoise2 * spsp.identity(self._dc)
 
-        # Split Sigma along boundary and internal nodes
+        # Get the internal node indices
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
-        Sigma_bb = Sigmac[np.ix_(self._cdofs,self._cdofs)]
-        Sigma_bi = Sigmac[np.ix_(self._cdofs,idofs)]
-        Sigma_ib = Sigmac[np.ix_(idofs,self._cdofs)]
+        # Check if the boundary condition should be applied directly or via dirichlet BCs
+        if self._bctype == 'dirichlet':
 
-        Sigma_bb_inv = spspla.inv(Sigma_bb.tocsc())
+            # Split K along boundary and internal nodes
+            K_ib = -self._K[:,self._cdofs]
+            K_ib[self._cdofs] = spsp.identity(len(self._cdofs))
 
-        # Update the prior mean by observing the displacement at the bcs
-        mc[idofs] += Sigma_ib @ Sigma_bb_inv @ (self._cvals - m[self._cdofs])
-        mc[self._cdofs] = self._cvals
+            # Update the prior mean by observing the displacement at the bcs
+            mc += K_ib @ self._cvals
 
-        # Update the prior covariance as well
-        Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
+            # Decouple the bc covariance from the internal nodes
+            Sigmac[self._cdofs,:] *= 0.0
+            Sigmac[:,self._cdofs] *= 0.0
 
-        # Decouple the bc covariance from the internal nodes
-        Sigmac[self._cdofs,:] *= 0.0
-        Sigmac[:,self._cdofs] *= 0.0
-        Sigmac[self._cdofs,self._cdofs] = self._bcnoise2
+            # Get a matrix that defines the constraint equations_set_arrayXarray
+            conmat = spsp.lil_array((self._dc, len(self._bcgroups)))
+            ds = globdat[gn.DOFSPACE]
+            for i, (group, dof, cov) in enumerate(zip(self._bcgroups, self._bcdofs, self._bccovs)):
+                idofs = ds.get_dofs(globdat[gn.NGROUPS][group], [dof])
+                conmat[idofs, i] = 1
+            conmat = conmat[self._cdofs,:]
+
+            # Get the boundary covariance matrix
+            covmat = spsp.diags(self._bccovs)**2
+            Sigma_bc = conmat @ covmat @ conmat.T
+
+            # Recouple the internal nodes based on the boundary covariance matrix
+            Sigmac += K_ib @ Sigma_bc @ K_ib.T
+
+        elif self._bctype == 'direct':
+            raise ValueError('With GPfModel, BCs cannot be applied directly')
+
+        else:
+            raise ValueError('boundary has to be "dirichlet" or "direct"')
+
+        # Add separate boundary noise to ensure positive definiteness
+        noisediag = np.zeros(self._dc)
+        noisediag[self._cdofs] = self._bcnoise2
+        Sigmac += spsp.diags(noisediag)
 
         return mc, Sigmac
 

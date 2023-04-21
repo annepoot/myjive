@@ -46,16 +46,15 @@ def test_moments(props):
     u_post = mean['posterior']['state0']
     f_post = mean['posterior']['extForce']
 
-    assert np.isclose(f_prior[mid], 5)
-    assert np.isclose(np.delete(f_prior, mid), 0).all()
-    assert np.isclose(u_prior[mid], 2.4972362848453950)
-    assert np.isclose(max(u_prior), u_prior[mid])
-    assert np.isclose(min(u_prior), 0)
+    assert np.isclose(f_prior, 0).all()
+    assert np.isclose(u_prior, 0).all()
+    # assert np.isclose(max(u_prior), u_prior[mid])
+    # assert np.isclose(min(u_prior), 0)
 
-    assert np.isclose(f_post[mid], 5.1479018481190035)
+    assert np.isclose(f_post[mid], 0.3952837213234438)
     assert np.isclose(max(f_post), f_post[mid])
     assert np.isclose(min(f_post), 0)
-    assert np.isclose(u_post[mid], 3.4637802350491290)
+    assert np.isclose(u_post[mid], 2.2429630646764194)
     assert np.isclose(max(u_post), u_post[mid])
     assert np.isclose(min(u_post), 0)
 
@@ -68,17 +67,17 @@ def test_moments(props):
     pdnoise = 1e-8
 
     assert np.isclose(std_f_prior[[0,-1]], pdnoise).all()
-    assert np.isclose(std_f_prior[1:-1], 0.3918362293782328).all()
+    assert np.isclose(std_f_prior[1:-1], 0.6747632114003022).all()
     assert np.isclose(std_u_prior[[0,-1]], pdnoise).all()
-    assert np.isclose(std_u_prior[mid], 0.6070367843858733)
+    assert np.isclose(std_u_prior[mid], 1.0453502237919374)
     assert np.isclose(max(std_u_prior), std_u_prior[mid])
-    assert np.isclose(std_u_prior[[p25,p75]], 0.5949856163367298).all()
+    assert np.isclose(std_u_prior[[p25,p75]], 1.0245974596412912).all()
     assert np.isclose(min(std_u_prior), pdnoise)
 
     assert np.isclose(std_f_post[[0,-1]], pdnoise).all()
-    assert np.isclose(std_f_post[mid], 0.37701598252510565)
-    assert np.isclose(std_f_post[[p25,p75]], 0.3717480581869951).all()
+    assert np.isclose(std_f_post[mid], 0.6492419435570032)
+    assert np.isclose(std_f_post[[p25,p75]], 0.6401702925012068).all()
     assert np.isclose(std_u_post[[0,-1]], pdnoise).all()
-    assert np.isclose(std_u_post[mid], 0.234519164730104)
-    assert np.isclose(std_u_post[[p25,p75]], 0.18731452470532461).all()
+    assert np.isclose(std_u_post[mid], 0.40385470472406826)
+    assert np.isclose(std_u_post[[p25,p75]], 0.3225657576789776).all()
     assert np.isclose(min(std_u_post), pdnoise)

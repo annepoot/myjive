@@ -61,21 +61,6 @@ class GPModule(LinsolveModule):
             # Store mass matrix in Globdat
             globdat[gn.MATRIX2] = M
 
-        # Get the rhs prior mean
-        if self._priormean == 'zero':
-            m = np.zeros_like(globdat[gn.STATE0])
-        else:
-            if self._priormean == 'dirichlet':
-                mf = np.zeros_like(globdat[gn.EXTFORCE])
-            elif self._priormean == 'neumann':
-                mf = self.get_neumann_vector(globdat)
-            else:
-                raise ValueError('priorMean has to be "zero", "dirichlet" or "neumann".')
-
-            m = self._solver.solve(mf)
-
-        params[gppn.PRIORMEAN] = m
-
         # Configure the GP based on the fine FEM results
         model.take_action(gpact.CONFIGUREFEM, params, globdat)
         model.take_action(gpact.CONFIGUREPRIOR, params, globdat)

@@ -125,12 +125,13 @@ class GPModel(Model):
 
         # Get the actual constrained stiffness matrix and force vector
         self._Mc = conmanM.get_output_matrix()
+        self._M = conmanM.get_input_matrix()
         self._Kc = conmanK.get_output_matrix()
+        self._K = conmanK.get_input_matrix()
         self._f = f
         fc = conmanK.get_rhs(f)
 
-        # Get the prior mean
-        self._m = params[gppn.PRIORMEAN]
+        # Get the constraints
         self._cdofs, self._cvals = c.get_constraints()
 
         # Constrain the phi matrix based on Dirichlet BCs
@@ -144,12 +145,6 @@ class GPModel(Model):
 
         # Get the observed force vector
         self._g = self._Phic.T @ fc
-
-        # Get the centered observation vector (as a deviation from the prior mean)
-        self._y = self._g - self._H @ self._m
-
-        # Get the coarse solution vector
-        self._uc = self._Phic @ np.linalg.solve(self._H @ self._Phic, self._g)
 
     def _configure_prior(self, params, globdat):
 
@@ -183,7 +178,10 @@ class GPModel(Model):
             self._Sigma = eval(self._covariance, eval_dict)
 
         # Apply boundary conditions to the prior
-        self._m, self._Sigma = self._apply_covariance_bcs(self._m, self._Sigma)
+        self._m, self._Sigma = self._apply_covariance_bcs(self._Sigma, globdat)
+
+        # Get the centered observation vector (as a deviation from the prior mean)
+        self._y = self._g - self._H @ self._m
 
     def _get_prior_mean(self, params, globdat):
 
@@ -507,32 +505,49 @@ class GPModel(Model):
             for cdof in cdofs:
                 if np.isclose(Phic[cdof,i], 1):
                     Phic[:,i] = 0.0
-                    Phic[cdof,i] = 1.0
+                    Phic[cdof,:] = 0.0
 
         return Phic
 
-    def _apply_covariance_bcs(self, m, Sigma):
+    def _apply_covariance_bcs(self, Sigma, globdat):
         Sigmac = Sigma.copy()
-        mc = m.copy()
+        mc = np.zeros(self._dc)
 
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         Sigmac += self._pdnoise2 * np.identity(self._dc)
 
-        # Split Sigma along boundary and internal nodes
+        # Get the internal node indices
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
-        Sigma_bb = Sigmac[np.ix_(self._cdofs,self._cdofs)]
-        Sigma_bi = Sigmac[np.ix_(self._cdofs,idofs)]
-        Sigma_ib = Sigmac[np.ix_(idofs,self._cdofs)]
+        # Check if the boundary condition should be applied directly or via dirichlet BCs
+        if self._boundary == 'direct':
 
-        Sigma_bb_inv = np.linalg.inv(Sigma_bb)
+            # Split Sigma along boundary and internal nodes
+            Sigma_bb = Sigmac[np.ix_(self._cdofs, self._cdofs)]
+            Sigma_bi = Sigmac[np.ix_(self._cdofs, idofs)]
+            Sigma_ib = Sigmac[np.ix_(idofs, self._cdofs)]
 
-        # Update the prior mean by observing the displacement at the bcs
-        mc[idofs] += Sigma_ib @ Sigma_bb_inv @ (self._cvals - m[self._cdofs])
-        mc[self._cdofs] = self._cvals
+            Sigma_bb_inv = np.linalg.inv(Sigma_bb)
 
-        # Update the prior covariance as well
-        Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
+            # Update the prior mean by observing the displacement at the bcs
+            mc[idofs] += Sigma_ib @ Sigma_bb_inv @ self._cvals
+            mc[self._cdofs] = self._cvals
+
+            # Update the prior covariance as well
+            Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
+
+        elif self._boundary == 'dirichlet':
+
+            # Split K along boundary and internal nodes
+            K_ib = self._K[np.ix_(idofs,self._cdofs)]
+            K_ii = self._K[np.ix_(idofs,idofs)]
+
+            # Update the prior mean by observing the displacement at the bcs
+            mc[idofs] -= np.linalg.solve(K_ii.toarray(), K_ib @ self._cvals)
+            mc[self._cdofs] = self._cvals
+
+        else:
+            raise ValueError('boundary has to be "dirichlet" or "direct"')
 
         # Decouple the bc covariance from the internal nodes
         Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0

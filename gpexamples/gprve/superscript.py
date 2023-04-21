@@ -7,7 +7,7 @@ import jive.util.proputils as pu
 from quickviewer import QuickViewer
 from copy import deepcopy
 
-props = pu.parse_file('gprve.pro')
+props = pu.parse_file('rve.pro')
 
 props_c = {}
 props_c['init'] = deepcopy(props['gpinit'])

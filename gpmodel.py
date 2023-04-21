@@ -125,7 +125,6 @@ class GPModel(Model):
 
         # Get the actual constrained stiffness matrix and force vector
         self._Mc = conmanM.get_output_matrix()
-        self._M = conmanM.get_input_matrix()
         self._Kc = conmanK.get_output_matrix()
         self._K = conmanK.get_input_matrix()
         self._f = f

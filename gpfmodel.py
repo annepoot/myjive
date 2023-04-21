@@ -172,9 +172,6 @@ class GPfModel(GPModel):
         # Add a tiny noise to ensure Sigma is positive definite rather than semidefinite
         Sigmac += self._pdnoise2 * spsp.identity(self._dc)
 
-        # Get the internal node indices
-        idofs = np.delete(np.arange(self._dc), self._cdofs)
-
         # Check if the boundary condition should be applied directly or via dirichlet BCs
         if self._bctype == 'dirichlet':
 
@@ -192,7 +189,7 @@ class GPfModel(GPModel):
             # Get a matrix that defines the constraint equations_set_arrayXarray
             conmat = spsp.lil_array((self._dc, len(self._bcgroups)))
             ds = globdat[gn.DOFSPACE]
-            for i, (group, dof, cov) in enumerate(zip(self._bcgroups, self._bcdofs, self._bccovs)):
+            for i, (group, dof) in enumerate(zip(self._bcgroups, self._bcdofs)):
                 idofs = ds.get_dofs(globdat[gn.NGROUPS][group], [dof])
                 conmat[idofs, i] = 1
             conmat = conmat[self._cdofs,:]

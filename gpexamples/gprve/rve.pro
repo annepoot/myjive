@@ -63,9 +63,8 @@ model =
       rank = 2;
       anmodel = plane_stress;
 
-      E = 3000.;
+      E = 3.;
       nu = 0.2;
-      thickness = 1.;
     };
 
     shape =
@@ -89,9 +88,9 @@ model =
       };
     };
 
-    obsNoise = 1e-2;
-    pdNoise = 0;
-    bcNoise = 1e-8;
+    obsNoise = 1e-8;
+    pdNoise = 1e-6;
+    bcNoise = 1e-6;
 
     boundary =
     {

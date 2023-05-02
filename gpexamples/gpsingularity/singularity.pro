@@ -89,9 +89,9 @@ model =
       };
     };
 
-    obsNoise = 1e-7;
-    pdNoise = 1e-5;
-    bcNoise = 1e-8;
+    obsNoise = 1e-8;
+    pdNoise = 1e-6;
+    bcNoise = 1e-6;
 
     shape =
     {

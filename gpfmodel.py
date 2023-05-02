@@ -117,7 +117,7 @@ class GPfModel(GPModel):
 
         # Determine the optimal value of alpha
         y = self._g - self._Phic.T @ m_fc
-        L = sparse_cholesky(self._H @ Sigma_fc @ self._H.T)
+        L = sparse_cholesky(self._H @ Sigma_fc @ self._H.T + spsp.identity(self._nobs) * self._noise2)
         v = self._solve_triangular(L, y, lower=True)
         alpha2 = v.T @ v / self._nobs
 

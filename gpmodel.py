@@ -14,6 +14,7 @@ OBSNOISE = 'obsNoise'
 PDNOISE = 'pdNoise'
 BCNOISE = 'bcNoise'
 PRIOR = 'prior'
+MEAN = 'mean'
 TYPE = 'type'
 FUNC = 'func'
 PREPROJECT = 'preproject'
@@ -76,6 +77,7 @@ class GPModel(Model):
 
         # Get the prior properties
         priorprops = props[PRIOR]
+
         self._prior = priorprops[TYPE]
         if self._prior == 'kernel':
             self._kernel = priorprops[FUNC]
@@ -83,6 +85,10 @@ class GPModel(Model):
             self._covariance = priorprops[FUNC]
         else:
             raise ValueError('prior has to be "kernel" or "SPDE"')
+
+        self._mean = priorprops.get(MEAN, 'zero')
+        if self._mean not in ['zero', 'dirichlet']:
+            raise ValueError('prior mean has to be "zero" or "dirichlet"')
 
         self._hyperparams = {}
         for key, value in priorprops[HYPERPARAMS].items():
@@ -542,8 +548,9 @@ class GPModel(Model):
             K_ii = self._K[np.ix_(idofs,idofs)]
 
             # Update the prior mean by observing the displacement at the bcs
-            mc[idofs] -= np.linalg.solve(K_ii.toarray(), K_ib @ self._cvals)
-            mc[self._cdofs] = self._cvals
+            if self._mean == 'dirichlet':
+                mc[idofs] -= np.linalg.solve(K_ii.toarray(), K_ib @ self._cvals)
+                mc[self._cdofs] = self._cvals
 
         else:
             raise ValueError('boundary has to be "dirichlet" or "direct"')

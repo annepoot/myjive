@@ -79,6 +79,7 @@ model =
       {
         alpha = opt;
       };
+      mean = dirichlet;
     };
 
     preproject = False;

@@ -180,7 +180,8 @@ class GPfModel(GPModel):
             K_ib[self._cdofs] = spsp.identity(len(self._cdofs))
 
             # Update the prior mean by observing the displacement at the bcs
-            mc += K_ib @ self._cvals
+            if self._mean == 'dirichlet':
+                mc += K_ib @ self._cvals
 
             # Decouple the bc covariance from the internal nodes
             Sigmac[self._cdofs,:] *= 0.0

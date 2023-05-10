@@ -12,27 +12,27 @@ globdat = main.jive(props)
 u = globdat['state0']
 u_post = globdat['gp']['mean']['posterior']['state0']
 
-gamma_rel = np.logspace(-4,6,21)
+beta_rel = np.logspace(-6,4,21)
 epsilon_rel = np.logspace(-4,4,17)
 
 alphas = []
-gammas = []
-gammas_rel = []
+betas = []
+betas_rel = []
 epsilons = []
 epsilons_rel = []
 errors = []
 errors_rel = []
 
 for i, e_rel in enumerate(epsilon_rel):
-    for j, g_rel in enumerate(gamma_rel):
+    for j, b_rel in enumerate(beta_rel):
         alpha = 1.
-        gamma = alpha * g_rel
+        beta = alpha * b_rel
         epsilon = alpha * e_rel
 
-        print('Running the model for gamma={:.1e}, epsilon={:.1e}'.format(gamma, epsilon))
-        props['model']['gp']['prior']['func'] = 'alpha**2 * M + gamma**2 * F'
+        print('Running the model for beta={:.1e}, epsilon={:.1e}'.format(beta, epsilon))
+        props['model']['gp']['prior']['func'] = 'alpha**2 * M'
         props['model']['gp']['prior']['hyperparams']['alpha'] = str(alpha)
-        props['model']['gp']['prior']['hyperparams']['gamma'] = str(gamma)
+        props['model']['gp']['boundary']['covs'] = '['+str(beta)+','+str(beta)+']'
         props['model']['gp']['obsNoise'] = epsilon
 
         globdat = main.jive(props)
@@ -43,13 +43,13 @@ for i, e_rel in enumerate(epsilon_rel):
         error_rel = error / np.linalg.norm(u)
 
         alphas.append(alpha)
-        gammas.append(gamma)
-        gammas_rel.append(g_rel)
+        betas.append(beta)
+        betas_rel.append(b_rel)
         epsilons.append(epsilon)
         epsilons_rel.append(e_rel)
         errors.append(error)
         errors_rel.append(error_rel)
 
-create_dat(data=[alphas, gammas, gammas_rel, epsilons, epsilons_rel, errors, errors_rel],
-           headers=['alpha', 'gamma', 'gamma_rel', 'epsilon', 'epsilon_rel', 'error', 'error_rel'],
+create_dat(data=[alphas, betas, betas_rel, epsilons, epsilons_rel, errors, errors_rel],
+           headers=['alpha', 'beta', 'beta_rel', 'epsilon', 'epsilon_rel', 'error', 'error_rel'],
            fname='output/contour.dat')

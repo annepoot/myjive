@@ -30,6 +30,7 @@ def QuickViewer(array, globdat, **kwargs):
     title = kwargs.get('title', None)
     fname = kwargs.get('fname', None)
     pdf = bool(kwargs.get('pdf', False))
+    figsize = kwargs.get('figsize', None)
 
     # Get the necessary info from globdat
     nodes = globdat[gn.NSET]
@@ -132,7 +133,7 @@ def QuickViewer(array, globdat, **kwargs):
     no_ax = ax is None
 
     if no_ax:
-        plt.figure()
+        plt.figure(figsize=figsize)
         ax = plt.gca()
     else:
         if inset:

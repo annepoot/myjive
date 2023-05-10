@@ -80,12 +80,11 @@ model =
     prior =
     {
       type = SPDE;
-      //func = alpha**2 * M + beta**2 * exp(-(np.outer(abs(x-5),abs(x-5))+np.outer(abs(y-10),abs(y-10)))/(2*l**2)) * M;
-      func = alpha**2 * M + beta**2 * F;
+      func = alpha**2 * M + gamma**2 * F;
       hyperparams =
       {
         alpha = 1.;
-        beta = 1.;
+        gamma = 1.;
       };
     };
 

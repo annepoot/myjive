@@ -8,22 +8,34 @@ from quickviewer import QuickViewer
 
 props = pu.parse_file('singularity.pro')
 
-beta_rel = np.logspace(-1,5,7)
-epsilon_rel = np.logspace(-3,1,5)
+gamma_rel = np.logspace(-4,4,9)
+epsilon_rel = np.logspace(-4,4,9)
 
 for e_rel in epsilon_rel:
-    for b_rel in beta_rel:
+    for g_rel in gamma_rel:
         alpha = 1.
-        beta = alpha * b_rel
+        gamma = alpha * g_rel
         epsilon = alpha * e_rel
 
-        print('Running the model for beta={:.1e}, epsilon={:.1e}'.format(beta, epsilon))
-        props['model']['gp']['prior']['func'] = 'alpha**2 * M + beta**2 * F'
+        print('Running the model for gamma={:.1e}, epsilon={:.1e}'.format(gamma, epsilon))
+        props['model']['gp']['prior']['func'] = 'alpha**2 * M + gamma**2 * F'
         props['model']['gp']['prior']['hyperparams']['alpha'] = str(alpha)
-        props['model']['gp']['prior']['hyperparams']['beta'] = str(beta)
+        props['model']['gp']['prior']['hyperparams']['gamma'] = str(gamma)
         props['model']['gp']['obsNoise'] = epsilon
 
         globdat = main.jive(props)
+
+        mean = globdat['gp']['mean']
+        u_prior = mean['prior']['state0']
+        f_prior = mean['prior']['extForce']
+        u_post = mean['posterior']['state0']
+        f_post = mean['posterior']['extForce']
+
+        std = globdat['gp']['std']
+        std_u_prior = std['prior']['state0']
+        std_f_prior = std['prior']['extForce']
+        std_u_post = std['posterior']['state0']
+        std_f_post = std['posterior']['extForce']
 
         samples = globdat['gp']['samples']
 
@@ -35,9 +47,17 @@ for e_rel in epsilon_rel:
         std_eps_xx_post = np.std(samples_eps_post['xx'], axis=1)
         std_eps_yy_post = np.std(samples_eps_post['yy'], axis=1)
 
-        fname = 'img/systematic-plots/alpha-{:.0e}_beta-{:.0e}_epsilon-{:.0e}_'.format(alpha, beta, epsilon)
+        fname = 'img/systematic-plots/alpha-{:.0e}_gamma-{:.0e}_epsilon-{:.0e}_'.format(alpha, gamma, epsilon)
 
-        QuickViewer(std_eps_xx_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_prior.pdf')
-        QuickViewer(std_eps_yy_prior, globdat, pdf=True, title=r'Prior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_prior.pdf')
-        QuickViewer(std_eps_xx_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{xx}}$)', fname=fname+'std_strain-xx_posterior.pdf')
-        QuickViewer(std_eps_xx_post, globdat, pdf=True, title=r'Posterior standard deviation ($\sigma_{\varepsilon_{yy}}$)', fname=fname+'std_strain-yy_posterior.pdf')
+        QuickViewer(u_post, globdat, comp=0, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'mean_state0-x_posterior.pdf')
+        QuickViewer(u_post, globdat, comp=1, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'mean_state0-y_posterior.pdf')
+
+        QuickViewer(std_u_prior, globdat, comp=0, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_state0-x_prior.pdf')
+        QuickViewer(std_u_prior, globdat, comp=1, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_state0-y_prior.pdf')
+        QuickViewer(std_u_post, globdat, comp=0, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_state0-x_posterior.pdf')
+        QuickViewer(std_u_post, globdat, comp=1, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_state0-y_posterior.pdf')
+
+        QuickViewer(std_eps_xx_prior, globdat, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_strain-xx_prior.pdf')
+        QuickViewer(std_eps_yy_prior, globdat, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_strain-yy_prior.pdf')
+        QuickViewer(std_eps_xx_post, globdat, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_strain-xx_posterior.pdf')
+        QuickViewer(std_eps_yy_post, globdat, pdf=True, colorbar=False, figsize=(6,6), fname=fname+'std_strain-yy_posterior.pdf')

@@ -40,9 +40,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  nsample = 50;
-  seed = 0;
-  tables = [ strain ];
 };
 
 model =
@@ -87,16 +84,16 @@ model =
       };
     };
 
-    obsNoise = 1e-4;
+    obsNoise = 1e-8;
     pdNoise = 1e-6;
-    bcNoise = 1e-4;
+    bcNoise = 1e-6;
 
     boundary =
     {
       type = dirichlet;
       groups = [ r , t ];
       dofs   = [ dx, dy ];
-      covs   = [ 1., 1. ];
+      covs   = [ 1.0, 1.0 ];
     };
 
     shape =

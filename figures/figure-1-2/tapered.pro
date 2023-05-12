@@ -77,8 +77,9 @@ model =
       func = alpha**2 * M;
       hyperparams =
       {
-        alpha = opt;
+        alpha = 1.0;
       };
+      mean = dirichlet;
     };
 
     obsNoise = 1e-8;

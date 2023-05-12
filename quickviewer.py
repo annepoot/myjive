@@ -17,7 +17,7 @@ def QuickViewer(array, globdat, **kwargs):
     ax = kwargs.get('ax', None)
     inset = bool(kwargs.get('inset', False))
     scale = float(kwargs.get('scale', 0.0))
-    linewidth = float(kwargs.get('linewidth', 0.2))
+    linewidth = kwargs.get('linewidth', None)
     alpha = float(kwargs.get('alpha', 1.0))
     boundarywidth = kwargs.get('boundarywidth', None)
     linealpha = float(kwargs.get('linealpha', alpha))
@@ -30,6 +30,7 @@ def QuickViewer(array, globdat, **kwargs):
     title = kwargs.get('title', None)
     fname = kwargs.get('fname', None)
     pdf = bool(kwargs.get('pdf', False))
+    dpi = float(kwargs.get('dpi', 300))
     figsize = kwargs.get('figsize', None)
 
     # Get the necessary info from globdat
@@ -173,9 +174,11 @@ def QuickViewer(array, globdat, **kwargs):
 
     if colorbar:
         ticks = np.linspace(mincolor, maxcolor, 5, endpoint=True)
-        plt.colorbar(mappable, ticks=ticks, ax=ax, format=tickformat)
+        cbar = plt.colorbar(mappable, ticks=ticks, ax=ax, format=tickformat)
+        cbar.formatter.set_powerlimits((0, 0))
 
-    ax.triplot(triang, 'k-', linewidth=linewidth, alpha=linealpha)
+    if linewidth is not None:
+        ax.triplot(triang, 'k-', linewidth=linewidth, alpha=linealpha)
 
     if boundarywidth is not None:
         ax.plot(topx, topy, 'k-', linewidth=boundarywidth, alpha=linealpha)
@@ -194,7 +197,7 @@ def QuickViewer(array, globdat, **kwargs):
         ax.set_title(title)
 
     if not fname is None:
-        plt.savefig(fname, dpi=300)
+        plt.savefig(fname, dpi=dpi, bbox_inches='tight')
 
     if no_ax:
         plt.show(block=True)

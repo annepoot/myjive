@@ -40,7 +40,7 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  nsample = 50;
+  nsample = 100;
   seed = 0;
   tables = [ strain ];
 };
@@ -96,7 +96,7 @@ model =
       type = dirichlet;
       groups = [ r , t ];
       dofs   = [ dx, dy ];
-      covs   = [ 1., 1. ];
+      covs   = [ 0., 0. ];
     };
 
     shape =

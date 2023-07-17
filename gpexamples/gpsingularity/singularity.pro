@@ -37,7 +37,7 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  nsample = 50;
+  nsample = 100;
   seed = 0;
   tables = [ strain ];
   priorMean = dirichlet;
@@ -84,7 +84,7 @@ model =
       hyperparams =
       {
         alpha = 1.;
-        gamma = 1.;
+        gamma = 0.;
       };
     };
 

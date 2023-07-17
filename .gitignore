@@ -4,6 +4,7 @@ __pycache__
 *.dat
 *.csv
 *.png
+*.svg
 *.pdf
 *.avi
 go

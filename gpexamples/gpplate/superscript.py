@@ -16,7 +16,7 @@ props_c['solver'] = deepcopy(props['gpsolver'])
 props_c['solver']['type'] = 'Linsolve'
 props_c['model'] = deepcopy(props['model'])
 props_c['model']['models'] = '[ solid, diri ]'
-props_c['init']['mesh']['file'] = 'meshes/plate_r0.msh'
+props_c['init']['mesh']['file'] = 'meshes-mixed/plate_r01.msh'
 
 globdat_c = main.jive(props_c)
 u_coarse = globdat_c['state0']

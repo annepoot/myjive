@@ -5,13 +5,13 @@ gpinit =
   mesh =
   {
     type = gmsh;
-    file = meshes/plate_r1.msh;
+    file = meshes-mixed/plate_r2.msh;
   };
 
   coarseMesh =
   {
     type = gmsh;
-    file = meshes/plate_r0.msh;
+    file = meshes-mixed/plate_r01.msh;
   };
 
   nodeGroups = [ l, lb, r ];
@@ -83,7 +83,7 @@ model =
       };
     };
 
-    obsNoise = 1e-1;
+    obsNoise = 1e-2;
     pdNoise = 1e-6;
     bcNoise = 1e-4;
 

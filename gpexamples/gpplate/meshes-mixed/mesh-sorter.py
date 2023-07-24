@@ -1,6 +1,6 @@
 import numpy as np
 
-for fname in ['plate_r0.msh', 'plate_r1.msh', 'plate_r2.msh']:
+for fname in ['plate_r0.msh', 'plate_r1.msh', 'plate_r2.msh', 'plate_r3.msh']:
     with open(fname, 'r') as msh:
         lines = msh.readlines()
 
@@ -43,9 +43,9 @@ for fname in ['plate_r0.msh', 'plate_r1.msh', 'plate_r2.msh']:
         elem_info = np.genfromtxt(elines, dtype=int, ndmin=2)[:,1:5]
         inodes = np.genfromtxt(elines, dtype=int, ndmin=2)[:,5:]
 
-        if np.all(top_nodes < 1000) and np.all(mid_nodes < 1000) and np.all(bot_nodes < 1000):
+        if np.all(top_nodes < 10000) and np.all(mid_nodes < 10000) and np.all(bot_nodes < 10000):
             reindex = True
-        elif np.all(1000 < top_nodes) and np.all(top_nodes < 2000) and np.all(2000 < mid_nodes) and np.all(mid_nodes < 3000) and np.all(3000 < bot_nodes) and np.all(bot_nodes < 4000):
+        elif np.all(10000 < top_nodes) and np.all(top_nodes < 20000) and np.all(20000 < mid_nodes) and np.all(mid_nodes < 30000) and np.all(30000 < bot_nodes) and np.all(bot_nodes < 40000):
             reindex = False
         else:
             raise ValueError('Cannot decide if node ids should be updated or not.')
@@ -54,20 +54,20 @@ for fname in ['plate_r0.msh', 'plate_r1.msh', 'plate_r2.msh']:
             for i in range(inodes.shape[0]):
                 for j in range(inodes.shape[1]):
                     if inodes[i,j] in top_nodes:
-                        inodes[i,j] += 1000
+                        inodes[i,j] += 10000
                     elif inodes[i,j] in mid_nodes:
-                        inodes[i,j] += 2000
+                        inodes[i,j] += 20000
                     elif inodes[i,j] in bot_nodes:
-                        inodes[i,j] += 3000
+                        inodes[i,j] += 30000
                     else:
                         raise ValueError('node was not found in top, mid or bottom nodes')
 
-            top_nodes += 1000
-            mid_nodes += 2000
-            bot_nodes += 3000
+            top_nodes += 10000
+            mid_nodes += 20000
+            bot_nodes += 30000
 
-            elem_ids[np.logical_and(np.any(1000 < inodes, axis=1), np.any(inodes < 2000, axis=1))] += 1000
-            elem_ids[np.logical_and(np.any(3000 < inodes, axis=1), np.any(inodes < 4000, axis=1))] += 3000
+            elem_ids[np.logical_and(np.any(10000 < inodes, axis=1), np.any(inodes < 20000, axis=1))] += 10000
+            elem_ids[np.logical_and(np.any(30000 < inodes, axis=1), np.any(inodes < 40000, axis=1))] += 30000
 
     with open(fname, 'w') as msh:
         for line in lines[:lines.index('$Nodes\n')+2]:

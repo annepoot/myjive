@@ -35,6 +35,8 @@ class SolidModel(Model):
                 self._get_strains(params, globdat)
             elif 'stiffness' in params[pn.TABLENAME]:
                 self._get_stiffness(params, globdat)
+            elif 'size' in params[pn.TABLENAME]:
+                self._get_elem_size(params, globdat)
             else:
                 showmsg = False
         else:
@@ -314,6 +316,44 @@ class SolidModel(Model):
         # Divide the stresses by the shape function weights
         values = xtable.get_col_values(None, jcol)
         xtable.set_col_values(None, jcol, values / tbwts)
+
+        # Convert the table back to the original class
+        params[pn.TABLE] = xtable.to_table()
+
+    def _get_elem_size(self, params, globdat):
+        table = params[pn.TABLE]
+        tbwts = params[pn.TABLEWEIGHTS]
+
+        # Convert the table to an XTable and store the original class
+        xtable = to_xtable(table)
+
+        # Add the columns of all stress components to the table
+        jcol = xtable.add_column('')
+
+        for ielem in self._ielems:
+            # Get the nodal coordinates of each element
+            inodes = self._elems.get_elem_nodes(ielem)
+            coords = self._nodes.get_some_coords(inodes)
+
+            # Compute the maximum edge length\
+            max_edge = 0.0
+            for i, inode in enumerate(inodes):
+                for j, jnode in enumerate(inodes):
+                    icoords = coords[:,i]
+                    jcoords = coords[:,j]
+                    edge = np.sqrt(np.sum((icoords-jcoords)**2))
+                    if edge > max_edge:
+                        max_edge = edge
+
+            # Reset the element size and weights
+            elsize = max_edge * np.ones(self._shape.node_count())
+            elwts = np.ones(self._shape.node_count())
+
+            # Add the element weights to the global weights
+            tbwts[inodes] += elwts
+
+            # Add the element stresses to the global stresses
+            xtable.add_col_values(inodes, jcol, elsize)
 
         # Convert the table back to the original class
         params[pn.TABLE] = xtable.to_table()

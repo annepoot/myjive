@@ -5,16 +5,16 @@ gpinit =
   mesh =
   {
     type = gmsh;
-    file = meshes-mixed/plate_r2.msh;
+    file = meshes/plate_r1.msh;
   };
 
   coarseMesh =
   {
     type = gmsh;
-    file = meshes-mixed/plate_r01.msh;
+    file = meshes/plate_r0.msh;
   };
 
-  nodeGroups = [ l, lb, r ];
+  nodeGroups = [ l, lb ];
 
   l =
   {
@@ -25,11 +25,6 @@ gpinit =
   {
   	xtype = min;
     ytype = min;
-  };
-
-  r =
-  {
-    xtype = max;
   };
 };
 
@@ -45,7 +40,7 @@ model =
 {
   type = Multi;
 
-  models = [ solid, gp, diri ];
+  models = [ solid, load, gp, diri ];
 
   solid =
   {
@@ -69,6 +64,22 @@ model =
     };
   };
 
+  load =
+  {
+    type = Load;
+
+    elements = all;
+
+    dofs   = [ dx  ];
+    values = [ 1.0 ];
+
+    shape =
+    {
+      type = Triangle3;
+      intScheme = Gauss1;
+    };
+  };
+
   gp =
   {
     type = GPf;
@@ -83,17 +94,9 @@ model =
       };
     };
 
-    obsNoise = 1e-2;
+    obsNoise = 1e-6;
     pdNoise = 1e-6;
-    bcNoise = 1e-4;
-
-    boundary =
-    {
-      type = dirichlet;
-      groups = [ l , r ];
-      dofs   = [ dx, dx ];
-      covs   = [ 100., 100. ];
-    };
+    bcNoise = 1e-6;
 
     shape =
     {
@@ -106,8 +109,8 @@ model =
   {
     type = Dirichlet;
 
-    groups = [ l , lb , r ];
-    dofs   = [ dx, dy, dx ];
-    values = [ 0., 0., 1. ];
+    groups = [ l , lb ];
+    dofs   = [ dx, dy ];
+    values = [ 0., 0. ];
   };
 };

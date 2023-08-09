@@ -4,18 +4,12 @@ import scipy.sparse.linalg as spspla
 
 from jive.solver.jit.cholesky import sparse_cholesky
 from jive.solver.jit.spsolve import solve_triangular
-from jive.fem.names import GPActions as gpact
 from jive.fem.names import GPParamNames as gppn
 from jive.fem.names import GlobNames as gn
-import jive.util.proputils as pu
 
 from gpmodel import GPModel
 
 PRIOR = 'prior'
-BOUNDARY = 'boundary'
-GROUPS = 'groups'
-DOFS = 'dofs'
-COVS = 'covs'
 DIAGONALIZED = 'diagonalized'
 TYPE = 'type'
 
@@ -24,15 +18,6 @@ class GPfModel(GPModel):
     def configure(self, props, globdat):
 
         super().configure(props, globdat)
-
-        # Get the type of BC enforcement
-        bcprops = props.get(BOUNDARY, {})
-        self._bctype = bcprops.get(TYPE, 'dirichlet')
-        if self._bctype not in ['direct', 'dirichlet']:
-            raise ValueError('boundary has to be "dirichlet" or "direct"')
-        self._bcgroups = pu.parse_list(bcprops.get(GROUPS,'[]'))
-        self._bcdofs = pu.parse_list(bcprops.get(DOFS, '[]'))
-        self._bccovs = pu.parse_list(bcprops.get(COVS,'[]'), float)
 
         self._diagonalized = props[PRIOR].get(DIAGONALIZED, False)
 
@@ -179,21 +164,24 @@ class GPfModel(GPModel):
             K_ib = -self._K[:,self._cdofs]
             K_ib[self._cdofs] = spsp.identity(len(self._cdofs))
 
-            # Update the prior mean by observing the displacement at the bcs
-            if self._mean == 'dirichlet':
-                mc += K_ib @ self._cvals
-
             # Decouple the bc covariance from the internal nodes
             Sigmac[self._cdofs,:] *= 0.0
             Sigmac[:,self._cdofs] *= 0.0
 
-            # Get a matrix that defines the constraint equations_set_arrayXarray
+            # Get a matrix that defines the constraint equations
             conmat = spsp.lil_array((self._dc, len(self._bcgroups)))
             ds = globdat[gn.DOFSPACE]
             for i, (group, dof) in enumerate(zip(self._bcgroups, self._bcdofs)):
                 idofs = ds.get_dofs(globdat[gn.NGROUPS][group], [dof])
                 conmat[idofs, i] = 1
             conmat = conmat[self._cdofs,:]
+
+            # Get the boundary mean vector
+            meanvec = np.array(self._bcmeans)
+            mean_bc = conmat @ meanvec
+
+            # Add the boundary mean vector to the prior
+            mc += K_ib @ mean_bc
 
             # Get the boundary covariance matrix
             covmat = spsp.diags(self._bccovs)**2

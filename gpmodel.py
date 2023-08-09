@@ -9,16 +9,21 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import PropNames as prn
 from jive.model.model import Model
 from jive.solver.constrainer import Constrainer
+import jive.util.proputils as pu
 
 OBSNOISE = 'obsNoise'
 PDNOISE = 'pdNoise'
 BCNOISE = 'bcNoise'
 PRIOR = 'prior'
-MEAN = 'mean'
 TYPE = 'type'
 FUNC = 'func'
 PREPROJECT = 'preproject'
 HYPERPARAMS = 'hyperparams'
+BOUNDARY = 'boundary'
+GROUPS = 'groups'
+DOFS = 'dofs'
+MEANS = 'means'
+COVS = 'covs'
 SHAPE = 'shape'
 INTSCHEME = 'intScheme'
 
@@ -86,16 +91,22 @@ class GPModel(Model):
         else:
             raise ValueError('prior has to be "kernel" or "SPDE"')
 
-        self._mean = priorprops.get(MEAN, 'zero')
-        if self._mean not in ['zero', 'dirichlet']:
-            raise ValueError('prior mean has to be "zero" or "dirichlet"')
-
         self._hyperparams = {}
         for key, value in priorprops[HYPERPARAMS].items():
             if value != 'opt':
                 self._hyperparams[key] = float(value)
             else:
                 self._hyperparams[key] = 'opt'
+
+        # Get the type of BC enforcement
+        bcprops = props.get(BOUNDARY, {})
+        self._bctype = bcprops.get(TYPE, 'dirichlet')
+        if self._bctype not in ['direct', 'dirichlet']:
+            raise ValueError('boundary has to be "dirichlet" or "direct"')
+        self._bcgroups = pu.parse_list(bcprops.get(GROUPS,'[]'))
+        self._bcdofs = pu.parse_list(bcprops.get(DOFS, '[]'))
+        self._bcmeans = pu.parse_list(bcprops.get(MEANS, '[]'), float)
+        self._bccovs = pu.parse_list(bcprops.get(COVS,'[]'), float)
 
         # Get the preprojection props
         self._preproject = bool(eval(props.get(PREPROJECT, 'False')))
@@ -515,6 +526,7 @@ class GPModel(Model):
         return Phic
 
     def _apply_covariance_bcs(self, Sigma, globdat):
+
         Sigmac = Sigma.copy()
         mc = np.zeros(self._dc)
 
@@ -525,7 +537,7 @@ class GPModel(Model):
         idofs = np.delete(np.arange(self._dc), self._cdofs)
 
         # Check if the boundary condition should be applied directly or via dirichlet BCs
-        if self._boundary == 'direct':
+        if self._bctype == 'direct':
 
             # Split Sigma along boundary and internal nodes
             Sigma_bb = Sigmac[np.ix_(self._cdofs, self._cdofs)]
@@ -535,29 +547,53 @@ class GPModel(Model):
             Sigma_bb_inv = np.linalg.inv(Sigma_bb)
 
             # Update the prior mean by observing the displacement at the bcs
-            mc[idofs] += Sigma_ib @ Sigma_bb_inv @ self._cvals
+            mc[idofs] += Sigma_ib @ (Sigma_bb_inv @ self._cvals)
             mc[self._cdofs] = self._cvals
 
             # Update the prior covariance as well
             Sigmac[np.ix_(idofs,idofs)] -= Sigma_ib @ Sigma_bb_inv @ Sigma_bi
 
-        elif self._boundary == 'dirichlet':
+            # Decouple the bc covariance from the internal nodes
+            Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
+
+        elif self._bctype == 'dirichlet':
 
             # Split K along boundary and internal nodes
-            K_ib = self._K[np.ix_(idofs,self._cdofs)]
-            K_ii = self._K[np.ix_(idofs,idofs)]
+            K_ib = -self._K.toarray()[:,self._cdofs]
+            K_ib[self._cdofs] = np.identity(len(self._cdofs))
 
-            # Update the prior mean by observing the displacement at the bcs
-            if self._mean == 'dirichlet':
-                mc[idofs] -= np.linalg.solve(K_ii.toarray(), K_ib @ self._cvals)
-                mc[self._cdofs] = self._cvals
+            # Decouple the bc covariance from the internal nodes
+            Sigmac[self._cdofs,:] *= 0.0
+            Sigmac[:,self._cdofs] *= 0.0
+
+            # Get a matrix that defines the constraint equations
+            conmat = np.zeros((self._dc, len(self._bcgroups)))
+            ds = globdat[gn.DOFSPACE]
+            for i, (group, dof) in enumerate(zip(self._bcgroups, self._bcdofs)):
+                idofs = ds.get_dofs(globdat[gn.NGROUPS][group], [dof])
+                conmat[idofs, i] = 1
+            conmat = conmat[self._cdofs,:]
+
+            # Get the boundary mean vector
+            meanvec = np.array(self._bcmeans)
+            mean_bc = conmat @ meanvec
+
+            # Add the boundary mean vector to the prior
+            mc += np.linalg.solve(self._Kc.toarray(), K_ib @ mean_bc)
+
+            # Get the boundary covariance matrix
+            sqrtcovmat = np.diag(self._bccovs)
+            sqrtSigma_bc = conmat @ sqrtcovmat
+
+            # Recouple the internal nodes based on the boundary covariance matrix
+            sqrtSigma_mod = np.linalg.solve(self._Kc.toarray(), K_ib @ sqrtSigma_bc)
+            Sigmac += sqrtSigma_mod @ sqrtSigma_mod.T
 
         else:
             raise ValueError('boundary has to be "dirichlet" or "direct"')
 
-        # Decouple the bc covariance from the internal nodes
-        Sigmac[self._cdofs,:] = Sigmac[:,self._cdofs] = 0.0
-        Sigmac[self._cdofs,self._cdofs] = self._bcnoise2
+        # Add separate boundary noise to ensure positive definiteness
+        Sigmac[self._cdofs,self._cdofs] += self._bcnoise2
 
         return mc, Sigmac
 

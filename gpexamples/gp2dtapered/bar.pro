@@ -30,7 +30,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  priorMean = dirichlet;
   nsample = 3;
   seed = 0;
   tables = [ stress, strain ];

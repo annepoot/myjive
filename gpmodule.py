@@ -13,7 +13,6 @@ from jive.util.xtable import to_xtable
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 EXPLICITINVERSE = 'explicitInverse'
 POSTPROJECT = 'postproject'
-PRIORMEAN = 'priorMean'
 NSAMPLE = 'nsample'
 SEED = 'seed'
 
@@ -28,10 +27,6 @@ class GPModule(LinsolveModule):
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
         self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'True')))
         self._postproject = bool(eval(myprops.get(POSTPROJECT, 'False')))
-
-        self._priormean = myprops.get(PRIORMEAN, 'zero')
-        if self._priormean not in ['zero', 'dirichlet', 'neumann']:
-            raise ValueError('priorMean has to be "zero", "dirichlet" or "neumann".')
 
         self._nsample = int(myprops.get(NSAMPLE,1))
         self._seed = eval(myprops.get(SEED,'None'))

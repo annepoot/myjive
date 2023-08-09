@@ -35,7 +35,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  priorMean = neumann;
   nsample = 30;
   seed = 0;
 };

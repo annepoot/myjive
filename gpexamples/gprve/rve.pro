@@ -96,6 +96,7 @@ model =
       type = dirichlet;
       groups = [ r , t ];
       dofs   = [ dx, dy ];
+      means  = [ 1., 1. ];
       covs   = [ 0., 0. ];
     };
 

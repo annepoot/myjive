@@ -37,7 +37,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  priorMean = dirichlet;
 };
 
 model =

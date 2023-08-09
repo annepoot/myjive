@@ -35,7 +35,6 @@ gpinit =
 gpsolver =
 {
   type = GPSolver;
-  priorMean = dirichlet;
   nsample = 30;
   seed = 0;
 };
@@ -79,7 +78,15 @@ model =
       {
         alpha = opt;
       };
-      mean = dirichlet;
+    };
+
+    boundary =
+    {
+      type = dirichlet;
+      groups = [ right ];
+      dofs   = [ dx ];
+      means  = [ 1. ];
+      covs   = [ 0. ];
     };
 
     preproject = False;

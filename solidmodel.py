@@ -28,6 +28,8 @@ class SolidModel(Model):
             self._get_matrix(params, globdat)
         elif action == act.GETMATRIX2:
             self._get_mass_matrix(params, globdat)
+        elif action == act.GETMATRIXB:
+            self._get_strain_matrix(params, globdat)
         elif action == act.GETTABLE:
             if 'stress' in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
@@ -153,6 +155,46 @@ class SolidModel(Model):
             # Add the element mass matrix to the global mass matrix
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
+    def _get_strain_matrix(self, params, globdat):
+
+        # Add the element weights to the global weights
+        nc = self._nodes.size()
+        node_count = self._shape.node_count()
+
+        for ielem in self._ielems:
+            # Get the nodal coordinates of each element
+            inodes = self._elems.get_elem_nodes(ielem)
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            coords = self._nodes.get_some_coords(inodes)
+
+            # Get the gradients, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
+
+            # Reset the element strain matrix
+            elbmat = np.zeros((node_count * self._strcount, self._dofcount))
+            elwts = np.zeros(node_count * self._strcount)
+
+            for ip in range(self._ipcount):
+                # Get the B and D matrices for each integration point
+                B = self._get_B_matrix(grads[:, :, ip])
+
+                # Compute the element strain and weights
+                for i in range(self._strcount):
+                    elbmat[i*node_count:(i+1)*node_count, :] += np.outer(sfuncs[:, ip], B[i, :])
+                    elwts[i*node_count:(i+1)*node_count] += sfuncs[:, ip].flatten()
+
+            # Get the node index vector
+            node_idx = np.zeros(node_count * self._strcount, dtype=int)
+            for i in range(self._strcount):
+                node_idx[i*node_count:(i+1)*node_count] = inodes + nc * i
+
+            # Add the element strain matrix to the global strain matrix
+            params[pn.MATRIXB][np.ix_(node_idx,idofs)] += elbmat
+
+            # Add the element weights to the global weights
+            params[pn.TABLEWEIGHTS][node_idx] += elwts
+
     def _get_strains(self, params, globdat):
 
         table = params[pn.TABLE]
@@ -184,7 +226,6 @@ class SolidModel(Model):
             # Get the shape functions, gradients, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
-            ipcoords = self._shape.get_global_integration_points(coords)
 
             # Get the nodal displacements
             eldisp = disp[idofs]

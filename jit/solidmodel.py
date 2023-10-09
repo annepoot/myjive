@@ -19,7 +19,6 @@ def get_B_matrix_jit(grads, _strcount, _dofcount, _nodecount, _rank):
             B[2,i+0] = gi[1]
             B[2,i+1] = gi[0]
     elif _rank == 3:
-        B = np.zeros((6, _dofcount))
         for inode in range(_nodecount):
             i = 3 * inode
             gi = grads[inode, :]

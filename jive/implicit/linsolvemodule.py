@@ -15,6 +15,7 @@ SOLVER = 'solver'
 PRECONDITIONER = 'preconditioner'
 TYPE = 'type'
 GETMASSMATRIX = 'getMassMatrix'
+GETSTRAINMATRIX = 'getStrainMatrix'
 TABLES = 'tables'
 
 class LinsolveModule(SolverModule):
@@ -24,6 +25,7 @@ class LinsolveModule(SolverModule):
 
         myprops = props[self._name]
         self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
+        self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX,'False')))
         self._tnames = pu.parse_list(myprops.get(TABLES, '[]'))
 
         self._model = globdat[gn.MODEL]
@@ -54,9 +56,11 @@ class LinsolveModule(SolverModule):
 
         # Optionally get the mass matrix
         if self._get_mass_matrix:
-            M = self._get_empty_matrix(globdat)
-            params = {pn.MATRIX2: M}
-            model.take_action(act.GETMATRIX2, params, globdat)
+            M = self.update_mass_matrix(globdat)
+
+        # Optionally get the strain matrix
+        if self._get_strain_matrix:
+            B = self.update_strain_matrix(globdat)
 
         # Update the solver
         self._solver.update(K, c, self._precon)
@@ -75,6 +79,10 @@ class LinsolveModule(SolverModule):
         # Optionally store mass matrix in Globdat
         if self._get_mass_matrix:
             globdat[gn.MATRIX2] = M
+
+        # Optionally store strain matrix in Globdat
+        if self._get_strain_matrix:
+            globdat[gn.MATRIXB] = B
 
         # Compute stresses, strains, etc.
         if gn.TABLES not in globdat:
@@ -121,13 +129,36 @@ class LinsolveModule(SolverModule):
         return f_neum
 
     def update_matrix(self, globdat):
-        K = self._get_empty_matrix(globdat)
-        f_int = np.zeros(self._dc)
-        params = {pn.MATRIX0: K, pn.INTFORCE:f_int}
+        params = {}
+        params[pn.MATRIX0] = self._get_empty_matrix(globdat)
+        params[pn.INTFORCE] = np.zeros(self._dc)
 
         self._model.take_action(act.GETMATRIX0, params, globdat)
 
-        return K, f_int
+        return params[pn.MATRIX0], params[pn.INTFORCE]
+
+    def update_mass_matrix(self, globdat):
+        params = {}
+        params[pn.MATRIX2] = self._get_empty_matrix(globdat)
+
+        self._model.take_action(act.GETMATRIX2, params, globdat)
+
+        return params[pn.MATRIX2]
+
+    def update_strain_matrix(self, globdat):
+        params = {}
+        params[pn.MATRIXB] = self._get_empty_bmatrix(globdat)
+        params[pn.TABLEWEIGHTS] = np.zeros(params[pn.MATRIXB].shape[0])
+
+        self._model.take_action(act.GETMATRIXB, params, globdat)
+
+        # Divide non-zero entries by weights
+        str_indices, dof_indices = params[pn.MATRIXB].nonzero()
+        for i, str_idx in enumerate(str_indices):
+            dof_idx = dof_indices[i]
+            params[pn.MATRIXB][str_idx, dof_idx] /= params[pn.TABLEWEIGHTS][str_idx]
+
+        return params[pn.MATRIXB]
 
     def update_constraints(self, K, globdat):
         c = Constraints()
@@ -171,6 +202,38 @@ class LinsolveModule(SolverModule):
 
         K_empty = spsp.csr_array((values, (rowindices, colindices)), shape=(dc,dc), dtype=float)
         return K_empty
+
+    def _get_empty_bmatrix(self, globdat):
+
+        rowindices = []
+        colindices = []
+
+        doftypes = globdat[gn.DOFSPACE].get_types()
+        dc = globdat[gn.DOFSPACE].dof_count()
+        nc = globdat[gn.NSET].size()
+        rank = globdat[gn.DOFSPACE].type_count()
+        strcount = rank * (rank + 1) // 2
+
+        for elem in globdat[gn.ESET]:
+            inodes = elem.get_nodes()
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, doftypes)
+            node_count = len(inodes)
+
+            # Get the node index vector
+            node_idx = np.zeros(node_count * strcount, dtype=int)
+            for i in range(strcount):
+                node_idx[i*node_count:(i+1)*node_count] = inodes + nc * i
+
+            for row in node_idx:
+                for col in idofs:
+                    rowindices.append(row)
+                    colindices.append(col)
+
+        assert len(rowindices) == len(colindices)
+        values = np.zeros(len(rowindices))
+
+        B_empty = spsp.csr_array((values, (rowindices, colindices)), shape=(nc * strcount,dc), dtype=float)
+        return B_empty
 
 
 def declare(factory):

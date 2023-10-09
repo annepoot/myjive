@@ -10,6 +10,8 @@ from jive.implicit.linsolvemodule import LinsolveModule
 from jive.util.table import Table
 from jive.util.xtable import to_xtable
 
+from jive.implicit.linsolvemodule import GETSTRAINMATRIX
+
 GETUNITMASSMATRIX = 'getUnitMassMatrix'
 EXPLICITINVERSE = 'explicitInverse'
 POSTPROJECT = 'postproject'
@@ -25,6 +27,7 @@ class GPModule(LinsolveModule):
 
         myprops = props[self._name]
         self._get_unit_mass_matrix = bool(eval(myprops.get(GETUNITMASSMATRIX, 'True')))
+        self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX, 'True')))
         self._explicit_inverse = bool(eval(props.get(EXPLICITINVERSE, 'True')))
         self._postproject = bool(eval(myprops.get(POSTPROJECT, 'False')))
 

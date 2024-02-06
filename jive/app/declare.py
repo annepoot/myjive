@@ -10,7 +10,7 @@ import jive.gl.declare as gl_declare
 import jive.implicit.declare as implicit_declare
 import jive.model.declare as model_declare
 import jive.solver.declare as solver_declare
-import declare
+import coredeclare
 
 def declare_all(globdat):
     # Declare all standard jive models and modules in one go
@@ -23,8 +23,8 @@ def declare_all(globdat):
     solver_declare.declare_precons(globdat)
 
     # Declare all custom models and modules as well
-    declare.declare_models(globdat)
-    declare.declare_modules(globdat)
+    coredeclare.declare_models(globdat)
+    coredeclare.declare_modules(globdat)
 
 
 def declare_modules(globdat):

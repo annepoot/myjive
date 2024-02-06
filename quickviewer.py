@@ -32,6 +32,7 @@ def QuickViewer(array, globdat, **kwargs):
     pdf = bool(kwargs.get('pdf', False))
     dpi = float(kwargs.get('dpi', 300))
     figsize = kwargs.get('figsize', None)
+    meshonly = bool(kwargs.get('meshonly', False))
 
     # Get the necessary info from globdat
     nodes = globdat[gn.NSET]
@@ -170,7 +171,9 @@ def QuickViewer(array, globdat, **kwargs):
         maxcolor = z.max()
 
     levels = np.linspace(mincolor, maxcolor, ncolors)
-    mappable = ax.tricontourf(triang, z, levels=levels, alpha=alpha, cmap=cmap)
+
+    if not meshonly:
+        mappable = ax.tricontourf(triang, z, levels=levels, alpha=alpha, cmap=cmap)
 
     if colorbar:
         ticks = np.linspace(mincolor, maxcolor, 5, endpoint=True)

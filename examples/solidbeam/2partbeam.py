@@ -6,7 +6,7 @@ if rootdir not in sys.path:
     sys.path.append(rootdir)
 
 from jive.app import main
-from jive.util import proputils as pu
+import jive.util.proputils as pu
 
 props = pu.parse_file("2partbeam.pro")
 

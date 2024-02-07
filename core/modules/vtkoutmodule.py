@@ -5,8 +5,7 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 import jive.util.proputils as pu
-from jive.util.table import Table
-from jive.util.xtable import to_xtable
+from jive.util import Table, to_xtable
 
 FILENAME = "file"
 TABLES = "tables"

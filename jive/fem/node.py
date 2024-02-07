@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Node:
     def __init__(self, coords):
         self._coords = np.array(coords, dtype=float)
@@ -12,5 +13,5 @@ class Node:
 
     def set_coords(self, coords):
         if len(coords) != self.rank():
-            raise ValueError('set_coords cannot change the node rank')
+            raise ValueError("set_coords cannot change the node rank")
         self._coords = np.array(coords, dtype=float)

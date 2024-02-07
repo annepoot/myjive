@@ -1,7 +1,8 @@
 import pytest
 import sys, os
+
 cwd = os.getcwd()
-rootdir = os.path.join(cwd[:cwd.rfind(os.path.sep + "myjive")], "myjive")
+rootdir = os.path.join(cwd[: cwd.rfind(os.path.sep + "myjive")], "myjive")
 if rootdir not in sys.path:
     sys.path.append(rootdir)
 
@@ -10,33 +11,37 @@ import jive.util.proputils as pu
 from jive.app import main
 from jive.solver.constrainer import Constrainer
 
+
 @pytest.fixture(autouse=True)
 def change_test_dir(monkeypatch):
     monkeypatch.chdir(rootdir)
-    monkeypatch.chdir('examples/solidbeam')
+    monkeypatch.chdir("examples/solidbeam")
+
 
 @pytest.fixture
 def props1():
-    return pu.parse_file('beam.pro')
+    return pu.parse_file("beam.pro")
+
 
 @pytest.fixture
 def props2():
-    return pu.parse_file('2partbeam.pro')
+    return pu.parse_file("2partbeam.pro")
+
 
 @pytest.mark.rank2
 @pytest.mark.solidbeam
 @pytest.mark.core
 def test_solidbeam(props1):
-    props1['model']['diri']['groups'] = '[lb,lb,rb]'
-    props1['model']['diri']['dofs'] = '[dx,dy,dy]'
-    props1['model']['diri']['values'] = '[0,0,0]'
+    props1["model"]["diri"]["groups"] = "[lb,lb,rb]"
+    props1["model"]["diri"]["dofs"] = "[dx,dy,dy]"
+    props1["model"]["diri"]["values"] = "[0,0,0]"
 
     globdat = main.jive(props1)
 
-    K = globdat['matrix0']
-    u = globdat['state0']
-    f = globdat['extForce']
-    c = globdat['constraints']
+    K = globdat["matrix0"]
+    u = globdat["state0"]
+    f = globdat["extForce"]
+    c = globdat["constraints"]
 
     conman = Constrainer(c, K)
     Kc = conman.get_output_matrix()
@@ -45,8 +50,8 @@ def test_solidbeam(props1):
     # Check solver solution
     assert np.isclose(Kc @ u, fc).all()
 
-    u_mid = u[globdat['dofSpace'].get_dof(3,'dy')]
-    u_y = u[len(u)//2:]
+    u_mid = u[globdat["dofSpace"].get_dof(3, "dy")]
+    u_y = u[len(u) // 2 :]
 
     # Check displacement field
     assert np.isclose(u_mid, -0.018766977331516582)
@@ -61,20 +66,21 @@ def test_solidbeam(props1):
     assert np.isclose(sum(reactions_y), 1)
     assert np.isclose(-sum(bodyforces_y), sum(reactions_y))
 
+
 @pytest.mark.rank2
 @pytest.mark.solidbeam
 @pytest.mark.core
 def test_2partbeam(props2):
-    props2['model']['diri']['groups'] = '[lb,lb,rb]'
-    props2['model']['diri']['dofs'] = '[dx,dy,dy]'
-    props2['model']['diri']['values'] = '[0,0,0]'
+    props2["model"]["diri"]["groups"] = "[lb,lb,rb]"
+    props2["model"]["diri"]["dofs"] = "[dx,dy,dy]"
+    props2["model"]["diri"]["values"] = "[0,0,0]"
 
     globdat = main.jive(props2)
 
-    K = globdat['matrix0']
-    u = globdat['state0']
-    f = globdat['extForce']
-    c = globdat['constraints']
+    K = globdat["matrix0"]
+    u = globdat["state0"]
+    f = globdat["extForce"]
+    c = globdat["constraints"]
 
     conman = Constrainer(c, K)
     Kc = conman.get_output_matrix()
@@ -83,10 +89,10 @@ def test_2partbeam(props2):
     # Check solver solution
     assert np.isclose(Kc @ u, fc).all()
 
-    dofs_y = globdat['dofSpace'].get_dofs(np.arange(len(globdat['nodeSet'])), ['dy'])
+    dofs_y = globdat["dofSpace"].get_dofs(np.arange(len(globdat["nodeSet"])), ["dy"])
     u_y = u[dofs_y]
 
-    dof_mid = globdat['dofSpace'].get_dof(4,'dy')
+    dof_mid = globdat["dofSpace"].get_dof(4, "dy")
     u_mid = u[dof_mid]
 
     # Check displacement field

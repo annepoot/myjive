@@ -12,6 +12,7 @@ import jive.model.declare as model_declare
 import jive.solver.declare as solver_declare
 import coredeclare
 
+
 def declare_all(globdat):
     # Declare all standard jive models and modules in one go
     app_declare.declare_modules(globdat)

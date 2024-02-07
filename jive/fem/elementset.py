@@ -3,8 +3,8 @@ import numpy as np
 from jive.fem.itemset import ItemSet, XItemSet
 from jive.fem.element import Element
 
-class ElementSet(ItemSet):
 
+class ElementSet(ItemSet):
     def __init__(self, nodes, elems=None):
         super().__init__(elems)
         self._nodes = nodes
@@ -49,7 +49,6 @@ class ElementSet(ItemSet):
 
 
 class XElementSet(ElementSet, XItemSet):
-
     def add_element(self, inodes, elem_id=None):
         elem = Element(inodes)
         nodeCount = elem.get_node_count()

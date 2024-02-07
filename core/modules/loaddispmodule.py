@@ -7,14 +7,13 @@ from jive.fem.names import Actions as act
 
 import jive.util.proputils as pu
 
-GROUPS = 'groups'
-DISP = 'disp'
-LOAD = 'load'
+GROUPS = "groups"
+DISP = "disp"
+LOAD = "load"
+
 
 class LoadDispModule(Module):
-
     def init(self, props, globdat):
-
         if self._name in props:
             myprops = props.get(self._name)
 
@@ -34,7 +33,6 @@ class LoadDispModule(Module):
         globdat[self._name] = mydata
 
     def run(self, globdat):
-
         model = globdat[gn.MODEL]
         nodes = globdat[gn.NSET]
         disp = globdat[gn.STATE0]
@@ -51,13 +49,14 @@ class LoadDispModule(Module):
         for group in self._groups:
             for typ in types:
                 idofs = dofs.get_dofs(globdat[gn.NGROUPS][group], [typ])
-                mydata[group][DISP][typ].append( np.mean(disp[idofs]) )
-                mydata[group][LOAD][typ].append( np.sum(fint[idofs]) )
-                
-        return 'ok'
+                mydata[group][DISP][typ].append(np.mean(disp[idofs]))
+                mydata[group][LOAD][typ].append(np.sum(fint[idofs]))
+
+        return "ok"
 
     def shutdown(self, globdat):
         pass
 
+
 def declare(factory):
-    factory.declare_module('LoadDisp', LoadDispModule)
+    factory.declare_module("LoadDisp", LoadDispModule)

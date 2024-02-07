@@ -3,8 +3,8 @@ import scipy.sparse.linalg as spspla
 from jive.solver.solver import Solver
 from jive.solver.constrainer import Constrainer
 
-class DirectSolver(Solver):
 
+class DirectSolver(Solver):
     def __init__(self):
         super().__init__()
 
@@ -37,4 +37,4 @@ class DirectSolver(Solver):
 
 
 def declare(factory):
-    factory.declare_solver('direct', DirectSolver)
+    factory.declare_solver("direct", DirectSolver)

@@ -3,8 +3,8 @@ import numpy as np
 from jive.fem.itemset import ItemSet, XItemSet
 from jive.fem.node import Node
 
-class NodeSet(ItemSet):
 
+class NodeSet(ItemSet):
     def __init__(self, nodes=None):
         super().__init__(nodes)
         self._rank = 0
@@ -41,7 +41,6 @@ class NodeSet(ItemSet):
 
 
 class XNodeSet(NodeSet, XItemSet):
-
     def add_node(self, coords, node_id=None):
         node = Node(coords)
         if self.size() == 0:
@@ -58,13 +57,17 @@ class XNodeSet(NodeSet, XItemSet):
 
     def set_coords(self, coords):
         if coords.shape[0] != self.size():
-            raise ValueError('first dimension of coords does not match the number of nodes')
+            raise ValueError(
+                "first dimension of coords does not match the number of nodes"
+            )
         for inode in range(self.size()):
             self.set_node_coords(inode, coords[inode])
 
     def set_some_coords(self, inodes, coords):
         if coords.shape[0] != self.size():
-            raise ValueError('first dimension of coords does not match the size of inodes')
+            raise ValueError(
+                "first dimension of coords does not match the size of inodes"
+            )
         for i, inode in enumerate(inodes):
             self.set_node_coords(inode, coords[i])
 

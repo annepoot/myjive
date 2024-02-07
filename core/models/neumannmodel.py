@@ -7,10 +7,10 @@ from jive.model.model import Model
 
 import jive.util.proputils as pu
 
-GROUPS = 'groups'
-DOFS = 'dofs'
-VALS = 'values'
-INCR = 'loadIncr'
+GROUPS = "groups"
+DOFS = "dofs"
+VALS = "values"
+INCR = "loadIncr"
 
 
 class NeumannModel(Model):
@@ -65,8 +65,10 @@ class NeumannModel(Model):
                 params[pn.UNITFORCE][idof] += incr
 
     def _advance_step(self, params, globdat):
-        self._vals = np.array(self._initLoad) + globdat[gn.TIMESTEP] * np.array(self._loadIncr)
+        self._vals = np.array(self._initLoad) + globdat[gn.TIMESTEP] * np.array(
+            self._loadIncr
+        )
 
 
 def declare(factory):
-    factory.declare_model('Neumann', NeumannModel)
+    factory.declare_model("Neumann", NeumannModel)

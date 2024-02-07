@@ -2,8 +2,8 @@ from jive.solver.preconditioner import Preconditioner
 from jive.solver.jit.cholesky import incomplete_cholesky
 from jive.solver.jit.spsolve import solve_triangular
 
-class ICholPrecon(Preconditioner):
 
+class ICholPrecon(Preconditioner):
     def __init__(self):
         super().__init__()
 
@@ -28,4 +28,4 @@ class ICholPrecon(Preconditioner):
 
 
 def declare(factory):
-    factory.declare_precon('ichol', ICholPrecon)
+    factory.declare_precon("ichol", ICholPrecon)

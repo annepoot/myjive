@@ -5,14 +5,14 @@ from sksparse import cholmod as cm
 
 def get_reorder(A, ordering_method=None):
     if ordering_method is None:
-        ordering_method='amd'
+        ordering_method = "amd"
 
     # Transpose to convert the matrix from csr to csc
     chol = cm.analyze(A.T, ordering_method=ordering_method)
     reorder = chol.P()
 
     N = len(reorder)
-    P = spsp.csr_array((np.ones(N), reorder, np.arange(N+1)), shape=(N,N))
+    P = spsp.csr_array((np.ones(N), reorder, np.arange(N + 1)), shape=(N, N))
 
     return P
 

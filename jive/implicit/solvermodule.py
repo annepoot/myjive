@@ -1,12 +1,11 @@
 from jive.app.module import Module
 
-class SolverModule(Module):
 
+class SolverModule(Module):
     def init(self, props, globdat):
         pass
 
     def run(self, globdat):
-
         while True:
             self.advance(globdat)
 
@@ -15,11 +14,11 @@ class SolverModule(Module):
             if self.commit(globdat):
                 break
 
-            print('Solution rejected; retrying\n')
+            print("Solution rejected; retrying\n")
 
             self.cancel(globdat)
 
-        return 'ok'
+        return "ok"
 
     def configure(self, props, globdat):
         pass
@@ -38,4 +37,4 @@ class SolverModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('Solver', SolverModule)
+    factory.declare_module("Solver", SolverModule)

@@ -6,13 +6,14 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import PropNames as prn
 from jive.model.model import Model
 
-ELEMENTS = 'elements'
-EI = 'EI'
-GAs = 'GAs'
-SHAPE = 'shape'
-INTSCHEME = 'intScheme'
-DOFTYPES = ['phi', 'dy']
-TYPE = 'type'
+ELEMENTS = "elements"
+EI = "EI"
+GAs = "GAs"
+SHAPE = "shape"
+INTSCHEME = "intScheme"
+DOFTYPES = ["phi", "dy"]
+TYPE = "type"
+
 
 class TimoshenkoModel(Model):
     def take_action(self, action, params, globdat):
@@ -26,14 +27,16 @@ class TimoshenkoModel(Model):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('TimoshenkoModel taking action', action)
+            print("TimoshenkoModel taking action", action)
 
     def configure(self, props, globdat):
         self._EI = float(props[EI])
         self._GAs = float(props[GAs])
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
+            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+        )
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -68,14 +71,16 @@ class TimoshenkoModel(Model):
                 N_theta[:, 0::2] = sfuncs[:, ip].transpose()
                 N_v[:, 1::2] = sfuncs[:, ip].transpose()
 
-                elmat += weights[ip] * (np.matmul(B_theta.transpose() * self._EI, B_theta) + \
-                                        np.matmul(N_theta.transpose() * self._GAs, N_theta) - \
-                                        np.matmul(N_theta.transpose() * self._GAs, B_v) - \
-                                        np.matmul(B_v.transpose() * self._GAs, N_theta) + \
-                                        np.matmul(B_v.transpose() * self._GAs, B_v))
+                elmat += weights[ip] * (
+                    np.matmul(B_theta.transpose() * self._EI, B_theta)
+                    + np.matmul(N_theta.transpose() * self._GAs, N_theta)
+                    - np.matmul(N_theta.transpose() * self._GAs, B_v)
+                    - np.matmul(B_v.transpose() * self._GAs, N_theta)
+                    + np.matmul(B_v.transpose() * self._GAs, B_v)
+                )
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
 
 
 def declare(factory):
-    factory.declare_model('Timoshenko', TimoshenkoModel)
+    factory.declare_model("Timoshenko", TimoshenkoModel)

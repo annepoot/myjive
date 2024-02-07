@@ -1,7 +1,7 @@
 import numpy as np
 
-class ItemSet():
 
+class ItemSet:
     def __init__(self, items=None):
         if items is None:
             self._data = []
@@ -52,17 +52,16 @@ class ItemSet():
 
 
 class XItemSet(ItemSet):
-
     def clear(self):
-        self._data= []
+        self._data = []
         self._map = {}
 
     def add_item(self, item, item_id=None):
         size = self.size()
         if item_id is None:
-            item_id = size+1
+            item_id = size + 1
         if item_id in self._map.keys():
-            raise ValueError('item ID already exists in itemset')
+            raise ValueError("item ID already exists in itemset")
         self._data.append(item)
         self._map[item_id] = size
 

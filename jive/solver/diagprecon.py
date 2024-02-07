@@ -2,8 +2,8 @@ import scipy.sparse as spsp
 
 from jive.solver.preconditioner import Preconditioner
 
-class DiagPrecon(Preconditioner):
 
+class DiagPrecon(Preconditioner):
     def __init__(self):
         super().__init__()
 
@@ -14,8 +14,8 @@ class DiagPrecon(Preconditioner):
     def update(self, sourcematrix):
         self._sourcematrix = sourcematrix
         diag = self._sourcematrix.diagonal()
-        self._M = spsp.diags(diag, format='csr')
-        self._M_inv = spsp.diags(1/diag, format='csr')
+        self._M = spsp.diags(diag, format="csr")
+        self._M_inv = spsp.diags(1 / diag, format="csr")
 
     def dot(self, lhs):
         return self._M @ lhs
@@ -31,4 +31,4 @@ class DiagPrecon(Preconditioner):
 
 
 def declare(factory):
-    factory.declare_precon('diag', DiagPrecon)
+    factory.declare_precon("diag", DiagPrecon)

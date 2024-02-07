@@ -1,21 +1,21 @@
 def parse_file(fname):
-    fileraw = open(fname, 'r').read()
+    fileraw = open(fname, "r").read()
 
     filestr = uncomment_file(fileraw)
 
     data = {}
 
     i = 0
-    sp = filestr.split(';')
+    sp = filestr.split(";")
 
     while i < len(sp):
-        line = sp[i].replace(' ', '')
-        if '{' in line:
-            key = line.split('={')[0]
-            newline = '={'.join(line.split('={')[1:])
+        line = sp[i].replace(" ", "")
+        if "{" in line:
+            key = line.split("={")[0]
+            newline = "={".join(line.split("={")[1:])
             data[key], i, sp = read_level(newline, i, sp)
-        elif line != '':
-            raise RuntimeError('Unable to parse: %s' % line)
+        elif line != "":
+            raise RuntimeError("Unable to parse: %s" % line)
 
         i = i + 1
 
@@ -26,68 +26,67 @@ def read_level(line, i, sp):
     subdata = {}
 
     while True:
-        if '{' in line:
-            key = line.split('={')[0]
-            newline = '={'.join(line.split('={')[1:])
+        if "{" in line:
+            key = line.split("={")[0]
+            newline = "={".join(line.split("={")[1:])
             subdata[key], i, sp = read_level(newline, i, sp)
-        elif '}' in line:
+        elif "}" in line:
             return subdata, i, sp
-        elif '=' in line:
-            [key, value] = line.split('=')
+        elif "=" in line:
+            [key, value] = line.split("=")
             subdata[key] = value
-        elif line != '':
-            raise RuntimeError('Unable to parse: %s' % line)
+        elif line != "":
+            raise RuntimeError("Unable to parse: %s" % line)
 
         i = i + 1
 
         if i == len(sp):
-            raise RuntimeError('EOF reached while parsing an input block. Did you forget to close a bracket?')
+            raise RuntimeError(
+                "EOF reached while parsing an input block. Did you forget to close a bracket?"
+            )
 
-        line = sp[i].replace(' ', '')
+        line = sp[i].replace(" ", "")
 
 
 def parse_list(lst, typ=str):
-    shortlist = lst.strip('[').strip(']').replace(' ', '')
+    shortlist = lst.strip("[").strip("]").replace(" ", "")
 
-    if shortlist == '':
+    if shortlist == "":
         return []
     else:
-        return list(map(typ, shortlist.split(',')))
+        return list(map(typ, shortlist.split(",")))
 
 
 def uncomment_file(fileraw):
-    filestr = ''
+    filestr = ""
     comment_mode = False
 
     # Go through all lines in the raw file
-    for line in fileraw.split('\n'):
-
+    for line in fileraw.split("\n"):
         # Check if we are in comment mode
         if comment_mode:
-
             # If so, try to find '*/' and remove only the part before it
-            end = line.find('*/')
+            end = line.find("*/")
             if end >= 0:
                 comment_mode = False
-                line = line[end + len('*/'):]
+                line = line[end + len("*/") :]
 
             # If comment_mode is still enabled, don't include anything
             else:
-                line = ''
+                line = ""
 
         if not comment_mode:
-
             # If we are not in comment mode, remove all full comments from the line
             line = uncomment_line(line)
 
             # If there is a '/*' in the line, enable comment mode, and remove the part after '/*' from the line
-            start = line.find('/*')
+            start = line.find("/*")
             if start >= 0:
                 comment_mode = True
                 line = line[:start]
 
         # Add the line to the file string
-        filestr += line.replace('\t', '')
+        filestr += line.replace("\t", "")
 
     return filestr
 
@@ -98,17 +97,17 @@ def uncomment_line(line):
     # Remove all comments from the line (assuming that comment_mode is False)
     while True:
         # If the first identifier is a '//', remove everything after it
-        start_oneline = clean_line.find('//')
-        start_block = clean_line.find('/*')
+        start_oneline = clean_line.find("//")
+        start_block = clean_line.find("/*")
         if start_oneline >= 0:
             if start_oneline < start_block or start_block < 0:
                 clean_line = clean_line[:start_oneline]
 
         # Remove everything in the first one-line block comment that is found
-        start = clean_line.find('/*')
-        end = clean_line.find('*/')
+        start = clean_line.find("/*")
+        end = clean_line.find("*/")
         if 0 <= start < end and end >= 0:
-            clean_line = clean_line[:start] + clean_line[end + len('*/'):]
+            clean_line = clean_line[:start] + clean_line[end + len("*/") :]
         else:
             # Exit if no comments are left
             break
@@ -136,12 +135,12 @@ def evaluate(value, coords, rank, extra_dict=None):
 
 def get_eval_dict(coords, rank, extra_dict=None):
     # This function builds a dictionary with the x,y,z coordinates of coords
-    eval_dict = {'x': coords[0]}
+    eval_dict = {"x": coords[0]}
 
     if rank >= 2:
-        eval_dict.update({'y': coords[1]})
+        eval_dict.update({"y": coords[1]})
     if rank == 3:
-        eval_dict.update({'z': coords[2]})
+        eval_dict.update({"z": coords[2]})
 
     # Add the extra dictionary if applicable
     if extra_dict is not None:

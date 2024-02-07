@@ -8,25 +8,26 @@ from jive.solver.jit.sputil import rowcol2idx, idxs2rowscols
 # wrapper functions #
 #####################
 
+
 def incomplete_cholesky(A):
     if not spsp.isspmatrix_csr(A):
-        raise ValueError('A has to be a sparse matrix in csr format')
+        raise ValueError("A has to be a sparse matrix in csr format")
 
-    L = spsp.tril(A, format='csr')
+    L = spsp.tril(A, format="csr")
     L.data = incomplete_cholesky_jit(L.data, L.indices, L.indptr)
 
     return L
 
 
-def sparse_cholesky(A, mode='LDL'):
+def sparse_cholesky(A, mode="LDL"):
     if not spsp.isspmatrix_csr(A):
-        raise ValueError('A has to be a sparse matrix in csr format')
+        raise ValueError("A has to be a sparse matrix in csr format")
 
     A.sort_indices()
 
-    if mode=='LL':
+    if mode == "LL":
         L = sparse_cholesky_LL(A)
-    elif mode=='LDL':
+    elif mode == "LDL":
         L = sparse_cholesky_LDL(A)
 
     L.sort_indices()
@@ -51,6 +52,7 @@ def sparse_cholesky_LDL(A):
 # numba helper functions #
 ##########################
 
+
 @njit
 def incomplete_cholesky_jit(data, indices, indptr):
     L_data = data.copy()
@@ -64,10 +66,10 @@ def incomplete_cholesky_jit(data, indices, indptr):
         A_ij = data[idx]
 
         # Get all entries belonging to row i and row j
-        irowindices = indices[indptr[row]:indptr[row+1]]
-        irowvalues = L_data[indptr[row]:indptr[row+1]]
-        jrowindices = indices[indptr[col]:indptr[col+1]]
-        jrowvalues = L_data[indptr[col]:indptr[col+1]]
+        irowindices = indices[indptr[row] : indptr[row + 1]]
+        irowvalues = L_data[indptr[row] : indptr[row + 1]]
+        jrowindices = indices[indptr[col] : indptr[col + 1]]
+        jrowvalues = L_data[indptr[col] : indptr[col + 1]]
 
         # Initialize rowsum computation
         rowsum = 0.0
@@ -94,11 +96,11 @@ def incomplete_cholesky_jit(data, indices, indptr):
         # Compute the next entry in the lower triangular matrix
         if row == col:
             if A_ij - rowsum <= 0:
-                raise ValueError('Matrix is not positive definite')
+                raise ValueError("Matrix is not positive definite")
 
             L_ij = np.sqrt(A_ij - rowsum)
         else:
-            idx_jj = indptr[col+1]-1
+            idx_jj = indptr[col + 1] - 1
             L_jj = L_data[idx_jj]
             L_ij = (A_ij - rowsum) / L_jj
 
@@ -115,9 +117,8 @@ def sparse_cholesky_jit(data, indices, indptr):
 
     # Go over all rows, and all relevant columns
     # (starting from the first non-zero column in that row)
-    for row in range(len(indptr)-1):
-        for col in range(indices[indptr[row]], row+1):
-
+    for row in range(len(indptr) - 1):
+        for col in range(indices[indptr[row]], row + 1):
             idx = rowcol2idx(indices, indptr, row, col)
             if idx >= 0:
                 A_ij = data[idx]
@@ -125,15 +126,15 @@ def sparse_cholesky_jit(data, indices, indptr):
                 A_ij = 0
 
             # Get all entries belonging to row i and row j
-            irowindices = Lindices[Lindptr[row]:]
-            irowvalues = Ldata[Lindptr[row]:]
+            irowindices = Lindices[Lindptr[row] :]
+            irowvalues = Ldata[Lindptr[row] :]
 
             if row == col:
                 jrowindices = irowindices
                 jrowvalues = irowvalues
             else:
-                jrowindices = Lindices[Lindptr[col]:Lindptr[col+1]]
-                jrowvalues = Ldata[Lindptr[col]:Lindptr[col+1]]
+                jrowindices = Lindices[Lindptr[col] : Lindptr[col + 1]]
+                jrowvalues = Ldata[Lindptr[col] : Lindptr[col + 1]]
 
             # Initialize rowsum computation
             rowsum = 0.0
@@ -160,12 +161,12 @@ def sparse_cholesky_jit(data, indices, indptr):
             # Compute the next entry in the lower triangular matrix
             if row == col:
                 if A_ij - rowsum <= 0:
-                    raise ValueError('Matrix is not positive definite')
+                    raise ValueError("Matrix is not positive definite")
 
                 Lij = np.sqrt(A_ij - rowsum)
 
             else:
-                idx_jj = Lindptr[col+1]-1
+                idx_jj = Lindptr[col + 1] - 1
                 Ljj = Ldata[idx_jj]
                 Lij = (A_ij - rowsum) / Ljj
 
@@ -183,13 +184,12 @@ def sparse_LDL_jit(data, indices, indptr):
     Ldata = []
     Lindices = []
     Lindptr = [0]
-    Ddata = np.zeros(len(indptr)-1)
+    Ddata = np.zeros(len(indptr) - 1)
 
     # Go over all rows, and all relevant columns
     # (starting from the first non-zero column in that row)
-    for row in range(len(indptr)-1):
-        for col in range(indices[indptr[row]], row+1):
-
+    for row in range(len(indptr) - 1):
+        for col in range(indices[indptr[row]], row + 1):
             idx = rowcol2idx(indices, indptr, row, col)
             if idx >= 0:
                 A_ij = data[idx]
@@ -197,15 +197,15 @@ def sparse_LDL_jit(data, indices, indptr):
                 A_ij = 0
 
             # Get all entries belonging to row i and row j
-            irowindices = Lindices[Lindptr[row]:]
-            irowvalues = Ldata[Lindptr[row]:]
+            irowindices = Lindices[Lindptr[row] :]
+            irowvalues = Ldata[Lindptr[row] :]
 
             if row == col:
                 jrowindices = irowindices
                 jrowvalues = irowvalues
             else:
-                jrowindices = Lindices[Lindptr[col]:Lindptr[col+1]]
-                jrowvalues = Ldata[Lindptr[col]:Lindptr[col+1]]
+                jrowindices = Lindices[Lindptr[col] : Lindptr[col + 1]]
+                jrowvalues = Ldata[Lindptr[col] : Lindptr[col + 1]]
 
             # Initialize rowsum computation
             rowsum = 0.0
@@ -231,7 +231,7 @@ def sparse_LDL_jit(data, indices, indptr):
 
             # Compute the next entry in the lower triangular matrix
             if row == col:
-                Lij = 1.
+                Lij = 1.0
                 Ddata[row] = A_ij - rowsum
 
             else:
@@ -242,8 +242,8 @@ def sparse_LDL_jit(data, indices, indptr):
                 Ldata.append(Lij)
                 Lindices.append(col)
 
-        if Ddata[len(Lindptr)-1] <= 0:
-            raise ValueError('Matrix is not positive definite')
+        if Ddata[len(Lindptr) - 1] <= 0:
+            raise ValueError("Matrix is not positive definite")
 
         Lindptr.append(len(Lindices))
 

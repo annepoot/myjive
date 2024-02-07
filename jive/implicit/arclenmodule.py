@@ -10,11 +10,12 @@ from jive.fem.names import Actions as act
 from jive.app.module import Module
 from jive.solver.constrainer import Constrainer
 
-NSTEPS = 'nsteps'
-ITERMAX = 'itermax'
-TOLERANCE = 'tolerance'
-BETA = 'beta'
-DL = 'dl'
+NSTEPS = "nsteps"
+ITERMAX = "itermax"
+TOLERANCE = "tolerance"
+BETA = "beta"
+DL = "dl"
+
 
 class ArclenModule(Module):
     def init(self, props, globdat):
@@ -40,12 +41,12 @@ class ArclenModule(Module):
         model = globdat[gn.MODEL]
 
         globdat[gn.TIMESTEP] = self._step
-        print('Running time step', self._step)
+        print("Running time step", self._step)
 
         if self._step == 0:
             globdat[gn.STATE0] = np.zeros(dc)
             globdat[gn.OLDSTATE0] = np.zeros(dc)
-            globdat[gn.LAMBDA] = 0.
+            globdat[gn.LAMBDA] = 0.0
             self._duOld = np.zeros(dc)
 
         K = np.zeros((dc, dc))
@@ -84,7 +85,7 @@ class ArclenModule(Module):
         else:  # Choose solution with smallest angle wrt previous solution
             lsign = np.sign(np.dot(self._duOld, fhat) * np.dot(duII, fhat))
 
-        beta2F = self._beta ** 2 * np.dot(fhat, fhat)
+        beta2F = self._beta**2 * np.dot(fhat, fhat)
         Dlam = lsign * self._dl / np.sqrt(np.dot(duII, duII) + beta2F)
         lbeta2F = Dlam * beta2F
 
@@ -93,7 +94,7 @@ class ArclenModule(Module):
 
         # Reference values to check convergence
         ref = max(Dlam * np.linalg.norm(fext0), 1)
-        rel = 1.
+        rel = 1.0
 
         # Initialize iteration loop
         while rel > self._tolerance and iteration < self._itermax:
@@ -116,14 +117,14 @@ class ArclenModule(Module):
             globdat[gn.STATE0] += du
             Dlam += dl
             rel = np.linalg.norm(r[np.ix_(fdofs)]) / ref
-            print('Iteration %i, relative residual norm: %.4e' % (iteration, rel))
+            print("Iteration %i, relative residual norm: %.4e" % (iteration, rel))
 
         # Alert if not convergence
         if rel > self._tolerance:
             if rel > 1:
-                raise RuntimeError('Divergence in time step %i' % self._step)
+                raise RuntimeError("Divergence in time step %i" % self._step)
             else:
-                warnings.warn('No convergence in time step %i' % self._step)
+                warnings.warn("No convergence in time step %i" % self._step)
 
         globdat[gn.LAMBDA] += Dlam
 
@@ -138,16 +139,15 @@ class ArclenModule(Module):
             self._duOld = globdat[gn.STATE0] - globdat[gn.OLDSTATE0]
             globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
 
-
         while len(self._fhat) < globdat[gn.DOFSPACE].dof_count():
             self._fhat = np.append(self._fhat, 0)
             self._fext0 = np.append(self._fext0, 0)
             self._duOld = np.append(self._duOld, 0)
 
         if self._step >= self._nsteps:
-            return 'exit'
+            return "exit"
         else:
-            return 'ok'
+            return "ok"
 
     def shutdown(self, globdat):
         pass
@@ -161,4 +161,4 @@ def solveSys(K, f, c):
 
 
 def declare(factory):
-    factory.declare_module('Arclen', ArclenModule)
+    factory.declare_module("Arclen", ArclenModule)

@@ -10,14 +10,14 @@ import jive.util.proputils as pu
 
 from core.models.jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
-ELEMENTS = 'elements'
-RHO = 'rho'
-SHAPE = 'shape'
-TYPE = 'type'
-INTSCHEME = 'intScheme'
-DOFTYPES = ['dx', 'dy', 'dz']
-MATERIAL = 'material'
-THICKNESS_PROP = 'thickness'
+ELEMENTS = "elements"
+RHO = "rho"
+SHAPE = "shape"
+TYPE = "type"
+INTSCHEME = "intScheme"
+DOFTYPES = ["dx", "dy", "dz"]
+MATERIAL = "material"
+THICKNESS_PROP = "thickness"
 
 
 class SolidModel(Model):
@@ -31,13 +31,13 @@ class SolidModel(Model):
         elif action == act.GETMATRIXB:
             self._get_strain_matrix(params, globdat)
         elif action == act.GETTABLE:
-            if 'stress' in params[pn.TABLENAME]:
+            if "stress" in params[pn.TABLENAME]:
                 self._get_stresses(params, globdat)
-            elif 'strain' in params[pn.TABLENAME]:
+            elif "strain" in params[pn.TABLENAME]:
                 self._get_strains(params, globdat)
-            elif 'stiffness' in params[pn.TABLENAME]:
+            elif "stiffness" in params[pn.TABLENAME]:
                 self._get_stiffness(params, globdat)
-            elif 'size' in params[pn.TABLENAME]:
+            elif "size" in params[pn.TABLENAME]:
                 self._get_elem_size(params, globdat)
             else:
                 showmsg = False
@@ -47,17 +47,18 @@ class SolidModel(Model):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('SolidModel taking action', action)
+            print("SolidModel taking action", action)
 
     def configure(self, props, globdat):
-
         # Configure the material
         matprops = props[MATERIAL]
         self._mat = new_material(matprops)
         self._mat.configure(matprops, globdat)
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
+            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+        )
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -65,7 +66,7 @@ class SolidModel(Model):
 
         # Make sure the shape rank and mesh rank are identitcal
         if self._shape.global_rank() != globdat[gn.MESHRANK]:
-            raise RuntimeError('ElasticModel: Shape rank must agree with mesh rank')
+            raise RuntimeError("ElasticModel: Shape rank must agree with mesh rank")
 
         # Get basic dimensionality info
         self._rank = self._shape.global_rank()
@@ -79,7 +80,7 @@ class SolidModel(Model):
             self._thickness = pu.soft_cast(self._thickness, float)
 
         # Create a new dof for every node and dof type
-        for doftype in DOFTYPES[0:self._rank]:
+        for doftype in DOFTYPES[0 : self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
             for inode in self._elems.get_unique_nodes_of(self._ielems):
                 globdat[gn.DOFSPACE].add_dof(inode, doftype)
@@ -93,7 +94,7 @@ class SolidModel(Model):
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the gradients, weights and coordinates of each integration point
@@ -128,7 +129,7 @@ class SolidModel(Model):
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, weights and coordinates of each integration point
@@ -156,7 +157,6 @@ class SolidModel(Model):
             params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
 
     def _get_strain_matrix(self, params, globdat):
-
         # Add the element weights to the global weights
         nc = self._nodes.size()
         node_count = self._shape.node_count()
@@ -164,7 +164,7 @@ class SolidModel(Model):
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the gradients, weights and coordinates of each integration point
@@ -181,22 +181,25 @@ class SolidModel(Model):
 
                 # Compute the element strain and weights
                 for i in range(self._strcount):
-                    elbmat[i*node_count:(i+1)*node_count, :] += np.outer(sfuncs[:, ip], B[i, :])
-                    elwts[i*node_count:(i+1)*node_count] += sfuncs[:, ip].flatten()
+                    elbmat[i * node_count : (i + 1) * node_count, :] += np.outer(
+                        sfuncs[:, ip], B[i, :]
+                    )
+                    elwts[i * node_count : (i + 1) * node_count] += sfuncs[
+                        :, ip
+                    ].flatten()
 
             # Get the node index vector
             node_idx = np.zeros(node_count * self._strcount, dtype=int)
             for i in range(self._strcount):
-                node_idx[i*node_count:(i+1)*node_count] = inodes + nc * i
+                node_idx[i * node_count : (i + 1) * node_count] = inodes + nc * i
 
             # Add the element strain matrix to the global strain matrix
-            params[pn.MATRIXB][np.ix_(node_idx,idofs)] += elbmat
+            params[pn.MATRIXB][np.ix_(node_idx, idofs)] += elbmat
 
             # Add the element weights to the global weights
             params[pn.TABLEWEIGHTS][node_idx] += elwts
 
     def _get_strains(self, params, globdat):
-
         table = params[pn.TABLE]
         tbwts = params[pn.TABLEWEIGHTS]
 
@@ -211,16 +214,16 @@ class SolidModel(Model):
 
         # Add the columns of all stress components to the table
         if self._rank == 1:
-            jcols = xtable.add_columns(['xx'])
+            jcols = xtable.add_columns(["xx"])
         elif self._rank == 2:
-            jcols = xtable.add_columns(['xx', 'yy', 'xy'])
+            jcols = xtable.add_columns(["xx", "yy", "xy"])
         elif self._rank == 3:
-            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zx'])
+            jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, gradients, weights and coordinates of each integration point
@@ -269,16 +272,16 @@ class SolidModel(Model):
 
         # Add the columns of all stress components to the table
         if self._rank == 1:
-            jcols = xtable.add_columns(['xx'])
+            jcols = xtable.add_columns(["xx"])
         elif self._rank == 2:
-            jcols = xtable.add_columns(['xx', 'yy', 'xy'])
+            jcols = xtable.add_columns(["xx", "yy", "xy"])
         elif self._rank == 3:
-            jcols = xtable.add_columns(['xx', 'yy', 'zz', 'xy', 'yz', 'zx'])
+            jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, gradients, weights and coordinates of each integration point
@@ -325,7 +328,7 @@ class SolidModel(Model):
         xtable = to_xtable(table)
 
         # Add the column of the Young's modulus to the table
-        jcol = xtable.add_column('')
+        jcol = xtable.add_column("")
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -369,7 +372,7 @@ class SolidModel(Model):
         xtable = to_xtable(table)
 
         # Add the columns of all stress components to the table
-        jcol = xtable.add_column('')
+        jcol = xtable.add_column("")
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -380,9 +383,9 @@ class SolidModel(Model):
             max_edge = 0.0
             for i, inode in enumerate(inodes):
                 for j, jnode in enumerate(inodes):
-                    icoords = coords[:,i]
-                    jcoords = coords[:,j]
-                    edge = np.sqrt(np.sum((icoords-jcoords)**2))
+                    icoords = coords[:, i]
+                    jcoords = coords[:, j]
+                    edge = np.sqrt(np.sum((icoords - jcoords) ** 2))
                     if edge > max_edge:
                         max_edge = edge
 
@@ -403,8 +406,10 @@ class SolidModel(Model):
         return get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
 
     def _get_B_matrix(self, grads):
-        return get_B_matrix_jit(grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank)
+        return get_B_matrix_jit(
+            grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank
+        )
 
 
 def declare(factory):
-    factory.declare_model('Solid', SolidModel)
+    factory.declare_model("Solid", SolidModel)

@@ -1,7 +1,8 @@
 import pytest
 import sys, os
+
 cwd = os.getcwd()
-rootdir = os.path.join(cwd[:cwd.rfind(os.path.sep + "myjive")], "myjive")
+rootdir = os.path.join(cwd[: cwd.rfind(os.path.sep + "myjive")], "myjive")
 if rootdir not in sys.path:
     sys.path.append(rootdir)
 
@@ -10,14 +11,17 @@ import jive.util.proputils as pu
 from jive.app import main
 from jive.solver.constrainer import Constrainer
 
+
 @pytest.fixture(autouse=True)
 def change_test_dir(monkeypatch):
     monkeypatch.chdir(rootdir)
-    monkeypatch.chdir('examples/cantilever')
+    monkeypatch.chdir("examples/cantilever")
+
 
 @pytest.fixture
 def props():
-    return pu.parse_file('beam.pro')
+    return pu.parse_file("beam.pro")
+
 
 @pytest.mark.rank2
 @pytest.mark.cantilever
@@ -25,10 +29,10 @@ def props():
 def test_cantilever(props):
     globdat = main.jive(props)
 
-    K = globdat['matrix0']
-    u = globdat['state0']
-    f = globdat['extForce']
-    c = globdat['constraints']
+    K = globdat["matrix0"]
+    u = globdat["state0"]
+    f = globdat["extForce"]
+    c = globdat["constraints"]
 
     conman = Constrainer(c, K)
     Kc = conman.get_output_matrix()
@@ -37,8 +41,8 @@ def test_cantilever(props):
     # Check solver solution
     assert np.isclose(Kc @ u, fc).all()
 
-    u_rt = u[globdat['dofSpace'].get_dof(2,'dy')]
-    u_y = u[len(u)//2:]
+    u_rt = u[globdat["dofSpace"].get_dof(2, "dy")]
+    u_y = u[len(u) // 2 :]
 
     # Check displacement field
     assert np.isclose(u_rt, -0.5106734913602741)

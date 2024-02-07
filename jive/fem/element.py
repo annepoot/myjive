@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Element:
     def __init__(self, nodes):
         self._nodes = np.array(nodes, dtype=int)
@@ -12,7 +13,7 @@ class Element:
 
     def set_nodes(self, nodes):
         if len(nodes) != self.get_node_count():
-            raise ValueError('set_nodes cannot change the element node count')
+            raise ValueError("set_nodes cannot change the element node count")
         self._nodes = np.array(nodes, dtype=int)
 
     def change_node(self, oldnode, newnode):

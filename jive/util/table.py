@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["Table"]
+
 
 class Table:
     def __init__(self, tbl=None, size=None):

@@ -8,8 +8,7 @@ from jive.fem.names import Actions as act
 import jive.util.proputils as pu
 from .solvermodule import SolverModule
 from jive.solver import Constraints
-from jive.util.table import Table
-from jive.util.xtable import to_xtable
+from jive.util import Table, to_xtable
 
 SOLVER = "solver"
 PRECONDITIONER = "preconditioner"

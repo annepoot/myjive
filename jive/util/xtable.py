@@ -1,7 +1,9 @@
 import numpy as np
 
-from jive.util.table import Table
-from jive.util.jit.xtable import set_block_jit, add_block_jit
+from .table import Table
+from .jit.xtable import set_block_jit, add_block_jit
+
+__all__ = ["XTable", "to_xtable"]
 
 
 class XTable(Table):

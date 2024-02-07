@@ -4,7 +4,6 @@ from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
 from jive.model.model import Model
-from jive.util.xtable import XTable, to_xtable
 
 ELEMENTS = "elements"
 YOUNG = "young"

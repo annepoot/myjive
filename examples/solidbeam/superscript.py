@@ -7,8 +7,8 @@ if rootdir not in sys.path:
 
 import numpy as np
 from jive.app import main
-from jive.util import proputils as pu
-from util.quickviewer import QuickViewer
+import jive.util.proputils as pu
+from core.util import QuickViewer
 
 props = pu.parse_file("beam.pro")
 

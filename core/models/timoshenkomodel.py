@@ -82,7 +82,3 @@ class TimoshenkoModel(Model):
                 )
 
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
-
-
-def declare(factory):
-    factory.declare_model("Timoshenko", TimoshenkoModel)

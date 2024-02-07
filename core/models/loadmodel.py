@@ -99,7 +99,3 @@ class LoadModel(Model):
         for i in range(self._loadcount):
             b[i] = pu.evaluate(self._loads[i], ipcoords, self._rank)
         return b
-
-
-def declare(factory):
-    factory.declare_model("Load", LoadModel)

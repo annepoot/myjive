@@ -411,7 +411,3 @@ class SolidModel(Model):
         return get_B_matrix_jit(
             grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank
         )
-
-
-def declare(factory):
-    factory.declare_model("Solid", SolidModel)

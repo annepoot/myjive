@@ -70,7 +70,3 @@ class XPoissonModel(PoissonModel):
 
         # Restore the original rho value
         self._rho = rho_
-
-
-def declare(factory):
-    factory.declare_model("XPoisson", XPoissonModel)

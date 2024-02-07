@@ -157,7 +157,3 @@ class BarModel(Model):
     def _get_M_matrix(self, ipcoords):
         M = np.array([[self._rhoA]])
         return M
-
-
-def declare(factory):
-    factory.declare_model("Bar", BarModel)

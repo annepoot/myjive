@@ -19,6 +19,13 @@ class Module:
     def __init__(self, name):
         self._name = name
 
+    @classmethod
+    def declare(cls, factory):
+        name = cls.__name__
+        if len(name) > 6 and name[-6:] == "Module":
+            name = name[:-6]
+        factory.declare_module(name, cls)
+
     def init(self, props, globdat):
         print("Empty module init")
 

@@ -43,7 +43,3 @@ class DirichletModel(Model):
         self._vals = np.array(self._initDisp) + globdat[gn.TIMESTEP] * np.array(
             self._dispIncr
         )
-
-
-def declare(factory):
-    factory.declare_model("Dirichlet", DirichletModel)

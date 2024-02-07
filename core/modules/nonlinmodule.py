@@ -126,7 +126,3 @@ class NonlinModule(Module):
 
     def shutdown(self, globdat):
         pass
-
-
-def declare(factory):
-    factory.declare_module("Nonlin", NonlinModule)

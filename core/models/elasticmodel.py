@@ -390,7 +390,3 @@ class ElasticModel(Model):
             )
 
         return b
-
-
-def declare(factory):
-    factory.declare_model("Elastic", ElasticModel)

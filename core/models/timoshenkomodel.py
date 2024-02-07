@@ -1,9 +1,8 @@
 import numpy as np
 
-from jive.fem.names import Actions as act
-from jive.fem.names import ParamNames as pn
-from jive.fem.names import GlobNames as gn
-from jive.fem.names import PropNames as prn
+from jive.names import Actions as act
+from jive.names import ParamNames as pn
+from jive.names import GlobNames as gn
 from jive.model.model import Model
 
 ELEMENTS = "elements"

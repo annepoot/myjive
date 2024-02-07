@@ -1,12 +1,9 @@
-from jive.fem.names import GlobNames as gn
+from jive.names import GlobNames as gn
 
-from jive.app import module
-from jive.model import model
-
-from jive.app import InitModule, OutputModule
+from jive.app import ModuleFactory, InitModule, OutputModule
 from jive.gl import FrameViewModule, GraphModule, ViewModule
 from jive.implicit import ArclenModule, LinsolveModule, SolverModule
-from jive.model import MultiModel
+from jive.model import ModelFactory, MultiModel
 from jive.solver import (
     SolverFactory,
     CGSolver,
@@ -46,7 +43,7 @@ def declare_all(globdat):
 
 
 def declare_models(globdat):
-    factory = globdat.get(gn.MODELFACTORY, model.ModelFactory())
+    factory = globdat.get(gn.MODELFACTORY, ModelFactory())
 
     MultiModel.declare(factory)
 
@@ -54,7 +51,7 @@ def declare_models(globdat):
 
 
 def declare_modules(globdat):
-    factory = globdat.get(gn.MODULEFACTORY, module.ModuleFactory())
+    factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
     InitModule.declare(factory)
 

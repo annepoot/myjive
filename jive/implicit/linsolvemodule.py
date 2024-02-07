@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.sparse as spsp
 
-from jive.fem.names import GlobNames as gn
-from jive.fem.names import ParamNames as pn
-from jive.fem.names import Actions as act
+from jive.names import GlobNames as gn
+from jive.names import ParamNames as pn
+from jive.names import Actions as act
 
 import jive.util.proputils as pu
 from .solvermodule import SolverModule

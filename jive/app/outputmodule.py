@@ -1,5 +1,5 @@
 from .module import Module
-from jive.fem.names import GlobNames as gn
+from jive.names import GlobNames as gn
 
 __all__ = ["OutputModule"]
 

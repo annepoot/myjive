@@ -3,9 +3,9 @@ import numpy as np
 import scipy.sparse as sparse
 import scipy.sparse.linalg as linalg
 
-from jive.fem.names import GlobNames as gn
-from jive.fem.names import ParamNames as pn
-from jive.fem.names import Actions as act
+from jive.names import GlobNames as gn
+from jive.names import ParamNames as pn
+from jive.names import Actions as act
 
 from jive.app import Module
 from jive.solver import Constrainer

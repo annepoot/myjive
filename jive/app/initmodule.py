@@ -7,8 +7,7 @@ from jive.fem import XElementSet
 from jive.fem import ElementGroup
 from jive.fem import DofSpace
 
-from jive.fem.names import GlobNames as gn
-from jive.fem.names import PropNames as prn
+from jive.names import GlobNames as gn
 
 import jive.util.proputils as pu
 
@@ -68,7 +67,7 @@ class InitModule(Module):
 
         # Initialize model
         print("InitModule: Creating model...")
-        m = modelfac.get_model(modelprops[prn.TYPE], gn.MODEL)
+        m = modelfac.get_model(modelprops[TYPE], gn.MODEL)
         m.configure(modelprops, globdat)
         globdat[gn.MODEL] = m
 

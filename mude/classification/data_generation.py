@@ -10,7 +10,7 @@ import pandas as pd
 from datetime import datetime
 from jive.app import main
 import jive.util.proputils as pu
-from jive.fem.names import GlobNames as gn
+from jive.names import GlobNames as gn
 
 # Read the problem props from the general beam file
 props = pu.parse_file("beam.pro")

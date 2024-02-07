@@ -2,8 +2,8 @@ import scipy.sparse as spsp
 
 from jive.solver.preconditioner import Preconditioner
 
-class IdPrecon(Preconditioner):
 
+class IdPrecon(Preconditioner):
     def __init__(self):
         super().__init__()
 
@@ -12,7 +12,7 @@ class IdPrecon(Preconditioner):
 
     def update(self, sourcematrix):
         self._sourcematrix = sourcematrix
-        self._M = spsp.identity(self._sourcematrix.shape[0], format='csr')
+        self._M = spsp.identity(self._sourcematrix.shape[0], format="csr")
 
     def dot(self, lhs):
         return lhs
@@ -28,4 +28,4 @@ class IdPrecon(Preconditioner):
 
 
 def declare(factory):
-    factory.declare_precon('id', IdPrecon)
+    factory.declare_precon("id", IdPrecon)

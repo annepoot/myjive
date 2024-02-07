@@ -3,13 +3,12 @@ import matplotlib.pyplot as plt
 from jive.app.module import Module
 import jive.util.proputils as pu
 
-XDATA = 'xData'
-YDATA = 'yData'
+XDATA = "xData"
+YDATA = "yData"
+
 
 class GraphModule(Module):
-
     def init(self, props, globdat):
-
         if self._name in props:
             myprops = props.get(self._name)
 
@@ -17,7 +16,7 @@ class GraphModule(Module):
             self._ydata = pu.parse_list(myprops[YDATA])
 
     def run(self, globdat):
-        return 'ok'
+        return "ok"
 
     def shutdown(self, globdat):
         self._make_graph(globdat)
@@ -25,13 +24,13 @@ class GraphModule(Module):
     def _make_graph(self, globdat):
         fig = plt.figure(2)
         for xdat, ydat in zip(self._xdata, self._ydata):
-            [module, group, ld, typ] = xdat.split('.')
+            [module, group, ld, typ] = xdat.split(".")
             x = globdat[module][group][ld][typ]
-            [module, group, ld, typ] = ydat.split('.')
+            [module, group, ld, typ] = ydat.split(".")
             y = globdat[module][group][ld][typ]
             plt.plot(x, y)
         plt.show()
 
 
 def declare(factory):
-    factory.declare_module('Graph', GraphModule)
+    factory.declare_module("Graph", GraphModule)

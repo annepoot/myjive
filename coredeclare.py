@@ -20,6 +20,7 @@ from core.modules import vtkoutmodule
 from core.modules import linbuckmodule
 from core.modules import loaddispmodule
 
+
 def declare_models(globdat):
     factory = globdat.get(gn.MODELFACTORY, model.ModelFactory())
 

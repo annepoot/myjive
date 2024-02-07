@@ -20,11 +20,11 @@ class Module:
         self._name = name
 
     def init(self, props, globdat):
-        print('Empty module init')
+        print("Empty module init")
 
     def run(self, globdat):
-        print('Empty module run')
-        return 'exit'
+        print("Empty module run")
+        return "exit"
 
     def shutdown(self, globdat):
-        print('Empty module shutdown')
+        print("Empty module shutdown")

@@ -6,14 +6,14 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import PropNames as prn
 from jive.model.model import Model
 
-ELEMENTS = 'elements'
-EA = 'EA'
-k = 'k'
-RHOA = 'rhoA'
-SHAPE = 'shape'
-TYPE = 'type'
-INTSCHEME = 'intScheme'
-DOFTYPES = ['dx']
+ELEMENTS = "elements"
+EA = "EA"
+k = "k"
+RHOA = "rhoA"
+SHAPE = "shape"
+TYPE = "type"
+INTSCHEME = "intScheme"
+DOFTYPES = ["dx"]
 
 
 class BarModel(Model):
@@ -30,7 +30,7 @@ class BarModel(Model):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('BarModel taking action', action)
+            print("BarModel taking action", action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
@@ -41,7 +41,9 @@ class BarModel(Model):
         self._rhoA = float(props.get(RHOA, 0))
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
+            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+        )
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -59,21 +61,20 @@ class BarModel(Model):
         self._ipcount = self._shape.ipoint_count()
         self._nodecount = self._shape.node_count()
         self._dofcount = self._rank * self._nodecount
-        self._strcount = self._rank * (self._rank + 1) // 2   # 1-->1, 2-->3, 3-->6
+        self._strcount = self._rank * (self._rank + 1) // 2  # 1-->1, 2-->3, 3-->6
 
         # Create a new dof for every node and dof type
         nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
-        for doftype in DOFTYPES[0:self._rank]:
+        for doftype in DOFTYPES[0 : self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
             for node in nodes:
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def _get_matrix(self, params, globdat):
-
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, gradients, weights and coordinates of each integration point
@@ -86,14 +87,16 @@ class BarModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B, N, D and K matrices for each integration point
-                B = self._get_B_matrix(grads[:,:,ip])
-                N = self._get_N_matrix(sfuncs[:,ip])
-                D = self._get_D_matrix(ipcoords[:,ip])
-                K = self._get_K_matrix(ipcoords[:,ip])
+                B = self._get_B_matrix(grads[:, :, ip])
+                N = self._get_N_matrix(sfuncs[:, ip])
+                D = self._get_D_matrix(ipcoords[:, ip])
+                K = self._get_K_matrix(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * (np.matmul(np.transpose(B), np.matmul(D, B))
-                                        + np.matmul(np.transpose(N), np.matmul(K, N)))
+                elmat += weights[ip] * (
+                    np.matmul(np.transpose(B), np.matmul(D, B))
+                    + np.matmul(np.transpose(N), np.matmul(K, N))
+                )
 
             # Add the element stiffness matrix to the global stiffness matrix
             params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
@@ -107,7 +110,7 @@ class BarModel(Model):
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0:self._rank])
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, weights and coordinates of each integration point
@@ -120,10 +123,10 @@ class BarModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N = self._get_N_matrix(sfuncs[:,ip])
+                N = self._get_N_matrix(sfuncs[:, ip])
 
                 if not unit_matrix:
-                    M = self._get_M_matrix(ipcoords[:,ip])
+                    M = self._get_M_matrix(ipcoords[:, ip])
 
                 # Compute the element mass matrix
                 elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
@@ -133,12 +136,12 @@ class BarModel(Model):
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((1, self._nodecount))
-        N[0,:] = sfuncs.transpose()
+        N[0, :] = sfuncs.transpose()
         return N
 
     def _get_B_matrix(self, grads):
         B = np.zeros((1, self._nodecount))
-        B[0,:] = grads.transpose()
+        B[0, :] = grads.transpose()
         return B
 
     def _get_D_matrix(self, ipcoords):
@@ -155,4 +158,4 @@ class BarModel(Model):
 
 
 def declare(factory):
-    factory.declare_model('Bar', BarModel)
+    factory.declare_model("Bar", BarModel)

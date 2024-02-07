@@ -3,8 +3,8 @@ import numpy as np
 from jive.util.table import Table
 from jive.util.jit.xtable import set_block_jit, add_block_jit
 
-class XTable(Table):
 
+class XTable(Table):
     def clear_data(self):
         self._data = np.zeros((0, self._header.size()))
 
@@ -19,7 +19,9 @@ class XTable(Table):
     def add_column(self, name):
         if self.find_column(name) < 0:
             self._header = np.append(self._header, name)
-            self._data.resize((self.row_count(), self.column_count() + 1), refcheck=False)
+            self._data.resize(
+                (self.row_count(), self.column_count() + 1), refcheck=False
+            )
         return self.find_column(name)
 
     def add_columns(self, names):
@@ -28,32 +30,32 @@ class XTable(Table):
         return self.find_columns(names)
 
     def set_value(self, irow, jcol, value):
-        self.reserve(irow+1)
+        self.reserve(irow + 1)
         self._data[irow, jcol] = value
 
     def add_value(self, irow, jcol, value):
-        self.reserve(irow+1)
+        self.reserve(irow + 1)
         self._data[irow, jcol] += value
 
     def set_block(self, irows, jcols, block):
-        self.reserve(max(irows)+1)
+        self.reserve(max(irows) + 1)
         # self._data[np.ix_(irows, jcols)] = block
         set_block_jit(self._data, irows, jcols, block)
 
     def add_block(self, irows, jcols, block):
-        self.reserve(max(irows)+1)
+        self.reserve(max(irows) + 1)
         # self._data[np.ix_(irows, jcols)] += block
         add_block_jit(self._data, irows, jcols, block)
 
     def set_row_values(self, irow, jcols, values):
-        self.reserve(irow+1)
+        self.reserve(irow + 1)
         if jcols is None:
             self._data[irow, :] = values
         else:
             self._data[irow, jcols] = values
 
     def add_row_values(self, irow, jcols, values):
-        self.reserve(irow+1)
+        self.reserve(irow + 1)
         if jcols is None:
             self._data[irow, :] += values
         else:
@@ -64,7 +66,7 @@ class XTable(Table):
             self.reserve(values.shape[0])
             self._data[:, jcol] = values
         else:
-            self.reserve(max(irows)+1)
+            self.reserve(max(irows) + 1)
             self._data[irows, jcol] = values
 
     def add_col_values(self, irows, jcol, values):
@@ -72,7 +74,7 @@ class XTable(Table):
             self.reserve(values.shape[0])
             self._data[:, jcol] += values
         else:
-            self.reserve(max(irows)+1)
+            self.reserve(max(irows) + 1)
             self._data[irows, jcol] += values
 
     def to_table(self):

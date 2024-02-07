@@ -12,6 +12,7 @@ from jive.solver import idprecon
 from jive.solver import diagprecon
 from jive.solver import icholprecon
 
+
 def declare_solvers(globdat):
     factory = globdat.get(gn.SOLVERFACTORY, solver.SolverFactory())
 

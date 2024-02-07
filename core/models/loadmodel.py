@@ -6,12 +6,13 @@ from jive.fem.names import GlobNames as gn
 from jive.model.model import Model
 import jive.util.proputils as pu
 
-ELEMENTS = 'elements'
-SHAPE = 'shape'
-TYPE = 'type'
-INTSCHEME = 'intScheme'
-DOFTYPES = 'dofs'
-LOADS = 'values'
+ELEMENTS = "elements"
+SHAPE = "shape"
+TYPE = "type"
+INTSCHEME = "intScheme"
+DOFTYPES = "dofs"
+LOADS = "values"
+
 
 class LoadModel(Model):
     def take_action(self, action, params, globdat):
@@ -25,12 +26,13 @@ class LoadModel(Model):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('LoadModel taking action', action)
+            print("LoadModel taking action", action)
 
     def configure(self, props, globdat):
-
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
+            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+        )
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -38,7 +40,7 @@ class LoadModel(Model):
 
         # Make sure the shape rank and mesh rank are identitcal
         if self._shape.global_rank() != globdat[gn.MESHRANK]:
-            raise RuntimeError('LoadModel: Shape rank must agree with mesh rank')
+            raise RuntimeError("LoadModel: Shape rank must agree with mesh rank")
 
         # Get basic dimensionality info
         self._rank = self._shape.global_rank()
@@ -52,14 +54,13 @@ class LoadModel(Model):
 
         # Make sure the doftypes and loads have the same size
         if len(self._doftypes) != len(self._loads):
-            raise ValueError('LoadModel: dofs and values must have the same size')
+            raise ValueError("LoadModel: dofs and values must have the same size")
 
         # Get the dofcount (of only the relevant dofs!)
         self._loadcount = len(self._doftypes)
         self._dofcount = self._loadcount * self._shape.node_count()
 
     def _get_body_force(self, params, globdat):
-
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
@@ -76,8 +77,8 @@ class LoadModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N matrix and b vector for each integration point
-                N = self._get_N_matrix(sfuncs[:,ip])
-                b = self._get_b_vector(ipcoords[:,ip])
+                N = self._get_N_matrix(sfuncs[:, ip])
+                b = self._get_b_vector(ipcoords[:, ip])
 
                 # Compute the element force vector
                 elfor += weights[ip] * np.matmul(np.transpose(N), b)
@@ -88,7 +89,7 @@ class LoadModel(Model):
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._loadcount, self._dofcount))
         for i in range(self._loadcount):
-            N[i, i::self._loadcount] = sfuncs.transpose()
+            N[i, i :: self._loadcount] = sfuncs.transpose()
         return N
 
     def _get_b_vector(self, ipcoords):
@@ -97,5 +98,6 @@ class LoadModel(Model):
             b[i] = pu.evaluate(self._loads[i], ipcoords, self._rank)
         return b
 
+
 def declare(factory):
-    factory.declare_model('Load', LoadModel)
+    factory.declare_model("Load", LoadModel)

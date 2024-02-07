@@ -1,5 +1,6 @@
-PRECISION = 'precision'
-NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
+PRECISION = "precision"
+NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
+
 
 class PreconFactory:
     def __init__(self):
@@ -19,7 +20,6 @@ class PreconFactory:
 
 
 class Preconditioner:
-
     def __init__(self):
         self._precision = 1e-8
 

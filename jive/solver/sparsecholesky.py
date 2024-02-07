@@ -4,8 +4,8 @@ from jive.solver.util import reorder as reord
 from jive.solver.jit.cholesky import sparse_cholesky
 from jive.solver.jit.spsolve import solve_triangular
 
-class SparseCholeskySolver(DirectSolver):
 
+class SparseCholeskySolver(DirectSolver):
     def __init__(self):
         super().__init__()
 
@@ -46,4 +46,4 @@ class SparseCholeskySolver(DirectSolver):
 
 
 def declare(factory):
-    factory.declare_solver('sparseCholesky', SparseCholeskySolver)
+    factory.declare_solver("sparseCholesky", SparseCholeskySolver)

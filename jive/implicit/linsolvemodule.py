@@ -11,28 +11,28 @@ from jive.solver.constraints import Constraints
 from jive.util.table import Table
 from jive.util.xtable import to_xtable
 
-SOLVER = 'solver'
-PRECONDITIONER = 'preconditioner'
-TYPE = 'type'
-GETMASSMATRIX = 'getMassMatrix'
-GETSTRAINMATRIX = 'getStrainMatrix'
-TABLES = 'tables'
+SOLVER = "solver"
+PRECONDITIONER = "preconditioner"
+TYPE = "type"
+GETMASSMATRIX = "getMassMatrix"
+GETSTRAINMATRIX = "getStrainMatrix"
+TABLES = "tables"
+
 
 class LinsolveModule(SolverModule):
-
     def init(self, props, globdat):
         super().init(props, globdat)
 
         myprops = props[self._name]
-        self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX,'False')))
-        self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX,'False')))
-        self._tnames = pu.parse_list(myprops.get(TABLES, '[]'))
+        self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX, "False")))
+        self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX, "False")))
+        self._tnames = pu.parse_list(myprops.get(TABLES, "[]"))
 
         self._model = globdat[gn.MODEL]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
         solverprops = myprops.get(SOLVER, {})
-        solver = solverprops.get(TYPE, 'cholmod')
+        solver = solverprops.get(TYPE, "cholmod")
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
         self._solver.configure(solverprops, globdat)
 
@@ -44,10 +44,9 @@ class LinsolveModule(SolverModule):
             self._precon.configure(preconprops, globdat)
 
     def solve(self, globdat):
-
         model = globdat[gn.MODEL]
 
-        print('Running LinsolverModule')
+        print("Running LinsolverModule")
         globdat[gn.TIMESTEP] = 1
 
         K, _ = self.update_matrix(globdat)
@@ -102,12 +101,14 @@ class LinsolveModule(SolverModule):
 
             for jcol in range(params[pn.TABLE].column_count()):
                 values = params[pn.TABLE].get_col_values(None, jcol)
-                params[pn.TABLE].set_col_values(None, jcol, values / params[pn.TABLEWEIGHTS])
+                params[pn.TABLE].set_col_values(
+                    None, jcol, values / params[pn.TABLEWEIGHTS]
+                )
 
             params[pn.TABLE].to_table()
             globdat[gn.TABLES][name] = params[pn.TABLE]
 
-        return 'ok'
+        return "ok"
 
     def configure(self, props, globdat):
         pass
@@ -181,7 +182,6 @@ class LinsolveModule(SolverModule):
         return True
 
     def _get_empty_matrix(self, globdat):
-
         rowindices = []
         colindices = []
 
@@ -200,11 +200,12 @@ class LinsolveModule(SolverModule):
         assert len(rowindices) == len(colindices)
         values = np.zeros(len(rowindices))
 
-        K_empty = spsp.csr_array((values, (rowindices, colindices)), shape=(dc,dc), dtype=float)
+        K_empty = spsp.csr_array(
+            (values, (rowindices, colindices)), shape=(dc, dc), dtype=float
+        )
         return K_empty
 
     def _get_empty_bmatrix(self, globdat):
-
         rowindices = []
         colindices = []
 
@@ -222,7 +223,7 @@ class LinsolveModule(SolverModule):
             # Get the node index vector
             node_idx = np.zeros(node_count * strcount, dtype=int)
             for i in range(strcount):
-                node_idx[i*node_count:(i+1)*node_count] = inodes + nc * i
+                node_idx[i * node_count : (i + 1) * node_count] = inodes + nc * i
 
             for row in node_idx:
                 for col in idofs:
@@ -232,9 +233,11 @@ class LinsolveModule(SolverModule):
         assert len(rowindices) == len(colindices)
         values = np.zeros(len(rowindices))
 
-        B_empty = spsp.csr_array((values, (rowindices, colindices)), shape=(nc * strcount,dc), dtype=float)
+        B_empty = spsp.csr_array(
+            (values, (rowindices, colindices)), shape=(nc * strcount, dc), dtype=float
+        )
         return B_empty
 
 
 def declare(factory):
-    factory.declare_module('Linsolve', LinsolveModule)
+    factory.declare_module("Linsolve", LinsolveModule)

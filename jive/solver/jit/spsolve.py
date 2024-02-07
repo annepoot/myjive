@@ -6,9 +6,10 @@ from numba import njit
 # wrapper functions #
 #####################
 
+
 def solve_triangular(A, b, lower=True):
     if not spsp.isspmatrix_csr(A):
-        raise ValueError('A has to be a sparse matrix in csr format')
+        raise ValueError("A has to be a sparse matrix in csr format")
 
     if spsp.issparse(b):
         B = b.toarray()
@@ -21,9 +22,9 @@ def solve_triangular(A, b, lower=True):
         X[:] = solve_triangular_jit(A.data, A.indices, A.indptr, B, lower)
     elif len(B.shape) == 2:
         for i in range(B.shape[1]):
-            X[:,i] = solve_triangular_jit(A.data, A.indices, A.indptr, B[:,i], lower)
+            X[:, i] = solve_triangular_jit(A.data, A.indices, A.indptr, B[:, i], lower)
     else:
-        raise ValueError('b has to be either 1d or 2d')
+        raise ValueError("b has to be either 1d or 2d")
 
     return X
 
@@ -32,6 +33,7 @@ def solve_triangular(A, b, lower=True):
 # numba helper functions #
 ##########################
 
+
 @njit
 def solve_triangular_jit(data, indices, indptr, b, lower=True):
     x = np.zeros_like(b)
@@ -39,16 +41,16 @@ def solve_triangular_jit(data, indices, indptr, b, lower=True):
     if lower:
         rng = range(len(b))
     else:
-        rng = range(len(b)-1, -1, -1)
+        rng = range(len(b) - 1, -1, -1)
 
     for i in rng:
         if lower:
             start = indptr[i]
-            end = indptr[i+1]-1
-            L_ii = data[indptr[i+1]-1]
+            end = indptr[i + 1] - 1
+            L_ii = data[indptr[i + 1] - 1]
         else:
-            start = indptr[i]+1
-            end = indptr[i+1]
+            start = indptr[i] + 1
+            end = indptr[i + 1]
             L_ii = data[indptr[i]]
 
         cols = indices[start:end]

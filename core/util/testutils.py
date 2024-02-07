@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 def showmat(A, mask_zeros=False, title=None, **kwargs):
-    if hasattr(A, 'toarray'):
+    if hasattr(A, "toarray"):
         A = A.toarray()
 
     if mask_zeros:

@@ -5,6 +5,7 @@ from jive.implicit import arclenmodule
 from jive.implicit import solvermodule
 from jive.implicit import linsolvemodule
 
+
 def declare_modules(globdat):
     factory = globdat.get(gn.MODULEFACTORY, module.ModuleFactory())
 

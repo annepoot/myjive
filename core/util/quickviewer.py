@@ -5,34 +5,34 @@ from mpl_toolkits.axes_grid.inset_locator import inset_axes
 
 from jive.fem.names import GlobNames as gn
 
-LINEWIDTH = 'linewidth'
-PLOT = 'plot'
-NCOLORS = 'ncolors'
-DEFORM = 'deform'
+LINEWIDTH = "linewidth"
+PLOT = "plot"
+NCOLORS = "ncolors"
+DEFORM = "deform"
 
 
 def QuickViewer(array, globdat, **kwargs):
     # Get all possible key word arguments
-    comp = kwargs.get('comp', None)
-    ax = kwargs.get('ax', None)
-    inset = bool(kwargs.get('inset', False))
-    scale = float(kwargs.get('scale', 0.0))
-    linewidth = kwargs.get('linewidth', None)
-    alpha = float(kwargs.get('alpha', 1.0))
-    boundarywidth = kwargs.get('boundarywidth', None)
-    linealpha = float(kwargs.get('linealpha', alpha))
-    colorbar = bool(kwargs.get('colorbar', True))
-    tickformat = kwargs.get('tickformat', None)
-    cmap = plt.get_cmap(kwargs.get('colormap', 'viridis'))
-    ncolors = int(kwargs.get('ncolors', 100))
-    mincolor = kwargs.get('mincolor', None)
-    maxcolor = kwargs.get('maxcolor', None)
-    title = kwargs.get('title', None)
-    fname = kwargs.get('fname', None)
-    pdf = bool(kwargs.get('pdf', False))
-    dpi = float(kwargs.get('dpi', 300))
-    figsize = kwargs.get('figsize', None)
-    meshonly = bool(kwargs.get('meshonly', False))
+    comp = kwargs.get("comp", None)
+    ax = kwargs.get("ax", None)
+    inset = bool(kwargs.get("inset", False))
+    scale = float(kwargs.get("scale", 0.0))
+    linewidth = kwargs.get("linewidth", None)
+    alpha = float(kwargs.get("alpha", 1.0))
+    boundarywidth = kwargs.get("boundarywidth", None)
+    linealpha = float(kwargs.get("linealpha", alpha))
+    colorbar = bool(kwargs.get("colorbar", True))
+    tickformat = kwargs.get("tickformat", None)
+    cmap = plt.get_cmap(kwargs.get("colormap", "viridis"))
+    ncolors = int(kwargs.get("ncolors", 100))
+    mincolor = kwargs.get("mincolor", None)
+    maxcolor = kwargs.get("maxcolor", None)
+    title = kwargs.get("title", None)
+    fname = kwargs.get("fname", None)
+    pdf = bool(kwargs.get("pdf", False))
+    dpi = float(kwargs.get("dpi", 300))
+    figsize = kwargs.get("figsize", None)
+    meshonly = bool(kwargs.get("meshonly", False))
 
     # Get the necessary info from globdat
     nodes = globdat[gn.NSET]
@@ -48,16 +48,16 @@ def QuickViewer(array, globdat, **kwargs):
     x = np.zeros(len(nodes))
     y = np.zeros(len(nodes))
 
-    if shape == 'Triangle3':
+    if shape == "Triangle3":
         nelem = len(elems)
-    elif shape == 'Triangle6':
+    elif shape == "Triangle6":
         nelem = len(elems) * 4
-    elif shape == 'Quad4':
+    elif shape == "Quad4":
         nelem = len(elems) * 2
-    elif shape == 'Quad9':
+    elif shape == "Quad9":
         nelem = len(elems) * 8
     else:
-        raise ValueError('ViewModule only supports triangles for now')
+        raise ValueError("ViewModule only supports triangles for now")
 
     el = np.zeros((nelem, 3), dtype=int)
 
@@ -70,17 +70,17 @@ def QuickViewer(array, globdat, **kwargs):
     for e, elem in enumerate(elems):
         inodes = elem.get_nodes()
 
-        if shape == 'Triangle3':
+        if shape == "Triangle3":
             el[e, :] = inodes
-        elif shape == 'Triangle6':
+        elif shape == "Triangle6":
             el[4 * e + 0, :] = inodes[[0, 3, 5]]
             el[4 * e + 1, :] = inodes[[1, 4, 3]]
             el[4 * e + 2, :] = inodes[[2, 5, 4]]
             el[4 * e + 3, :] = inodes[[3, 4, 5]]
-        elif shape == 'Quad4':
+        elif shape == "Quad4":
             el[2 * e + 0, :] = inodes[[0, 1, 3]]
             el[2 * e + 1, :] = inodes[[1, 2, 3]]
-        elif shape == 'Quad9':
+        elif shape == "Quad9":
             el[8 * e + 0, :] = inodes[[0, 4, 7]]
             el[8 * e + 1, :] = inodes[[4, 8, 7]]
             el[8 * e + 2, :] = inodes[[1, 8, 4]]
@@ -139,7 +139,7 @@ def QuickViewer(array, globdat, **kwargs):
         ax = plt.gca()
     else:
         if inset:
-            ax_inset = inset_axes(ax, width='100%', height='100%', loc=10)
+            ax_inset = inset_axes(ax, width="100%", height="100%", loc=10)
             ax_inset.sharex(ax)
             ax_inset.sharey(ax)
             ax = ax_inset
@@ -148,10 +148,10 @@ def QuickViewer(array, globdat, **kwargs):
     ax.cla()
     ax.set_axis_off()
     if inset:
-        ax.set_aspect('equal', adjustable='box')
+        ax.set_aspect("equal", adjustable="box")
         ax.patch.set_alpha(0.0)
     else:
-        ax.set_aspect('equal', adjustable='datalim')
+        ax.set_aspect("equal", adjustable="datalim")
 
     triang = tri.Triangulation(dx, dy, el)
 
@@ -181,13 +181,13 @@ def QuickViewer(array, globdat, **kwargs):
         cbar.formatter.set_powerlimits((0, 0))
 
     if linewidth is not None:
-        ax.triplot(triang, 'k-', linewidth=linewidth, alpha=linealpha)
+        ax.triplot(triang, "k-", linewidth=linewidth, alpha=linealpha)
 
     if boundarywidth is not None:
-        ax.plot(topx, topy, 'k-', linewidth=boundarywidth, alpha=linealpha)
-        ax.plot(bottomx, bottomy, 'k-', linewidth=boundarywidth, alpha=linealpha)
-        ax.plot(rightx, righty, 'k-', linewidth=boundarywidth, alpha=linealpha)
-        ax.plot(leftx, lefty, 'k-', linewidth=boundarywidth, alpha=linealpha)
+        ax.plot(topx, topy, "k-", linewidth=boundarywidth, alpha=linealpha)
+        ax.plot(bottomx, bottomy, "k-", linewidth=boundarywidth, alpha=linealpha)
+        ax.plot(rightx, righty, "k-", linewidth=boundarywidth, alpha=linealpha)
+        ax.plot(leftx, lefty, "k-", linewidth=boundarywidth, alpha=linealpha)
 
     # Make sure the contour plot is rendered correctly as a pdf
     if pdf:
@@ -200,7 +200,7 @@ def QuickViewer(array, globdat, **kwargs):
         ax.set_title(title)
 
     if not fname is None:
-        plt.savefig(fname, dpi=dpi, bbox_inches='tight')
+        plt.savefig(fname, dpi=dpi, bbox_inches="tight")
 
     if no_ax:
         plt.show(block=True)

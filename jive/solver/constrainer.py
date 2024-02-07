@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as spsp
 
+
 class Constrainer:
     def __init__(self, constraints, inputmatrix):
         self._cons = constraints
@@ -47,7 +48,7 @@ class Constrainer:
                 else:
                     self._rhs[i] -= self._output[i, dof] * val
 
-            self._output[:,[dof]] *= 0.0
+            self._output[:, [dof]] *= 0.0
             self._output[[dof], :] *= 0.0
             self._output[dof, dof] = 1.0
 

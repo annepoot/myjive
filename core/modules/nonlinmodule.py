@@ -12,9 +12,9 @@ from jive.fem.names import Actions as act
 from jive.app.module import Module
 from jive.solver.constrainer import Constrainer
 
-NSTEPS = 'nsteps'
-ITERMAX = 'itermax'
-TOLERANCE = 'tolerance'
+NSTEPS = "nsteps"
+ITERMAX = "itermax"
+TOLERANCE = "tolerance"
 
 
 class NonlinModule(Module):
@@ -35,14 +35,19 @@ class NonlinModule(Module):
             globdat[gn.OLDSTATE0] = np.zeros(dc)
 
         globdat[gn.TIMESTEP] = self._step
-        print('Running time step', self._step)
+        print("Running time step", self._step)
 
         K = np.zeros((dc, dc))
         fext = np.zeros(dc)
         fint = np.zeros(dc)
         c = Constrainer()
 
-        params = {pn.MATRIX0: K, pn.EXTFORCE: fext, pn.INTFORCE: fint, pn.CONSTRAINTS: c}
+        params = {
+            pn.MATRIX0: K,
+            pn.EXTFORCE: fext,
+            pn.INTFORCE: fint,
+            pn.CONSTRAINTS: c,
+        }
 
         # Initialize first iteration
         iteration = 0
@@ -94,14 +99,14 @@ class NonlinModule(Module):
             du = linalg.spsolve(smat, rc)
             globdat[gn.STATE0] += du
             rel = np.linalg.norm(r[np.ix_(fdofs)]) / ref
-            print('Iteration %i, relative residual norm: %.4e' % (iteration, rel))
+            print("Iteration %i, relative residual norm: %.4e" % (iteration, rel))
 
         # Alert if not convergence
         if rel > self._tolerance:
             if rel > 1:
-                raise RuntimeError('Divergence in time step %i' % self._step)
+                raise RuntimeError("Divergence in time step %i" % self._step)
             else:
-                warnings.warn('No convergence in time step %i' % self._step)
+                warnings.warn("No convergence in time step %i" % self._step)
 
         # Check commit
         model.take_action(act.CHECKCOMMIT, params, globdat)
@@ -112,14 +117,14 @@ class NonlinModule(Module):
             globdat[gn.OLDSTATE0] = np.copy(globdat[gn.STATE0])
 
         if self._step >= self._nsteps:
-            return 'exit'
+            return "exit"
 
         else:
-            return 'ok'
+            return "ok"
 
     def shutdown(self, globdat):
         pass
 
 
 def declare(factory):
-    factory.declare_module('Nonlin', NonlinModule)
+    factory.declare_module("Nonlin", NonlinModule)

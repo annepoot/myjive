@@ -7,10 +7,10 @@ from jive.model.model import Model
 
 import jive.util.proputils as pu
 
-GROUPS = 'groups'
-DOFS = 'dofs'
-VALS = 'values'
-INCR = 'dispIncr'
+GROUPS = "groups"
+DOFS = "dofs"
+VALS = "values"
+INCR = "dispIncr"
 
 
 class DirichletModel(Model):
@@ -38,8 +38,10 @@ class DirichletModel(Model):
                 params[pn.CONSTRAINTS].add_dirichlet(idof, val)
 
     def _advance_step_constraints(self, params, globdat):
-        self._vals = np.array(self._initDisp) + globdat[gn.TIMESTEP] * np.array(self._dispIncr)
+        self._vals = np.array(self._initDisp) + globdat[gn.TIMESTEP] * np.array(
+            self._dispIncr
+        )
 
 
 def declare(factory):
-    factory.declare_model('Dirichlet', DirichletModel)
+    factory.declare_model("Dirichlet", DirichletModel)

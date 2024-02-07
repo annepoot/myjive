@@ -1,7 +1,7 @@
 from jive.solver.iterativesolver import IterativeSolver
 
-class CG(IterativeSolver):
 
+class CG(IterativeSolver):
     def __init__(self):
         super().__init__()
 
@@ -41,4 +41,4 @@ class CG(IterativeSolver):
 
 
 def declare(factory):
-    factory.declare_solver('CG', CG)
+    factory.declare_solver("CG", CG)

@@ -20,7 +20,7 @@ class Model:
         self._name = name
 
     def take_action(self, action, params, globdat):
-        print('Empty model takeAction')
+        print("Empty model takeAction")
 
     def configure(self, props, globdat):
-        print('Empty model configure')
+        print("Empty model configure")

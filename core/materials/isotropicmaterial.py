@@ -1,26 +1,25 @@
 from core.materials.material import Material
 import numpy as np
 
-E_PROP = 'E'
-NU_PROP = 'nu'
-RHO_PROP = 'rho'
-AREA_PROP = 'area'
-ANMODEL_PROP = 'anmodel'
-BAR = 'bar'
-PLANE_STRESS = 'plane_stress'
-PLANE_STRAIN = 'plane_strain'
-SOLID = 'solid'
+E_PROP = "E"
+NU_PROP = "nu"
+RHO_PROP = "rho"
+AREA_PROP = "area"
+ANMODEL_PROP = "anmodel"
+BAR = "bar"
+PLANE_STRESS = "plane_stress"
+PLANE_STRAIN = "plane_strain"
+SOLID = "solid"
 
 
 class IsotropicMaterial(Material):
-
     def __init__(self, rank):
         super().__init__(rank)
 
         self._rank = rank
         self._strcount = self._rank * (self._rank + 1) // 2
 
-        self._anmodel = ''
+        self._anmodel = ""
 
         self._E = 1.0
         self._nu = 0.0
@@ -33,10 +32,10 @@ class IsotropicMaterial(Material):
         self._mass_matrix = np.zeros((self._rank, self._rank))
 
     def configure(self, props, globdat):
-
         self._anmodel = props.get(ANMODEL_PROP, self._anmodel)
-        assert self._is_valid_anmodel(self._anmodel), 'Analysis model ' + self._anmodel + ' not valid for rank ' + str(
-            self._rank)
+        assert self._is_valid_anmodel(self._anmodel), (
+            "Analysis model " + self._anmodel + " not valid for rank " + str(self._rank)
+        )
 
         self._E = float(props.get(E_PROP, self._E))
         self._nu = float(props.get(NU_PROP, self._nu))
@@ -53,7 +52,7 @@ class IsotropicMaterial(Material):
             ANMODEL_PROP: self._anmodel,
             E_PROP: self._E,
             NU_PROP: self._nu,
-            RHO_PROP: self._rho
+            RHO_PROP: self._rho,
         }
 
         if self._rank == 1:
@@ -94,8 +93,8 @@ class IsotropicMaterial(Material):
             stiff[0, 0] = E * area
 
         elif self._anmodel == PLANE_STRESS:
-            stiff[[0, 1], [0, 1]] = E / (1 - nu ** 2)
-            stiff[[0, 1], [1, 0]] = (nu * E) / (1 - nu ** 2)
+            stiff[[0, 1], [0, 1]] = E / (1 - nu**2)
+            stiff[[0, 1], [1, 0]] = (nu * E) / (1 - nu**2)
             stiff[2, 2] = 0.5 * E / (1 + nu)
 
         elif self._anmodel == PLANE_STRAIN:
@@ -130,7 +129,9 @@ class IsotropicMaterial(Material):
 
         if self._rank == 1 and self._anmodel == BAR:
             valid = True
-        elif self._rank == 2 and (self._anmodel == PLANE_STRESS or self._anmodel == PLANE_STRAIN):
+        elif self._rank == 2 and (
+            self._anmodel == PLANE_STRESS or self._anmodel == PLANE_STRAIN
+        ):
             valid = True
         elif self._rank == 3 and self._anmodel == SOLID:
             valid = True

@@ -3,7 +3,8 @@ from scipy.optimize import fsolve
 from warnings import warn
 from jive.fem.jit.shape import get_shape_gradients_jit
 
-NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
+NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
+
 
 class ShapeFactory:
     def __init__(self):
@@ -27,15 +28,15 @@ class Shape:
 
         self._int = intscheme
 
-        if self._int == 'Gauss1':
+        if self._int == "Gauss1":
             self._ipcount = 1
-        elif self._int == 'Gauss2':
+        elif self._int == "Gauss2":
             self._ipcount = 2
-        elif self._int == 'Gauss3':
+        elif self._int == "Gauss3":
             self._ipcount = 3
-        elif self._int == 'Gauss4':
+        elif self._int == "Gauss4":
             self._ipcount = 4
-        elif self._int == 'Gauss9':
+        elif self._int == "Gauss9":
             self._ipcount = 9
         else:
             raise ValueError(self._int)
@@ -44,19 +45,18 @@ class Shape:
         self._wts = np.zeros(self._ipcount)
 
         if self._rank == 1:
-
-            if self._int == 'Gauss1':
+            if self._int == "Gauss1":
                 self._ips[0, 0] = 0
                 self._wts[0] = 2
 
-            elif self._int == 'Gauss2':
+            elif self._int == "Gauss2":
                 self._ips[0, 0] = -1 / np.sqrt(3)
                 self._ips[0, 1] = 1 / np.sqrt(3)
                 self._wts[0] = 1
                 self._wts[1] = 1
 
-            elif self._int == 'Gauss3':
-                self._ips[0, 0] = - np.sqrt(3.0 / 5.0)
+            elif self._int == "Gauss3":
+                self._ips[0, 0] = -np.sqrt(3.0 / 5.0)
                 self._ips[0, 1] = 0
                 self._ips[0, 2] = np.sqrt(3.0 / 5.0)
                 self._wts[0] = 5.0 / 9.0
@@ -67,13 +67,12 @@ class Shape:
                 raise ValueError(self._int)
 
         elif self._rank == 2:
-
             if self._ncount == 3 or self._ncount == 6:
-                if self._int == 'Gauss1':
+                if self._int == "Gauss1":
                     self._ips[0, 0] = 1.0 / 3.0
                     self._ips[1, 0] = 1.0 / 3.0
                     self._wts[0] = 0.5
-                elif self._int == 'Gauss3':
+                elif self._int == "Gauss3":
                     self._ips[0, 0] = 1.0 / 6.0
                     self._ips[1, 0] = 1.0 / 6.0
                     self._ips[0, 1] = 2.0 / 3.0
@@ -88,11 +87,11 @@ class Shape:
                     raise ValueError(self._int)
 
             elif self._ncount == 4 or self._ncount == 9:
-                if self._int == 'Gauss1':
+                if self._int == "Gauss1":
                     self._ips[0, 0] = 0.0
                     self._ips[1, 0] = 0.0
                     self._wts[0] = 4.0
-                elif self._int == 'Gauss4':
+                elif self._int == "Gauss4":
                     invsqrt3 = 1 / np.sqrt(3)
                     self._ips[0, 0] = -invsqrt3
                     self._ips[1, 0] = -invsqrt3
@@ -107,7 +106,7 @@ class Shape:
                     self._wts[1] = 1.0
                     self._wts[2] = 1.0
                     self._wts[3] = 1.0
-                elif self._int == 'Gauss9':
+                elif self._int == "Gauss9":
                     invsqrt35 = 1 / np.sqrt(3.0 / 5.0)
                     self._ips[0, 0] = -invsqrt35
                     self._ips[1, 0] = -invsqrt35
@@ -144,14 +143,12 @@ class Shape:
             else:
                 raise ValueError(self._ncount)
 
-
         self._N = np.zeros((self._ncount, self._ipcount))
         self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
 
         for ip in range(self._ipcount):
-            self._N[:,ip] = self.eval_shape_functions(self._ips[:,ip])
-            self._dN[:,:,ip] = self.eval_shape_gradients(self._ips[:,ip])
-
+            self._N[:, ip] = self.eval_shape_functions(self._ips[:, ip])
+            self._dN[:, :, ip] = self.eval_shape_gradients(self._ips[:, ip])
 
     def global_rank(self):
         return self._rank
@@ -172,7 +169,7 @@ class Shape:
         glob_ips = np.zeros((self._rank, self._ipcount))
 
         for ip in range(self._ipcount):
-            glob_ips[:,ip] = self.get_global_point(self._ips[:,ip], glob_coords)
+            glob_ips[:, ip] = self.get_global_point(self._ips[:, ip], glob_coords)
 
         return glob_ips
 
@@ -205,7 +202,9 @@ class Shape:
         x0 = np.mean(self.get_local_node_coords(), axis=1)
 
         # Raise an error that scipy.optimize.fsolve is necessary
-        warn('get_local_points needs to do a scipy.optimize.fsolve call to get a result')
+        warn(
+            "get_local_points needs to do a scipy.optimize.fsolve call to get a result"
+        )
 
         # Do a non-linear solve to find the corresponding local point
         loc_point = fsolve(f, x0)

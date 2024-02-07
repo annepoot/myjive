@@ -5,6 +5,7 @@ from jive.gl import frameviewmodule
 from jive.gl import graphmodule
 from jive.gl import viewmodule
 
+
 def declare_modules(globdat):
     factory = globdat.get(gn.MODULEFACTORY, module.ModuleFactory())
 

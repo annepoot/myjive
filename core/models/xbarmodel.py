@@ -6,15 +6,16 @@ from jive.fem.names import GlobNames as gn
 from core.models.barmodel import BarModel
 import jive.util.proputils as pu
 
-ELEMENTS = 'elements'
-EA = 'EA'
-k = 'k'
-RHOA = 'rhoA'
-SHAPE = 'shape'
-TYPE = 'type'
-INTSCHEME = 'intScheme'
-DOFTYPES = ['dx']
-LOAD = 'q'
+ELEMENTS = "elements"
+EA = "EA"
+k = "k"
+RHOA = "rhoA"
+SHAPE = "shape"
+TYPE = "type"
+INTSCHEME = "intScheme"
+DOFTYPES = ["dx"]
+LOAD = "q"
+
 
 class XBarModel(BarModel):
     def take_action(self, action, params, globdat):
@@ -32,7 +33,7 @@ class XBarModel(BarModel):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('XBarModel taking action', action)
+            print("XBarModel taking action", action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
@@ -44,7 +45,9 @@ class XBarModel(BarModel):
         self._q = pu.soft_cast(props.get(LOAD, 0), float)
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
+            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+        )
         egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -54,10 +57,9 @@ class XBarModel(BarModel):
         self._configure_noprops(globdat)
 
     def _get_unit_mass_matrix(self, params, globdat):
-
         # Swap out rhoA for 1
         rhoA_ = self._rhoA
-        self._rhoA = 1.
+        self._rhoA = 1.0
 
         # Get the mass matrix
         self._get_mass_matrix(params, globdat)
@@ -67,4 +69,4 @@ class XBarModel(BarModel):
 
 
 def declare(factory):
-    factory.declare_model('XBar', XBarModel)
+    factory.declare_model("XBar", XBarModel)

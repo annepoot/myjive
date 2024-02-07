@@ -6,13 +6,13 @@ from sksparse import cholmod as cm
 
 from gputils import incomplete_cholesky
 
+
 def condition_number(A):
     l = abs(eigvalsh(A))
     return max(l) / min(l)
 
 
 def conjugate_gradient(A, b, x0=None, tol=1e-7):
-
     # Get the initial approximate solution
     if x0 is None:
         x = np.zeros(b.size)
@@ -44,8 +44,9 @@ def conjugate_gradient(A, b, x0=None, tol=1e-7):
     return x
 
 
-def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, get_history=False):
-
+def preconditioned_conjugate_gradient(
+    A, b, x0=None, tol=1e-7, P=None, L=None, get_history=False
+):
     history = []
 
     # Get the initial approximate solution
@@ -60,10 +61,10 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, g
     # Get the preconditioner matrix if given
     if P is None:
         pass
-    elif P == 'diag':
-        P_inv = spsp.diags(1/A.diagonal(), format='csr')
+    elif P == "diag":
+        P_inv = spsp.diags(1 / A.diagonal(), format="csr")
         L = None
-    elif P == 'ichol':
+    elif P == "ichol":
         P_inv = None
         if L is None:
             L = incomplete_cholesky(A)
@@ -80,7 +81,7 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, g
             LTLr = spspla.spsolve(L.T, Lr)
             return LTLr
         else:
-            assert False, 'Either P is None or P_inv is calculated, or L is calculated'
+            assert False, "Either P is None or P_inv is calculated, or L is calculated"
 
     r = b - A @ x
     z = get_z(r)
@@ -119,7 +120,7 @@ def preconditioned_conjugate_gradient(A, b, x0=None, tol=1e-7, P=None, L=None, g
 
 def get_reorder(A, ordering_method=None):
     if ordering_method is None:
-        ordering_method='amd'
+        ordering_method = "amd"
     chol = cm.analyze(A, ordering_method=ordering_method)
     reorder = chol.P()
     return reorder
@@ -127,7 +128,7 @@ def get_reorder(A, ordering_method=None):
 
 def get_reorder_matrix(reorder):
     N = len(reorder)
-    P = spsp.csr_array((np.ones(N), reorder, np.arange(N+1)), shape=(N,N))
+    P = spsp.csr_array((np.ones(N), reorder, np.arange(N + 1)), shape=(N, N))
     return P
 
 
@@ -142,7 +143,7 @@ def reorder_vector(b, P):
     elif len(P.shape) == 2:
         return P @ b
     else:
-        raise ValueError('P has to be a 1D or 2D array')
+        raise ValueError("P has to be a 1D or 2D array")
 
 
 def rev_reorder_vector(b, P):
@@ -151,7 +152,7 @@ def rev_reorder_vector(b, P):
     elif len(P.shape) == 2:
         return P.T @ b
     else:
-        raise ValueError('P has to be a 1D or 2D array')
+        raise ValueError("P has to be a 1D or 2D array")
 
 
 def reorder_matrix(A, P):
@@ -160,7 +161,7 @@ def reorder_matrix(A, P):
     elif len(P.shape) == 2:
         return P @ A @ P.T
     else:
-        raise ValueError('P has to be a 1D or 2D array')
+        raise ValueError("P has to be a 1D or 2D array")
 
 
 def rev_reorder_matrix(A, P):
@@ -170,4 +171,4 @@ def rev_reorder_matrix(A, P):
     elif len(P.shape) == 2:
         return P.T @ A @ P
     else:
-        raise ValueError('P has to be a 1D or 2D array')
+        raise ValueError("P has to be a 1D or 2D array")

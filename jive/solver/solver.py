@@ -1,7 +1,8 @@
 import numpy as np
 
-PRECISION = 'precision'
-NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
+PRECISION = "precision"
+NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
+
 
 class SolverFactory:
     def __init__(self):
@@ -21,7 +22,6 @@ class SolverFactory:
 
 
 class Solver:
-
     def __init__(self):
         self._precision = 1e-8
         self.precon_mode = False
@@ -36,7 +36,6 @@ class Solver:
         pass
 
     def solve(self, rhs):
-
         lhs = np.zeros_like(rhs)
 
         lhs = self.improve(lhs, rhs)
@@ -44,8 +43,7 @@ class Solver:
         return lhs
 
     def multisolve(self, rhs):
-
-        if hasattr(rhs, 'toarray'):
+        if hasattr(rhs, "toarray"):
             rhs_mat = rhs.toarray()
         else:
             rhs_mat = rhs
@@ -53,7 +51,7 @@ class Solver:
         lhs = np.zeros_like(rhs_mat)
 
         for j in range(rhs_mat.shape[1]):
-            lhs[:,j] = self.solve(rhs_mat[:,j])
+            lhs[:, j] = self.solve(rhs_mat[:, j])
 
         return lhs
 

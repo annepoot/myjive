@@ -27,7 +27,7 @@ class DofSpace:
     def get_dof(self, inode, typ):
         idof = self.find_dof(inode, typ)
         if idof is None:
-            raise RuntimeError('DofSpace: Non-existent DOF')
+            raise RuntimeError("DofSpace: Non-existent DOF")
         return idof
 
     def get_dofs(self, inodes, types):

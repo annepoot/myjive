@@ -5,22 +5,22 @@ from matplotlib.widgets import Slider
 from jive.app.module import Module
 from jive.fem.names import GlobNames as gn
 
-LINEWIDTH = 'linewidth'
-DEFORM = 'deform'
-INTERACTIVE = 'interactive'
-LABEL = 'label'
-MAXSTEP = 'maxStep'
+LINEWIDTH = "linewidth"
+DEFORM = "deform"
+INTERACTIVE = "interactive"
+LABEL = "label"
+MAXSTEP = "maxStep"
+
 
 class FrameViewModule(Module):
-
     def init(self, props, globdat):
         myprops = props[self._name]
         self._linewidth = float(myprops.get(LINEWIDTH, 0.5))
         self._scale = float(myprops.get(DEFORM, 1.0))
-        self._interactive = bool(eval(myprops.get(INTERACTIVE, 'True')))
+        self._interactive = bool(eval(myprops.get(INTERACTIVE, "True")))
         self._step = 0
         self._storeHistory = self._interactive
-        self._label = myprops.get(LABEL, 'Step')
+        self._label = myprops.get(LABEL, "Step")
         self._maxStep = int(myprops.get(MAXSTEP, -1))
 
     def run(self, globdat):
@@ -31,10 +31,12 @@ class FrameViewModule(Module):
                 elif gn.HISTORY not in globdat and globdat[gn.ACCEPTED]:
                     globdat[gn.HISTORY] = np.array([globdat[gn.STATE0]])
             elif self._step != 0 and globdat[gn.ACCEPTED]:
-                globdat[gn.HISTORY] = np.vstack((globdat[gn.HISTORY], globdat[gn.STATE0]))
+                globdat[gn.HISTORY] = np.vstack(
+                    (globdat[gn.HISTORY], globdat[gn.STATE0])
+                )
 
         self._step += 1
-        return 'ok'
+        return "ok"
 
     def shutdown(self, globdat):
         if not self._interactive:
@@ -48,27 +50,27 @@ class FrameViewModule(Module):
 
             for n, node in enumerate(nodes):
                 coords = node.get_coords()
-                dx[n] = coords[0] + self._scale * disp[dofs.get_dof(n, 'dx')]
-                dy[n] = coords[1] + self._scale * disp[dofs.get_dof(n, 'dy')]
+                dx[n] = coords[0] + self._scale * disp[dofs.get_dof(n, "dx")]
+                dy[n] = coords[1] + self._scale * disp[dofs.get_dof(n, "dy")]
 
             plt.figure()
-            plt.subplots_adjust(left=0.1, bottom=0., right=0.9, top=1.)
+            plt.subplots_adjust(left=0.1, bottom=0.0, right=0.9, top=1.0)
             plt.ion()
             plt.cla()
-            plt.axis('equal')
-            plt.axis('off')
+            plt.axis("equal")
+            plt.axis("off")
 
             for elem in elems:
                 inodes = elem.get_nodes()
                 x = dx[inodes]
                 y = dy[inodes]
-                plt.plot(x, y, 'k-o', linewidth=self._linewidth, markersize=4)
+                plt.plot(x, y, "k-o", linewidth=self._linewidth, markersize=4)
 
             plt.show(block=False)
 
         elif self._interactive:
             if gn.HISTORY not in globdat:
-                raise RuntimeError(gn.HISTORY + ' has not been defined')
+                raise RuntimeError(gn.HISTORY + " has not been defined")
 
             # Initial plot
             nodes = globdat[gn.NSET]
@@ -81,15 +83,15 @@ class FrameViewModule(Module):
 
             for n, node in enumerate(nodes):
                 coords = node.get_coords()
-                dx[n] = coords[0] + self._scale * disp0[dofs.get_dof(n, 'dx')]
-                dy[n] = coords[1] + self._scale * disp0[dofs.get_dof(n, 'dy')]
+                dx[n] = coords[0] + self._scale * disp0[dofs.get_dof(n, "dx")]
+                dy[n] = coords[1] + self._scale * disp0[dofs.get_dof(n, "dy")]
 
             fig, ax = plt.subplots()
-            plt.subplots_adjust(left=0.1, bottom=0., right=0.9, top=1.)
+            plt.subplots_adjust(left=0.1, bottom=0.0, right=0.9, top=1.0)
             plt.ion()
             plt.cla()
-            plt.axis('equal')
-            plt.axis('off')
+            plt.axis("equal")
+            plt.axis("off")
 
             for i, elem in enumerate(elems):
                 inodes = elem.get_nodes()
@@ -100,18 +102,24 @@ class FrameViewModule(Module):
                     x = np.hstack((x, dx[inodes]))
                     y = np.hstack((y, dy[inodes]))
 
-            line, = plt.plot(x, y, 'k-o', linewidth=self._linewidth, markersize=4)
+            (line,) = plt.plot(x, y, "k-o", linewidth=self._linewidth, markersize=4)
 
             # Slider axes
-            axcolor = 'lightgoldenrodyellow'
+            axcolor = "lightgoldenrodyellow"
             axstep = plt.axes([0.1, 0.1, 0.8, 0.03], facecolor=axcolor)
 
             # Create slider object
-            if  self._maxStep < 0 :
+            if self._maxStep < 0:
                 self._maxStep = len(globdat[gn.HISTORY])
 
-            s_step = Slider(ax=axstep, label=self._label, valmin=1.,
-                            valmax=self._maxStep, valinit=1., valstep=1.)
+            s_step = Slider(
+                ax=axstep,
+                label=self._label,
+                valmin=1.0,
+                valmax=self._maxStep,
+                valinit=1.0,
+                valstep=1.0,
+            )
 
             # Slider function. Updates drawing with new x,y coordinates
             def update(val):
@@ -119,8 +127,12 @@ class FrameViewModule(Module):
                 disp_s = globdat[gn.HISTORY][step - 1, :]
                 for n_s, node_s in enumerate(nodes):
                     coords_s = node_s.get_coords()
-                    dx[n_s] = coords_s[0] + self._scale * disp_s[dofs.get_dof(n_s, 'dx')]
-                    dy[n_s] = coords_s[1] + self._scale * disp_s[dofs.get_dof(n_s, 'dy')]
+                    dx[n_s] = (
+                        coords_s[0] + self._scale * disp_s[dofs.get_dof(n_s, "dx")]
+                    )
+                    dy[n_s] = (
+                        coords_s[1] + self._scale * disp_s[dofs.get_dof(n_s, "dy")]
+                    )
 
                 for j, elem_s in enumerate(elems):
                     inodes_s = elem_s.get_nodes()
@@ -145,4 +157,4 @@ class FrameViewModule(Module):
 
 
 def declare(factory):
-    factory.declare_module('FrameView', FrameViewModule)
+    factory.declare_module("FrameView", FrameViewModule)

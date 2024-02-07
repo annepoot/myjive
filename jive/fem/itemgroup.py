@@ -2,8 +2,8 @@ import numpy as np
 
 from jive.fem.itemset import ItemSet
 
-class ItemGroup():
 
+class ItemGroup:
     def __init__(self, items, data=None):
         if data is None:
             self._data = []
@@ -57,7 +57,6 @@ class ItemGroup():
 
 
 class XItemGroup(ItemGroup):
-
     def clear(self):
         self._data = []
 

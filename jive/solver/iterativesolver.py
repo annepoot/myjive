@@ -4,12 +4,12 @@ import warnings
 from jive.solver.solver import Solver
 from jive.solver.constrainer import Constrainer
 
-MAXITER = 'maxIter'
-ALLOWMAXITER = 'allowMaxIter'
-NOTIMPLEMENTEDMSG = 'this function needs to be implemented in an derived class'
+MAXITER = "maxIter"
+ALLOWMAXITER = "allowMaxIter"
+NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
+
 
 class IterativeSolver(Solver):
-
     def __init__(self):
         super().__init__()
 
@@ -38,7 +38,6 @@ class IterativeSolver(Solver):
             self._precon.update(self._matrix)
 
     def solve(self, rhs):
-
         if self._init_guess is None:
             lhs = np.zeros_like(rhs)
         else:
@@ -69,9 +68,14 @@ class IterativeSolver(Solver):
             u += du
         else:
             if self._allow_max_iter:
-                warnings.warn('maximum number of iterations {} exceeded'.format(self._maxiter), RuntimeWarning)
+                warnings.warn(
+                    "maximum number of iterations {} exceeded".format(self._maxiter),
+                    RuntimeWarning,
+                )
             else:
-                raise RuntimeError('maximum number of iterations {} exceeded'.format(self._maxiter))
+                raise RuntimeError(
+                    "maximum number of iterations {} exceeded".format(self._maxiter)
+                )
 
         self.finish()
 
@@ -103,4 +107,4 @@ class IterativeSolver(Solver):
 
 
 def declare(factory):
-    factory.declare_solver('iterative', IterativeSolver)
+    factory.declare_solver("iterative", IterativeSolver)

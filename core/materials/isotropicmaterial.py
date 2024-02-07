@@ -1,4 +1,4 @@
-from core.materials.material import Material
+from .material import Material
 import numpy as np
 
 E_PROP = "E"
@@ -10,6 +10,8 @@ BAR = "bar"
 PLANE_STRESS = "plane_stress"
 PLANE_STRAIN = "plane_strain"
 SOLID = "solid"
+
+__all__ = ["IsotropicMaterial"]
 
 
 class IsotropicMaterial(Material):

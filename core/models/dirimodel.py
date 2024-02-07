@@ -12,6 +12,8 @@ DOFS = "dofs"
 VALS = "values"
 INCR = "dispIncr"
 
+__all__ = ["DirichletModel"]
+
 
 class DirichletModel(Model):
     def take_action(self, action, params, globdat):

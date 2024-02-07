@@ -1,7 +1,7 @@
 import numpy as np
 
-from jive.fem.itemset import ItemSet, XItemSet
-from jive.fem.node import Node
+from .itemset import ItemSet, XItemSet
+from .node import Node
 
 __all__ = ["NodeSet", "XNodeSet", "to_xnodeset"]
 

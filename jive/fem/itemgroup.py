@@ -1,6 +1,6 @@
 import numpy as np
 
-from jive.fem.itemset import ItemSet
+from .itemset import ItemSet
 
 __all__ = ["ItemGroup", "XItemGroup"]
 

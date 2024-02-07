@@ -1,6 +1,6 @@
 import numpy as np
 
-from jive.app.module import Module
+from jive.app import Module
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act

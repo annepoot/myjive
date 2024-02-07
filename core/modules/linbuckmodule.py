@@ -7,8 +7,8 @@ from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 
-from jive.app.module import Module
-from jive.solver.constrainer import Constrainer
+from jive.app import Module
+from jive.solver import Constrainer
 
 __all__ = ["LinBuckModule"]
 

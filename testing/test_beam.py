@@ -9,7 +9,7 @@ if rootdir not in sys.path:
 import numpy as np
 import jive.util.proputils as pu
 from jive.app import main
-from jive.solver.constrainer import Constrainer
+from jive.solver import Constrainer
 
 
 @pytest.fixture(autouse=True)

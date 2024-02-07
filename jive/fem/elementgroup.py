@@ -1,5 +1,5 @@
-from jive.fem.itemgroup import ItemGroup
-from jive.fem.elementset import ElementSet
+from .itemgroup import ItemGroup
+from .elementset import ElementSet
 
 __all__ = ["ElementGroup"]
 

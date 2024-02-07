@@ -1,6 +1,6 @@
 import numpy as np
 
-from jive.fem.shape import Shape
+from .shape import Shape
 
 __all__ = [
     "Tri3Shape",

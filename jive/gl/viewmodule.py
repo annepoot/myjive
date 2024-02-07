@@ -15,6 +15,8 @@ NCOLORS = "ncolors"
 DEFORM = "deform"
 SOLUTION = "solution"
 
+__all__ = ["ViewModule"]
+
 
 class ViewModule(Module):
     def init(self, props, globdat):
@@ -154,7 +156,3 @@ class ViewModule(Module):
 
         params[pn.TABLE].to_table()
         globdat[gn.TABLES][name] = params[pn.TABLE]
-
-
-def declare(factory):
-    factory.declare_module("View", ViewModule)

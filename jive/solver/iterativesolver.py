@@ -1,12 +1,14 @@
 import numpy as np
 import warnings
 
-from jive.solver.solver import Solver
-from jive.solver.constrainer import Constrainer
+from .solver import Solver
+from .constrainer import Constrainer
 
 MAXITER = "maxIter"
 ALLOWMAXITER = "allowMaxIter"
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
+
+__all__ = ["IterativeSolver"]
 
 
 class IterativeSolver(Solver):
@@ -104,7 +106,3 @@ class IterativeSolver(Solver):
 
     def get_constraints(self):
         return self._cons
-
-
-def declare(factory):
-    factory.declare_solver("iterative", IterativeSolver)

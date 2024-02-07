@@ -1,5 +1,7 @@
 from jive.app.module import Module
 
+__all__ = ["SolverModule"]
+
 
 class SolverModule(Module):
     def init(self, props, globdat):
@@ -34,7 +36,3 @@ class SolverModule(Module):
 
     def commit(self, globdat):
         return True
-
-
-def declare(factory):
-    factory.declare_module("Solver", SolverModule)

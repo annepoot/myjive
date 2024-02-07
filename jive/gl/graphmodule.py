@@ -6,6 +6,8 @@ import jive.util.proputils as pu
 XDATA = "xData"
 YDATA = "yData"
 
+__all__ = ["GraphModule"]
+
 
 class GraphModule(Module):
     def init(self, props, globdat):
@@ -30,7 +32,3 @@ class GraphModule(Module):
             y = globdat[module][group][ld][typ]
             plt.plot(x, y)
         plt.show()
-
-
-def declare(factory):
-    factory.declare_module("Graph", GraphModule)

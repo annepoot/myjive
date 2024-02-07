@@ -1,6 +1,8 @@
 import scipy.sparse as spsp
 
-from jive.solver.preconditioner import Preconditioner
+from .preconditioner import Preconditioner
+
+__all__ = ["IdPrecon"]
 
 
 class IdPrecon(Preconditioner):
@@ -25,7 +27,3 @@ class IdPrecon(Preconditioner):
 
     def get_inv_matrix(self):
         return self._M
-
-
-def declare(factory):
-    factory.declare_precon("id", IdPrecon)

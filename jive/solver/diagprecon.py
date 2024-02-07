@@ -1,6 +1,8 @@
 import scipy.sparse as spsp
 
-from jive.solver.preconditioner import Preconditioner
+from .preconditioner import Preconditioner
+
+__all__ = ["DiagPrecon"]
 
 
 class DiagPrecon(Preconditioner):
@@ -28,7 +30,3 @@ class DiagPrecon(Preconditioner):
 
     def get_inv_matrix(self):
         return self._M_inv
-
-
-def declare(factory):
-    factory.declare_precon("diag", DiagPrecon)

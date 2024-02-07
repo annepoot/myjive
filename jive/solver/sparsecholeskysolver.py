@@ -1,8 +1,10 @@
-from jive.solver.directsolver import DirectSolver
-from jive.solver.constrainer import Constrainer
-from jive.solver.util import reorder as reord
-from jive.solver.jit.cholesky import sparse_cholesky
-from jive.solver.jit.spsolve import solve_triangular
+from .directsolver import DirectSolver
+from .constrainer import Constrainer
+from .util import reorder as reord
+from .jit.cholesky import sparse_cholesky
+from .jit.spsolve import solve_triangular
+
+__all__ = ["SparseCholeskySolver"]
 
 
 class SparseCholeskySolver(DirectSolver):
@@ -43,7 +45,3 @@ class SparseCholeskySolver(DirectSolver):
 
     def get_constraints(self):
         return self._cons
-
-
-def declare(factory):
-    factory.declare_solver("sparseCholesky", SparseCholeskySolver)

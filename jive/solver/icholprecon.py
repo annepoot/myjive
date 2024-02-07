@@ -1,6 +1,8 @@
-from jive.solver.preconditioner import Preconditioner
-from jive.solver.jit.cholesky import incomplete_cholesky
-from jive.solver.jit.spsolve import solve_triangular
+from .preconditioner import Preconditioner
+from .jit.cholesky import incomplete_cholesky
+from .jit.spsolve import solve_triangular
+
+__all__ = ["ICholPrecon"]
 
 
 class ICholPrecon(Preconditioner):
@@ -25,7 +27,3 @@ class ICholPrecon(Preconditioner):
 
     def get_matrix(self):
         return self._L @ self._L.T
-
-
-def declare(factory):
-    factory.declare_precon("ichol", ICholPrecon)

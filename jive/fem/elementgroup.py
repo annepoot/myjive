@@ -1,6 +1,8 @@
 from jive.fem.itemgroup import ItemGroup
 from jive.fem.elementset import ElementSet
 
+__all__ = ["ElementGroup"]
+
 
 class ElementGroup(ItemGroup):
     def __init__(self, elements, data=None):

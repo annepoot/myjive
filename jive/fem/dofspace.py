@@ -1,3 +1,6 @@
+__all__ = ["DofSpace"]
+
+
 class DofSpace:
     def __init__(self):
         self._dofs = {}

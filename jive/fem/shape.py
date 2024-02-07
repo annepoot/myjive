@@ -5,6 +5,8 @@ from jive.fem.jit.shape import get_shape_gradients_jit
 
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
+__all__ = ["Shape", "ShapeFactory"]
+
 
 class ShapeFactory:
     def __init__(self):
@@ -149,6 +151,13 @@ class Shape:
         for ip in range(self._ipcount):
             self._N[:, ip] = self.eval_shape_functions(self._ips[:, ip])
             self._dN[:, :, ip] = self.eval_shape_gradients(self._ips[:, ip])
+
+    @classmethod
+    def declare(cls, factory):
+        name = cls.__name__
+        if len(name) > 5 and name[-5:] == "Shape":
+            name = name[:-5]
+        factory.declare_shape(name, cls)
 
     def global_rank(self):
         return self._rank

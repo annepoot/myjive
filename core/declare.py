@@ -1,7 +1,6 @@
-from jive.fem.names import GlobNames as gn
-
-from jive.app import module
-from jive.model import model
+from jive.names import GlobNames as gn
+from jive.app import ModuleFactory
+from jive.model import ModelFactory
 
 from core.models import (
     BarModel,
@@ -26,7 +25,7 @@ from core.modules import (
 
 
 def declare_models(globdat):
-    factory = globdat.get(gn.MODELFACTORY, model.ModelFactory())
+    factory = globdat.get(gn.MODELFACTORY, ModelFactory())
 
     BarModel.declare(factory)
     DirichletModel.declare(factory)
@@ -44,7 +43,7 @@ def declare_models(globdat):
 
 
 def declare_modules(globdat):
-    factory = globdat.get(gn.MODULEFACTORY, module.ModuleFactory())
+    factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
     NonlinModule.declare(factory)
     VTKOutModule.declare(factory)

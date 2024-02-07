@@ -1,11 +1,12 @@
 import numpy as np
 
-from jive.fem.names import Actions as act
-from jive.fem.names import ParamNames as pn
-from jive.fem.names import GlobNames as gn
+from jive.names import Actions as act
+from jive.names import ParamNames as pn
+from jive.names import GlobNames as gn
 from jive.model.model import Model
 from core.materials import new_material
 import jive.util.proputils as pu
+from jive.util import to_xtable
 
 from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 

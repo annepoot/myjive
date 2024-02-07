@@ -1,5 +1,5 @@
 from jive.declare import declare_all
-from jive.fem.names import GlobNames as gn
+from jive.names import GlobNames as gn
 
 __all__ = ["jive"]
 

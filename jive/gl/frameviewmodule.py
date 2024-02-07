@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
 from jive.app import Module
-from jive.fem.names import GlobNames as gn
+from jive.names import GlobNames as gn
 
 LINEWIDTH = "linewidth"
 DEFORM = "deform"

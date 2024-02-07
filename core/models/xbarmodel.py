@@ -1,22 +1,22 @@
 import numpy as np
 
-from jive.fem.names import Actions    as act
+from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
-from jive.fem.names import GlobNames  as gn
-from poissonmodel import PoissonModel
+from jive.fem.names import GlobNames as gn
+from core.models.barmodel import BarModel
 import jive.util.proputils as pu
 
 ELEMENTS = 'elements'
-KAPPA = 'kappa'
-RHO = 'rho'
-LOAD = 'q'
+EA = 'EA'
+k = 'k'
+RHOA = 'rhoA'
 SHAPE = 'shape'
 TYPE = 'type'
 INTSCHEME = 'intScheme'
-DOFTYPES = ['u']
+DOFTYPES = ['dx']
+LOAD = 'q'
 
-
-class XPoissonModel(PoissonModel):
+class XBarModel(BarModel):
     def take_action(self, action, params, globdat):
         showmsg = True
 
@@ -32,15 +32,16 @@ class XPoissonModel(PoissonModel):
         verbose = params.get(pn.VERBOSE, True)
 
         if showmsg and verbose:
-            print('XPoissonModel taking action', action)
+            print('XBarModel taking action', action)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
 
         # Get basic parameter values
-        self._kappa = pu.soft_cast(props[KAPPA], float)
-        self._rho = pu.soft_cast(props.get(RHO,0), float)
-        self._q = pu.soft_cast(props.get(LOAD,0), float)
+        self._EA = pu.soft_cast(props[EA], float)
+        self._k = pu.soft_cast(props.get(k, 0), float)
+        self._rhoA = pu.soft_cast(props.get(RHOA, 0), float)
+        self._q = pu.soft_cast(props.get(LOAD, 0), float)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(props[SHAPE][TYPE], props[SHAPE][INTSCHEME])
@@ -49,25 +50,21 @@ class XPoissonModel(PoissonModel):
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()
 
-        # Make sure the shape rank and mesh rank are identitcal
-        if self._shape.global_rank() != globdat[gn.MESHRANK]:
-            raise RuntimeError('PoissonModel: Shape rank must agree with mesh rank')
-
         # The rest of the configuration happens in configure_noprops
         self._configure_noprops(globdat)
 
     def _get_unit_mass_matrix(self, params, globdat):
 
-        # Swap out rho for 1
-        rho_ = self._rho
-        self._rho = 1.
+        # Swap out rhoA for 1
+        rhoA_ = self._rhoA
+        self._rhoA = 1.
 
         # Get the mass matrix
         self._get_mass_matrix(params, globdat)
 
-        # Restore the original rho value
-        self._rho = rho_
+        # Restore the original rhoA value
+        self._rhoA = rhoA_
 
 
 def declare(factory):
-    factory.declare_model('XPoisson', XPoissonModel)
+    factory.declare_model('XBar', XBarModel)

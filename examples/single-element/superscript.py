@@ -1,8 +1,8 @@
 import sys, os
-rootdir = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
-jivedir = os.path.abspath(os.path.join(rootdir, "..", "myjive"))
-sys.path.append(rootdir)
-sys.path.append(jivedir)
+cwd = os.getcwd()
+rootdir = os.path.join(cwd[:cwd.rfind(os.path.sep + "myjive")], "myjive")
+if rootdir not in sys.path:
+    sys.path.append(rootdir)
 
 import numpy as np
 from jive.app import main

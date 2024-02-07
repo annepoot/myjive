@@ -1,4 +1,4 @@
-from heterogeneousmaterial import HeterogeneousMaterial
+from core.materials.heterogeneousmaterial import HeterogeneousMaterial
 from jive.fem.names import GlobNames as gn
 from scipy.stats import norm
 import numpy as np

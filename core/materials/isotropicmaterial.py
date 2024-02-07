@@ -1,4 +1,4 @@
-from material import Material
+from core.materials.material import Material
 import numpy as np
 
 E_PROP = 'E'

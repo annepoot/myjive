@@ -4,11 +4,11 @@ from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
 from jive.model.model import Model
-from material import new_material
+from core.materials.material import new_material
 from jive.util.xtable import XTable, to_xtable
 import jive.util.proputils as pu
 
-from jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
+from core.models.jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
 ELEMENTS = 'elements'
 RHO = 'rho'

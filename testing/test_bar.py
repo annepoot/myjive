@@ -1,8 +1,9 @@
 import pytest
 import sys, os
 cwd = os.getcwd()
-rootdir = cwd[:cwd.rfind('/myjive')] + '/myjive'
-sys.path.append(rootdir)
+rootdir = os.path.join(cwd[:cwd.rfind(os.path.sep + "myjive")], "myjive")
+if rootdir not in sys.path:
+    sys.path.append(rootdir)
 
 import numpy as np
 

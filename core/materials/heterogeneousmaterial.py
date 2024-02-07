@@ -1,5 +1,5 @@
-from isotropicmaterial import IsotropicMaterial
-from isotropicmaterial import E_PROP, NU_PROP, RHO_PROP, AREA_PROP, ANMODEL_PROP
+from core.materials.isotropicmaterial import IsotropicMaterial
+from core.materials.isotropicmaterial import E_PROP, NU_PROP, RHO_PROP, AREA_PROP, ANMODEL_PROP
 import jive.util.proputils as pu
 
 

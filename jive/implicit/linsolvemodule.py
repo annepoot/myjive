@@ -6,8 +6,8 @@ from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act
 
 import jive.util.proputils as pu
-from jive.implicit.solvermodule import SolverModule
-from jive.solver.constraints import Constraints
+from .solvermodule import SolverModule
+from jive.solver import Constraints
 from jive.util.table import Table
 from jive.util.xtable import to_xtable
 

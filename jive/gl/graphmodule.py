@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from jive.app.module import Module
+from jive.app import Module
 import jive.util.proputils as pu
 
 XDATA = "xData"

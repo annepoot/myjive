@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
-from jive.app.module import Module
+from jive.app import Module
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import Actions as act

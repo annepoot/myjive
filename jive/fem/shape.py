@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 from warnings import warn
-from jive.fem.jit.shape import get_shape_gradients_jit
+from .jit.shape import get_shape_gradients_jit
 
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 

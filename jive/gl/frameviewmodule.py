@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 
-from jive.app.module import Module
+from jive.app import Module
 from jive.fem.names import GlobNames as gn
 
 LINEWIDTH = "linewidth"

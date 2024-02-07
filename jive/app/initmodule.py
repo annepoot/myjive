@@ -1,11 +1,11 @@
 import numpy as np
 
 from .module import Module
-from jive.fem.nodeset import XNodeSet
-from jive.fem.nodegroup import NodeGroup
-from jive.fem.elementset import XElementSet
-from jive.fem.elementgroup import ElementGroup
-from jive.fem.dofspace import DofSpace
+from jive.fem import XNodeSet
+from jive.fem import NodeGroup
+from jive.fem import XElementSet
+from jive.fem import ElementGroup
+from jive.fem import DofSpace
 
 from jive.fem.names import GlobNames as gn
 from jive.fem.names import PropNames as prn

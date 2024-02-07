@@ -7,7 +7,7 @@ if rootdir not in sys.path:
 
 import numpy as np
 from jive.app import main
-from jive.solver.constrainer import Constrainer
+from jive.solver import Constrainer
 import jive.util.proputils as pu
 
 props = pu.parse_file("elem.pro")

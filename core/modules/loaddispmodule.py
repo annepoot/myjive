@@ -11,6 +11,8 @@ GROUPS = "groups"
 DISP = "disp"
 LOAD = "load"
 
+__all__ = ["LoadDispModule"]
+
 
 class LoadDispModule(Module):
     def init(self, props, globdat):

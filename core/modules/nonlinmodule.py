@@ -16,6 +16,8 @@ NSTEPS = "nsteps"
 ITERMAX = "itermax"
 TOLERANCE = "tolerance"
 
+__all__ = ["NonlinModule"]
+
 
 class NonlinModule(Module):
     def init(self, props, globdat):

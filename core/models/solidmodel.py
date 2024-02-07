@@ -4,11 +4,11 @@ from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
 from jive.model.model import Model
-from core.materials.material import new_material
+from core.materials import new_material
 from jive.util.xtable import XTable, to_xtable
 import jive.util.proputils as pu
 
-from core.models.jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
+from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
 ELEMENTS = "elements"
 RHO = "rho"
@@ -18,6 +18,8 @@ INTSCHEME = "intScheme"
 DOFTYPES = ["dx", "dy", "dz"]
 MATERIAL = "material"
 THICKNESS_PROP = "thickness"
+
+__all__ = ["SolidModel"]
 
 
 class SolidModel(Model):

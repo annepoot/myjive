@@ -13,6 +13,8 @@ INTSCHEME = "intScheme"
 DOFTYPES = "dofs"
 LOADS = "values"
 
+__all__ = ["LoadModel"]
+
 
 class LoadModel(Model):
     def take_action(self, action, params, globdat):

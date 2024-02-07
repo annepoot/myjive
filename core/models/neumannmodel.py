@@ -12,6 +12,8 @@ DOFS = "dofs"
 VALS = "values"
 INCR = "loadIncr"
 
+__all__ = ["NeumannModel"]
+
 
 class NeumannModel(Model):
     def take_action(self, action, params, globdat):

@@ -10,6 +10,8 @@ PLOT = "plot"
 NCOLORS = "ncolors"
 DEFORM = "deform"
 
+__all__ = ["QuickViewer"]
+
 
 def QuickViewer(array, globdat, **kwargs):
     # Get all possible key word arguments

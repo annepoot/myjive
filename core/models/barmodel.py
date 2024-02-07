@@ -15,6 +15,8 @@ TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["dx"]
 
+__all__ = ["BarModel"]
+
 
 class BarModel(Model):
     def take_action(self, action, params, globdat):

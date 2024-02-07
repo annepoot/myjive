@@ -3,7 +3,7 @@ import numpy as np
 from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
-from core.models.poissonmodel import PoissonModel
+from .poissonmodel import PoissonModel
 import jive.util.proputils as pu
 
 ELEMENTS = "elements"
@@ -14,6 +14,8 @@ SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["u"]
+
+__all__ = ["XPoissonModel"]
 
 
 class XPoissonModel(PoissonModel):

@@ -1,4 +1,4 @@
-from core.materials.heterogeneousmaterial import HeterogeneousMaterial
+from .heterogeneousmaterial import HeterogeneousMaterial
 from jive.fem.names import GlobNames as gn
 from scipy.stats import norm
 import numpy as np
@@ -14,6 +14,8 @@ STD_Y_PROP = "stdY"
 SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
+
+__all__ = ["DeterioratedMaterial"]
 
 
 class DeterioratedMaterial(HeterogeneousMaterial):

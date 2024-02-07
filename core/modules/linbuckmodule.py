@@ -10,6 +10,8 @@ from jive.fem.names import Actions as act
 from jive.app.module import Module
 from jive.solver.constrainer import Constrainer
 
+__all__ = ["LinBuckModule"]
+
 
 class LinBuckModule(Module):
     def init(self, props, globdat):

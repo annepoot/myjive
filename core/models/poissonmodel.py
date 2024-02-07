@@ -14,6 +14,8 @@ TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["u"]
 
+__all__ = ["PoissonModel"]
+
 
 class PoissonModel(Model):
     def take_action(self, action, params, globdat):

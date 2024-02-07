@@ -14,6 +14,8 @@ INTSCHEME = "intScheme"
 DOFTYPES = ["phi", "dy"]
 TYPE = "type"
 
+__all__ = ["TimoshenkoModel"]
+
 
 class TimoshenkoModel(Model):
     def take_action(self, action, params, globdat):

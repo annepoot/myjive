@@ -1,5 +1,5 @@
-from core.materials.isotropicmaterial import IsotropicMaterial
-from core.materials.isotropicmaterial import (
+from .isotropicmaterial import IsotropicMaterial
+from .isotropicmaterial import (
     E_PROP,
     NU_PROP,
     RHO_PROP,
@@ -7,6 +7,8 @@ from core.materials.isotropicmaterial import (
     ANMODEL_PROP,
 )
 import jive.util.proputils as pu
+
+__all__ = ["HeterogeneousMaterial"]
 
 
 class HeterogeneousMaterial(IsotropicMaterial):

@@ -11,6 +11,8 @@ from jive.util.xtable import to_xtable
 FILENAME = "file"
 TABLES = "tables"
 
+__all__ = ["VTKOutModule"]
+
 
 class VTKOutModule(Module):
     def init(self, props, globdat):

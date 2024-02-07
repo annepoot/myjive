@@ -19,6 +19,8 @@ DOFTYPES = ["dx", "dy", "dz"]
 PE_STATE = "plane_strain"
 PS_STATE = "plane_stress"
 
+__all__ = ["ElasticModel"]
+
 
 class ElasticModel(Model):
     def take_action(self, action, params, globdat):

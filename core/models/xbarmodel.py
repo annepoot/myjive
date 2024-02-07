@@ -3,7 +3,7 @@ import numpy as np
 from jive.fem.names import Actions as act
 from jive.fem.names import ParamNames as pn
 from jive.fem.names import GlobNames as gn
-from core.models.barmodel import BarModel
+from .barmodel import BarModel
 import jive.util.proputils as pu
 
 ELEMENTS = "elements"
@@ -15,6 +15,8 @@ TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["dx"]
 LOAD = "q"
+
+__all__ = ["XBarModel"]
 
 
 class XBarModel(BarModel):

@@ -16,6 +16,8 @@ TOLERANCE = "tolerance"
 BETA = "beta"
 DL = "dl"
 
+__all__ = ["ArclenModule"]
+
 
 class ArclenModule(Module):
     def init(self, props, globdat):
@@ -158,7 +160,3 @@ def solveSys(K, f, c):
     smat = sparse.csr_matrix(Kc)
     u = linalg.spsolve(smat, fc)
     return u
-
-
-def declare(factory):
-    factory.declare_module("Arclen", ArclenModule)

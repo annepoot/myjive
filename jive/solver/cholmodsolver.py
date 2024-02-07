@@ -1,7 +1,9 @@
 from sksparse import cholmod as cm
 
-from jive.solver.sparsecholesky import SparseCholeskySolver
-from jive.solver.constrainer import Constrainer
+from .sparsecholeskysolver import SparseCholeskySolver
+from .constrainer import Constrainer
+
+__all__ = ["CholmodSolver"]
 
 
 class CholmodSolver(SparseCholeskySolver):
@@ -30,7 +32,3 @@ class CholmodSolver(SparseCholeskySolver):
 
     def get_constraints(self):
         return self._cons
-
-
-def declare(factory):
-    factory.declare_solver("cholmod", CholmodSolver)

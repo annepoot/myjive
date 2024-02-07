@@ -1,6 +1,9 @@
 import numpy as np
 
 
+__all__ = ["Element"]
+
+
 class Element:
     def __init__(self, nodes):
         self._nodes = np.array(nodes, dtype=int)

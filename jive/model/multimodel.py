@@ -4,6 +4,8 @@ import jive.util.proputils as pu
 MODELS = "models"
 TYPE = "type"
 
+__all__ = ["MultiModel"]
+
 
 class MultiModel(Model):
     def take_action(self, action, params, globdat):
@@ -24,7 +26,3 @@ class MultiModel(Model):
             model.configure(modelprops, globdat)
 
             self._models.append(model)
-
-
-def declare(factory):
-    factory.declare_model("Multi", MultiModel)

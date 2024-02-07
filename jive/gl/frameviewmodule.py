@@ -11,6 +11,8 @@ INTERACTIVE = "interactive"
 LABEL = "label"
 MAXSTEP = "maxStep"
 
+__all__ = ["FrameViewModule"]
+
 
 class FrameViewModule(Module):
     def init(self, props, globdat):
@@ -154,7 +156,3 @@ class FrameViewModule(Module):
                 globdat[gn.SLIDERS] = []
 
             globdat[gn.SLIDERS].append(s_step)
-
-
-def declare(factory):
-    factory.declare_module("FrameView", FrameViewModule)

@@ -1,7 +1,9 @@
 import scipy.sparse.linalg as spspla
 
-from jive.solver.solver import Solver
-from jive.solver.constrainer import Constrainer
+from .solver import Solver
+from .constrainer import Constrainer
+
+__all__ = ["DirectSolver"]
 
 
 class DirectSolver(Solver):
@@ -34,7 +36,3 @@ class DirectSolver(Solver):
 
     def get_constraints(self):
         return self._cons
-
-
-def declare(factory):
-    factory.declare_solver("direct", DirectSolver)

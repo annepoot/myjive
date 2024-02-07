@@ -2,6 +2,15 @@ import numpy as np
 
 from jive.fem.shape import Shape
 
+__all__ = [
+    "Tri3Shape",
+    "Tri6Shape",
+    "Quad4Shape",
+    "Quad9Shape",
+    "Line2Shape",
+    "Line3Shape",
+]
+
 
 class Tri3Shape(Shape):
     def __init__(self, intscheme):
@@ -13,6 +22,10 @@ class Tri3Shape(Shape):
 
         # Refer to the Shape class to handle the rest of the initialization
         super().__init__(intscheme)
+
+    @classmethod
+    def declare(cls, factory):
+        factory.declare_shape("Triangle3", cls)
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
@@ -95,6 +108,10 @@ class Tri6Shape(Shape):
 
         # Refer to the Shape class to handle the rest of the initialization
         super().__init__(intscheme)
+
+    @classmethod
+    def declare(cls, factory):
+        factory.declare_shape("Triangle6", cls)
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
@@ -448,12 +465,3 @@ class Line3Shape(Shape):
             return False
         else:
             return True
-
-
-def declare(factory):
-    factory.declare_shape("Triangle3", Tri3Shape)
-    factory.declare_shape("Triangle6", Tri6Shape)
-    factory.declare_shape("Quad4", Quad4Shape)
-    factory.declare_shape("Quad9", Quad9Shape)
-    factory.declare_shape("Line2", Line2Shape)
-    factory.declare_shape("Line3", Line3Shape)

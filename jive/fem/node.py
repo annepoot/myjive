@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["Node"]
+
 
 class Node:
     def __init__(self, coords):

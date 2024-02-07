@@ -1,7 +1,9 @@
-from jive.solver.iterativesolver import IterativeSolver
+from .iterativesolver import IterativeSolver
+
+__all__ = ["CGSolver"]
 
 
-class CG(IterativeSolver):
+class CGSolver(IterativeSolver):
     def __init__(self):
         super().__init__()
 
@@ -38,7 +40,3 @@ class CG(IterativeSolver):
         self._p = z_new + beta * self._p
 
         return du
-
-
-def declare(factory):
-    factory.declare_solver("CG", CG)

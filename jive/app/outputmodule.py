@@ -1,5 +1,7 @@
-from jive.app.module import Module
+from .module import Module
 from jive.fem.names import GlobNames as gn
+
+__all__ = ["OutputModule"]
 
 
 class OutputModule(Module):
@@ -20,7 +22,3 @@ class OutputModule(Module):
 
     def shutdown(self, globdat):
         pass
-
-
-def declare(factory):
-    factory.declare_module("Output", OutputModule)

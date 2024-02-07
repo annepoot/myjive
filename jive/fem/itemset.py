@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ["ItemSet", "XItemSet"]
+
 
 class ItemSet:
     def __init__(self, items=None):

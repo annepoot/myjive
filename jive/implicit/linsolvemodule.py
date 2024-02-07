@@ -18,6 +18,8 @@ GETMASSMATRIX = "getMassMatrix"
 GETSTRAINMATRIX = "getStrainMatrix"
 TABLES = "tables"
 
+__all__ = ["LinsolveModule"]
+
 
 class LinsolveModule(SolverModule):
     def init(self, props, globdat):
@@ -32,7 +34,7 @@ class LinsolveModule(SolverModule):
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
         solverprops = myprops.get(SOLVER, {})
-        solver = solverprops.get(TYPE, "cholmod")
+        solver = solverprops.get(TYPE, "Cholmod")
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
         self._solver.configure(solverprops, globdat)
 
@@ -237,7 +239,3 @@ class LinsolveModule(SolverModule):
             (values, (rowindices, colindices)), shape=(nc * strcount, dc), dtype=float
         )
         return B_empty
-
-
-def declare(factory):
-    factory.declare_module("Linsolve", LinsolveModule)

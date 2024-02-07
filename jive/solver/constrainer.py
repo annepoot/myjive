@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.sparse as spsp
 
+__all__ = ["Constrainer"]
+
 
 class Constrainer:
     def __init__(self, constraints, inputmatrix):

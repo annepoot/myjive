@@ -1,6 +1,8 @@
 from jive.fem.itemgroup import ItemGroup
 from jive.fem.nodeset import NodeSet
 
+__all__ = ["NodeGroup"]
+
 
 class NodeGroup(ItemGroup):
     def __init__(self, nodes, data=None):

@@ -1,3 +1,6 @@
+__all__ = ["Constraints"]
+
+
 class Constraints:
     def __init__(self):
         self._ddofs = []

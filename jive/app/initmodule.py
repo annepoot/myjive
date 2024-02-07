@@ -1,6 +1,6 @@
 import numpy as np
 
-from jive.app.module import Module
+from .module import Module
 from jive.fem.nodeset import XNodeSet
 from jive.fem.nodegroup import NodeGroup
 from jive.fem.elementset import XElementSet
@@ -15,6 +15,8 @@ import jive.util.proputils as pu
 MESH = "mesh"
 TYPE = "type"
 FILE = "file"
+
+__all__ = ["InitModule"]
 
 
 class InitModule(Module):
@@ -379,7 +381,3 @@ class InitModule(Module):
 
     def _create_egroups(self, groups, globdat):
         pass
-
-
-def declare(factory):
-    factory.declare_module("Init", InitModule)

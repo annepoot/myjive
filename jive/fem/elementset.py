@@ -3,6 +3,8 @@ import numpy as np
 from jive.fem.itemset import ItemSet, XItemSet
 from jive.fem.element import Element
 
+__all__ = ["ElementSet", "XElementSet", "to_xelementset"]
+
 
 class ElementSet(ItemSet):
     def __init__(self, nodes, elems=None):

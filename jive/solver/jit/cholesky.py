@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as spsp
 from numba import njit
 
-from jive.solver.jit.sputil import rowcol2idx, idxs2rowscols
+from .sputil import rowcol2idx, idxs2rowscols
 
 #####################
 # wrapper functions #

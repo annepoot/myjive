@@ -3,6 +3,8 @@ import numpy as np
 PRECISION = "precision"
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
+__all__ = ["Solver", "SolverFactory"]
+
 
 class SolverFactory:
     def __init__(self):
@@ -25,6 +27,13 @@ class Solver:
     def __init__(self):
         self._precision = 1e-8
         self.precon_mode = False
+
+    @classmethod
+    def declare(cls, factory):
+        name = cls.__name__
+        if len(name) > 6 and name[-6:] == "Solver":
+            name = name[:-6]
+        factory.declare_solver(name, cls)
 
     def configure(self, props, globdat):
         self._precision = props.get(PRECISION, self._precision)

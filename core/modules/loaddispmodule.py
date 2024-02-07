@@ -58,7 +58,3 @@ class LoadDispModule(Module):
 
     def shutdown(self, globdat):
         pass
-
-
-def declare(factory):
-    factory.declare_module("LoadDisp", LoadDispModule)

@@ -19,6 +19,13 @@ class Model:
     def __init__(self, name):
         self._name = name
 
+    @classmethod
+    def declare(cls, factory):
+        name = cls.__name__
+        if len(name) > 5 and name[-5:] == "Model":
+            name = name[:-5]
+        factory.declare_model(name, cls)
+
     def take_action(self, action, params, globdat):
         print("Empty model takeAction")
 

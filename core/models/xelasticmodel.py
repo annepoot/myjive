@@ -92,7 +92,3 @@ class XElasticModel(ElasticModel):
         # Restore the original thickness value if in 2d
         if self._rank == 2:
             self._thickness = thickness_
-
-
-def declare(factory):
-    factory.declare_model("XElastic", XElasticModel)

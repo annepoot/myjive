@@ -70,7 +70,3 @@ class NeumannModel(Model):
         self._vals = np.array(self._initLoad) + globdat[gn.TIMESTEP] * np.array(
             self._loadIncr
         )
-
-
-def declare(factory):
-    factory.declare_model("Neumann", NeumannModel)

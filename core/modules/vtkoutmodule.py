@@ -146,7 +146,3 @@ class VTKOutModule(Module):
 
             params[pn.TABLE].to_table()
             globdat[gn.TABLES][name] = params[pn.TABLE]
-
-
-def declare(factory):
-    factory.declare_module("VTKOut", VTKOutModule)

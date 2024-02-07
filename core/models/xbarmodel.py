@@ -68,7 +68,3 @@ class XBarModel(BarModel):
 
         # Restore the original rhoA value
         self._rhoA = rhoA_
-
-
-def declare(factory):
-    factory.declare_model("XBar", XBarModel)

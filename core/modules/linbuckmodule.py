@@ -79,7 +79,3 @@ class LinBuckModule(Module):
 
     def __solve(self, globdat):
         pass
-
-
-def declare(factory):
-    factory.declare_module("LinBuck", LinBuckModule)

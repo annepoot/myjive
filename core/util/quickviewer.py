@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
@@ -202,6 +203,9 @@ def QuickViewer(array, globdat, **kwargs):
         ax.set_title(title)
 
     if not fname is None:
+        dirname = os.path.dirname(fname)
+        if len(dirname) > 0:
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
         plt.savefig(fname, dpi=dpi, bbox_inches="tight")
 
     if no_ax:

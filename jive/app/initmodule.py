@@ -14,6 +14,7 @@ import jive.util.proputils as pu
 MESH = "mesh"
 TYPE = "type"
 FILE = "file"
+MODELS = "models"
 
 __all__ = ["InitModule"]
 
@@ -33,7 +34,7 @@ class InitModule(Module):
         globdat[gn.EGROUPS] = {}
 
         modelfac = globdat[gn.MODELFACTORY]
-        modelprops = props[gn.MODEL]
+        modelprops = props[gn.MODELS]
 
         # Initialize DofSpace
         print("InitModule: Creating DofSpace...")
@@ -66,10 +67,14 @@ class InitModule(Module):
             self._create_egroups(groups, globdat)
 
         # Initialize model
-        print("InitModule: Creating model...")
-        m = modelfac.get_model(modelprops[TYPE], gn.MODEL)
-        m.configure(modelprops, globdat)
-        globdat[gn.MODEL] = m
+        print("InitModule: Creating models...")
+        name_list = pu.parse_list(modelprops[MODELS])
+        model_list = []
+        for name in name_list:
+            m = modelfac.get_model(modelprops[name][TYPE], name)
+            m.configure(modelprops[name], globdat)
+            model_list.append(m)
+        globdat[gn.MODELS] = model_list
 
     def run(self, globdat):
         return "ok"

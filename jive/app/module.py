@@ -29,6 +29,13 @@ class Module:
             name = name[:-6]
         factory.declare_module(name, cls)
 
+    def get_relevant_models(self, action, models):
+        model_list = []
+        for model in models:
+            if action in model.list_actions():
+                model_list.append(model)
+        return model_list
+
     def init(self, props, globdat):
         print("Empty module init")
 

@@ -18,22 +18,8 @@ __all__ = ["XBarModel"]
 
 
 class XBarModel(BarModel):
-    def take_action(self, action, params, globdat):
-        showmsg = True
-
-        # Refer the core actions to the parent class
-        super().take_action(action, params, globdat)
-
-        # Add extended actions below
-        if action == act.GETUNITMATRIX2:
-            self._get_unit_mass_matrix(params, globdat)
-        else:
-            showmsg = False
-
-        verbose = params.get(pn.VERBOSE, True)
-
-        if showmsg and verbose:
-            print("XBarModel taking action", action)
+    def GETUNITMATRIX2(self, params, globdat):
+        self._get_unit_mass_matrix(params, globdat)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

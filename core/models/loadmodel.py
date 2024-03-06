@@ -17,18 +17,8 @@ __all__ = ["LoadModel"]
 
 
 class LoadModel(Model):
-    def take_action(self, action, params, globdat):
-        showmsg = True
-
-        if action == act.GETEXTFORCE:
-            self._get_body_force(params, globdat)
-        else:
-            showmsg = False
-
-        verbose = params.get(pn.VERBOSE, True)
-
-        if showmsg and verbose:
-            print("LoadModel taking action", action)
+    def GETEXTFORCE(self, params, globdat):
+        self._get_body_force(params, globdat)
 
     def configure(self, props, globdat):
         # Get shape and element info

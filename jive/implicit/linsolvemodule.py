@@ -29,7 +29,7 @@ class LinsolveModule(SolverModule):
         self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX, "False")))
         self._tnames = pu.parse_list(myprops.get(TABLES, "[]"))
 
-        self._model = globdat[gn.MODEL]
+        self._models = globdat[gn.MODELS]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
         solverprops = myprops.get(SOLVER, {})
@@ -45,8 +45,6 @@ class LinsolveModule(SolverModule):
             self._precon.configure(preconprops, globdat)
 
     def solve(self, globdat):
-        model = globdat[gn.MODEL]
-
         print("Running LinsolverModule")
         globdat[gn.TIMESTEP] = 1
 
@@ -96,7 +94,8 @@ class LinsolveModule(SolverModule):
             params[pn.TABLENAME] = name
             params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
 
-            model.take_action(act.GETTABLE, params, globdat)
+            for model in self.get_relevant_models("GETTABLE", self._models):
+                model.GETTABLE(params, globdat)
 
             to_xtable(params[pn.TABLE])
 
@@ -118,7 +117,8 @@ class LinsolveModule(SolverModule):
         f_ext = np.zeros(self._dc)
         params = {pn.EXTFORCE: f_ext}
 
-        self._model.take_action(act.GETEXTFORCE, params, globdat)
+        for model in self.get_relevant_models("GETEXTFORCE", self._models):
+            model.GETEXTFORCE(params, globdat)
 
         return f_ext
 
@@ -126,7 +126,8 @@ class LinsolveModule(SolverModule):
         f_neum = np.zeros(self._dc)
         params = {pn.NEUMANNFORCE: f_neum}
 
-        self._model.take_action(act.GETNEUMANNFORCE, params, globdat)
+        for model in self.get_relevant_models("GETNEUMANNFORCE", self._models):
+            model.GETNEUMANNFORCE(params, globdat)
 
         return f_neum
 
@@ -135,7 +136,8 @@ class LinsolveModule(SolverModule):
         params[pn.MATRIX0] = self._get_empty_matrix(globdat)
         params[pn.INTFORCE] = np.zeros(self._dc)
 
-        self._model.take_action(act.GETMATRIX0, params, globdat)
+        for model in self.get_relevant_models("GETMATRIX0", self._models):
+            model.GETMATRIX0(params, globdat)
 
         return params[pn.MATRIX0], params[pn.INTFORCE]
 
@@ -143,7 +145,8 @@ class LinsolveModule(SolverModule):
         params = {}
         params[pn.MATRIX2] = self._get_empty_matrix(globdat)
 
-        self._model.take_action(act.GETMATRIX2, params, globdat)
+        for model in self.get_relevant_models("GETMATRIX2", self._models):
+            model.GETMATRIX2(params, globdat)
 
         return params[pn.MATRIX2]
 
@@ -152,7 +155,8 @@ class LinsolveModule(SolverModule):
         params[pn.MATRIXB] = self._get_empty_bmatrix(globdat)
         params[pn.TABLEWEIGHTS] = np.zeros(params[pn.MATRIXB].shape[0])
 
-        self._model.take_action(act.GETMATRIXB, params, globdat)
+        for model in self.get_relevant_models("GETMATRIXB", self._models):
+            model.GETMATRIXB(params, globdat)
 
         # Divide non-zero entries by weights
         str_indices, dof_indices = params[pn.MATRIXB].nonzero()
@@ -166,20 +170,18 @@ class LinsolveModule(SolverModule):
         c = Constraints()
         params = {pn.CONSTRAINTS: c}
 
-        self._model.take_action(act.GETCONSTRAINTS, params, globdat)
+        for model in self.get_relevant_models("GETCONSTRAINTS", self._models):
+            model.GETCONSTRAINTS(params, globdat)
 
         return c
 
     def advance(self, globat):
-        # globdat[gn.MODEL].take_action(act.ADVANCE)
         pass
 
     def cancel(self, globdat):
-        # globdat[gn.MODEL].take_action(act.CANCEL)
         pass
 
     def commit(self, globdat):
-        # globdat[gn.MODEL].take_action(act.COMMIT)
         return True
 
     def _get_empty_matrix(self, globdat):

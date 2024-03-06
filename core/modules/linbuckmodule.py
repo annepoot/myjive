@@ -18,7 +18,7 @@ class LinBuckModule(Module):
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
-        model = globdat[gn.MODEL]
+        models = globdat[gn.MODELS]
 
         print("LinBuckModule: running unit load analysis...")
 
@@ -29,11 +29,14 @@ class LinBuckModule(Module):
 
         params = {pn.MATRIX0: K, pn.CONSTRAINTS: c, pn.EXTFORCE: f}
 
-        model.take_action(act.GETMATRIX0, params, globdat)
+        for model in self.get_relevant_models("GETMATRIX0", models):
+            model.GETMATRIX0(params, globdat)
 
-        model.take_action(act.GETEXTFORCE, params, globdat)
+        for model in self.get_relevant_models("GETEXTFORCE", models):
+            model.GETEXTFORCE(params, globdat)
 
-        model.take_action(act.GETCONSTRAINTS, params, globdat)
+        for model in self.get_relevant_models("GETCONSTRAINTS", models):
+            model.GETCONSTRAINTS(params, globdat)
 
         Kc, fc = c.constrain(K, f)
 
@@ -50,7 +53,8 @@ class LinBuckModule(Module):
         params[pn.MATRIX0] = KM
         params[pn.MATRIX1] = KG
 
-        model.take_action(act.GETMATRIXLB, params, globdat)
+        for model in self.get_relevant_models("GETMATRIXLB", models):
+            model.GETMATRIXLB(params, globdat)
 
         cdofs, cvals = c.get_constraints()
         fdofs = [i for i in range(dc) if i not in cdofs]

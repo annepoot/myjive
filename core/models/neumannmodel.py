@@ -16,17 +16,20 @@ __all__ = ["NeumannModel"]
 
 
 class NeumannModel(Model):
-    def take_action(self, action, params, globdat):
-        if action == act.GETCONSTRAINTS:
-            self._get_constraints(params, globdat)
-        elif action == act.GETEXTFORCE:
-            self._get_ext_force(params, globdat)
-        elif action == act.GETNEUMANNFORCE:
-            self._get_neumann_force(params, globdat)
-        elif action == act.GETUNITFORCE:
-            self._get_unit_force(params, globdat)
-        elif action == act.ADVANCE:
-            self._advance_step(params, globdat)
+    def GETCONSTRAINTS(self, params, globdat):
+        self._get_constraints(params, globdat)
+
+    def GETEXTFORCE(self, params, globdat):
+        self._get_ext_force(params, globdat)
+
+    def GETNEUMANNFORCE(self, params, globdat):
+        self._get_neumann_force(params, globdat)
+
+    def GETUNITFORCE(self, params, globdat):
+        self._get_unit_force(params, globdat)
+
+    def ADVANCE(self, params, globdat):
+        self._advance_step(params, globdat)
 
     def configure(self, props, globdat):
         self._groups = pu.parse_list(props[GROUPS])

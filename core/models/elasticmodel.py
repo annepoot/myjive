@@ -23,29 +23,20 @@ __all__ = ["ElasticModel"]
 
 
 class ElasticModel(Model):
-    def take_action(self, action, params, globdat):
-        showmsg = True
+    def GETMATRIX0(self, params, globdat):
+        self._get_matrix(params, globdat)
 
-        if action == act.GETMATRIX0:
-            self._get_matrix(params, globdat)
-        elif action == act.GETMATRIX2:
-            self._get_mass_matrix(params, globdat)
-        elif action == act.GETEXTFORCE:
-            self._get_body_force(params, globdat)
-        elif action == act.GETTABLE:
-            if "stress" in params[pn.TABLENAME]:
-                self._get_stresses(params, globdat)
-            elif "strain" in params[pn.TABLENAME]:
-                self._get_strains(params, globdat)
-            else:
-                showmsg = False
-        else:
-            showmsg = False
+    def GETMATRIX2(self, params, globdat):
+        self._get_mass_matrix(params, globdat)
 
-        verbose = params.get(pn.VERBOSE, True)
+    def GETEXTFORCE(self, params, globdat):
+        self._get_body_force(params, globdat)
 
-        if showmsg and verbose:
-            print("ElasticModel taking action", action)
+    def GETTABLE(self, params, globdat):
+        if "stress" in params[pn.TABLENAME]:
+            self._get_stresses(params, globdat)
+        elif "strain" in params[pn.TABLENAME]:
+            self._get_strains(params, globdat)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

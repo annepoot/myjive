@@ -39,8 +39,6 @@ class ViewModule(Module):
             if NCOLORS in myprops:
                 self._ncolors = int(myprops[NCOLORS])
 
-        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
-
     def run(self, globdat):
         nodes = globdat[gn.NSET]
         elems = globdat[gn.ESET]
@@ -132,7 +130,7 @@ class ViewModule(Module):
 
     def _write_table(self, name, globdat):
         nodecount = len(globdat[gn.NSET])
-        model = globdat[self._modelname]
+        models = globdat[gn.MODELS]
 
         if gn.TABLES not in globdat:
             globdat[gn.TABLES] = {}
@@ -143,7 +141,8 @@ class ViewModule(Module):
         params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
         params[pn.SOLUTION] = self._solution
 
-        model.take_action(act.GETTABLE, params, globdat)
+        for model in self.get_relevant_models("GETTABLE", models):
+            model.GETTABLE(params, globdat)
 
         to_xtable(params[pn.TABLE])
 

@@ -27,7 +27,7 @@ class NonlinModule(Module):
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
-        model = globdat[gn.MODEL]
+        models = globdat[gn.MODELS]
 
         if self._step == 0:
             globdat[gn.STATE0] = np.zeros(dc)
@@ -52,19 +52,25 @@ class NonlinModule(Module):
         iteration = 0
 
         # Advance to next time step
-        model.take_action(act.ADVANCE, params, globdat)
+        for model in self.get_relevant_models("ADVANCE", models):
+            model.ADVANCE(params, globdat)
 
         # Assemble K
-        model.take_action(act.GETMATRIX0, params, globdat)
+        for model in self.get_relevant_models("GETMATRIX0", models):
+            model.GETMATRIX0(params, globdat)
 
         # Assemble fext
-        model.take_action(act.GETEXTFORCE, params, globdat)
+        for model in self.get_relevant_models("GETEXTFORCE", models):
+            model.GETEXTFORCE(params, globdat)
 
         # Assemble fint
-        model.take_action(act.GETINTFORCE, params, globdat)
+        for model in self.get_relevant_models("GETINTFORCE", models):
+            model.GETINTFORCE(params, globdat)
 
         # Get constraints
-        model.take_action(act.GETCONSTRAINTS, params, globdat)
+        for model in self.get_relevant_models("GETCONSTRAINTS", models):
+            model.GETCONSTRAINTS(params, globdat)
+
         cdofs, cvals = c.get_constraints()
         fdofs = [i for i in range(dc) if i not in cdofs]
 
@@ -88,10 +94,15 @@ class NonlinModule(Module):
         # Initialize iteration loop
         while rel > self._tolerance and iteration < self._itermax:
             iteration += 1
+
             params[pn.MATRIX0] = np.zeros((dc, dc))
-            model.take_action(act.GETMATRIX0, params, globdat)
+            for model in self.get_relevant_models("GETMATRIX0", models):
+                model.GETMATRIX0(params, globdat)
+
             params[pn.INTFORCE] = np.zeros(dc)
-            model.take_action(act.GETINTFORCE, params, globdat)
+            for model in self.get_relevant_models("GETINTFORCE", models):
+                model.GETINTFORCE(params, globdat)
+
             r = fext - params[pn.INTFORCE]
             Kc, rc = c.constrain(params[pn.MATRIX0], r)
             smat = sparse.csr_matrix(Kc)
@@ -108,7 +119,8 @@ class NonlinModule(Module):
                 warnings.warn("No convergence in time step %i" % self._step)
 
         # Check commit
-        model.take_action(act.CHECKCOMMIT, params, globdat)
+        for model in self.get_relevant_models("CHECKCOMMIT", models):
+            model.CHECKCOMMIT(params, globdat)
 
         # Only move to next time step if commit is accepted
         if globdat[gn.ACCEPTED]:

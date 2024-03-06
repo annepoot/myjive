@@ -26,8 +26,6 @@ class VTKOutModule(Module):
             if TABLES in myprops:
                 self._tnames = pu.parse_list(myprops[TABLES])
 
-        self._modelname = myprops.get(gn.MODEL, gn.MODEL)
-
     def run(self, globdat):
         nodes = globdat[gn.NSET]
         elems = globdat[gn.ESET]
@@ -122,7 +120,7 @@ class VTKOutModule(Module):
 
     def _write_tables(self, table_names, globdat):
         nodecount = len(globdat[gn.NSET])
-        model = globdat[self._modelname]
+        models = globdat[gn.MODELS]
 
         if gn.TABLES not in globdat:
             globdat[gn.TABLES] = {}
@@ -133,7 +131,8 @@ class VTKOutModule(Module):
             params[pn.TABLENAME] = name
             params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
 
-            model.take_action(act.GETTABLE, params, globdat)
+            for model in self.get_relevant_models("GETTABLE", models):
+                model.GETTABLE(params, globdat)
 
             to_xtable(params[pn.TABLE])
 

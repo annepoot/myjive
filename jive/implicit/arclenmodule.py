@@ -30,17 +30,20 @@ class ArclenModule(Module):
         self._dl = float(myprops.get(DL, 0.02))
         globdat[gn.ACCEPTED] = True
 
-        model = globdat[gn.MODEL]
+        self._models = globdat[gn.MODELS]
         dc = globdat[gn.DOFSPACE].dof_count()
         self._fext0 = np.zeros(dc)
         self._fhat = np.zeros(dc)
         params = {pn.EXTFORCE: self._fext0, pn.UNITFORCE: self._fhat}
-        model.take_action(act.GETEXTFORCE, params, globdat)
-        model.take_action(act.GETUNITFORCE, params, globdat)
+
+        for model in self.get_relevant_models("GETEXTFORCE", self._models):
+            model.GETEXTFORCE(params, globdat)
+
+        for model in self.get_relevant_models("GETUNITFORCE", self._models):
+            model.GETUNITFORCE(params, globdat)
 
     def run(self, globdat):
         dc = globdat[gn.DOFSPACE].dof_count()
-        model = globdat[gn.MODEL]
 
         globdat[gn.TIMESTEP] = self._step
         print("Running time step", self._step)
@@ -66,16 +69,19 @@ class ArclenModule(Module):
         iteration = 0
 
         # Advance to next time step
-        model.take_action(act.ADVANCE, params, globdat)
+        for model in self.get_relevant_models("ADVANCE", self._models):
+            model.ADVANCE(params, globdat)
 
         # Assemble K
-        model.take_action(act.GETMATRIX0, params, globdat)
+        for model in self.get_relevant_models("GETMATRIX0", self._models):
+            model.GETMATRIX0(params, globdat)
 
         # Assemble fext0
         fext0 = fhat * globdat[gn.LAMBDA] + self._fext0
 
         # Get constraints
-        model.take_action(act.GETCONSTRAINTS, params, globdat)
+        for model in self.get_relevant_models("GETCONSTRAINTS", self._models):
+            model.GETCONSTRAINTS(params, globdat)
         cdofs, cvals = c.get_constraints()
         fdofs = [i for i in range(dc) if i not in cdofs]
 
@@ -101,10 +107,15 @@ class ArclenModule(Module):
         # Initialize iteration loop
         while rel > self._tolerance and iteration < self._itermax:
             iteration += 1
+
             params[pn.MATRIX0] = np.zeros((dc, dc))
-            model.take_action(act.GETMATRIX0, params, globdat)
+            for model in self.get_relevant_models("GETMATRIX0", self._models):
+                model.GETMATRIX0(params, globdat)
+
             params[pn.INTFORCE] = np.zeros(dc)
-            model.take_action(act.GETINTFORCE, params, globdat)
+            for model in self.get_relevant_models("GETINTFORCE", self._models):
+                model.GETINTFORCE(params, globdat)
+
             fext = fext0 + Dlam * fhat
             r = fext - params[pn.INTFORCE]
 
@@ -132,7 +143,8 @@ class ArclenModule(Module):
 
         # Check commit
         params[pn.EXTFORCE] = self._fext0
-        model.take_action(act.CHECKCOMMIT, params, globdat)
+        for model in self.get_relevant_models("CHECKCOMMIT", self._models):
+            model.CHECKCOMMIT(params, globdat)
         self._fext0 = params[pn.EXTFORCE]
 
         # Only move to next time step if commit is accepted

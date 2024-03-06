@@ -18,20 +18,11 @@ __all__ = ["BarModel"]
 
 
 class BarModel(Model):
-    def take_action(self, action, params, globdat):
-        showmsg = True
+    def GETMATRIX0(self, params, globdat):
+        self._get_matrix(params, globdat)
 
-        if action == act.GETMATRIX0:
-            self._get_matrix(params, globdat)
-        elif action == act.GETMATRIX2:
-            self._get_mass_matrix(params, globdat)
-        else:
-            showmsg = False
-
-        verbose = params.get(pn.VERBOSE, True)
-
-        if showmsg and verbose:
-            print("BarModel taking action", action)
+    def GETMATRIX2(self, params, globdat):
+        self._get_mass_matrix(params, globdat)
 
     def configure(self, props, globdat):
         # This function gets only the core values from props

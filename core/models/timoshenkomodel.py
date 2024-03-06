@@ -17,18 +17,8 @@ __all__ = ["TimoshenkoModel"]
 
 
 class TimoshenkoModel(Model):
-    def take_action(self, action, params, globdat):
-        showmsg = True
-
-        if action == act.GETMATRIX0:
-            self.__stiffness(params, globdat)
-        else:
-            showmsg = False
-
-        verbose = params.get(pn.VERBOSE, True)
-
-        if showmsg and verbose:
-            print("TimoshenkoModel taking action", action)
+    def GETMATRIX0(self, params, globdat):
+        self._get_matrix(params, globdat)
 
     def configure(self, props, globdat):
         self._EI = float(props[EI])
@@ -52,7 +42,7 @@ class TimoshenkoModel(Model):
             for node in nodes:
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
-    def __stiffness(self, params, globdat):
+    def _get_matrix(self, params, globdat):
         for ielem in self._ielems:
             inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)

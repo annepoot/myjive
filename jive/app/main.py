@@ -18,7 +18,6 @@ def jive(props, extra_declares=None):
     # Build main Module chain
     print("Initializing module chain...")
     modulefac = globdat[gn.MODULEFACTORY]
-    modelfac = globdat[gn.MODELFACTORY]
 
     chain = []
 
@@ -32,8 +31,6 @@ def jive(props, extra_declares=None):
         # If it refers to a module (and not to a model), add it to the chain
         if modulefac.is_module(typ):
             chain.append(modulefac.get_module(typ, name))
-        elif not modelfac.is_model(typ):
-            raise ValueError("%s is neither a module nor a model" % typ)
 
     # Initialize chain
     for module in chain:

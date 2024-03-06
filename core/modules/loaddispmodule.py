@@ -34,7 +34,7 @@ class LoadDispModule(Module):
         globdat[self._name] = mydata
 
     def run(self, globdat):
-        model = globdat[gn.MODEL]
+        models = globdat[gn.MODELS]
         nodes = globdat[gn.NSET]
         disp = globdat[gn.STATE0]
         dofs = globdat[gn.DOFSPACE]
@@ -45,7 +45,9 @@ class LoadDispModule(Module):
 
         params = {}
         params[pn.INTFORCE] = fint
-        model.take_action(act.GETINTFORCE, params, globdat)
+
+        for model in self.get_relevant_models("GETINTFORCE", models):
+            model.GETINTFORCE(params, globdat)
 
         for group in self._groups:
             for typ in types:

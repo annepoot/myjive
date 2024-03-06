@@ -29,8 +29,16 @@ class Model:
             name = name[:-5]
         factory.declare_model(name, cls)
 
+    def list_actions(self):
+        action_list = []
+        for func in dir(self):
+            if callable(getattr(self, func)):
+                if not func.startswith("_") and func == func.upper():
+                    action_list.append(func)
+        return action_list
+
     def take_action(self, action, params, globdat):
-        print("Empty model takeAction")
+        raise (NotImplementedError, "take_action has been deprecated!")
 
     def configure(self, props, globdat):
         print("Empty model configure")

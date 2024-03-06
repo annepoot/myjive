@@ -2,7 +2,7 @@ __all__ = ["GlobNames"]
 
 
 class GlobNames:
-    MODEL = "model"
+    MODELS = "model"
     DOFSPACE = "dofSpace"
     MESHSHAPE = "meshShape"
     MESHRANK = "meshRank"

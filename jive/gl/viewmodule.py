@@ -5,7 +5,6 @@ import matplotlib.tri as tri
 from jive.app import Module
 from jive.names import GlobNames as gn
 from jive.names import ParamNames as pn
-from jive.names import Actions as act
 from jive.util import Table, to_xtable
 
 LINEWIDTH = "linewidth"

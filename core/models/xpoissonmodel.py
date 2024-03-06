@@ -1,5 +1,3 @@
-from jive.names import Actions as act
-from jive.names import ParamNames as pn
 from jive.names import GlobNames as gn
 from .poissonmodel import PoissonModel
 import jive.util.proputils as pu

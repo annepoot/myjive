@@ -5,7 +5,6 @@ import scipy.sparse.linalg as linalg
 
 from jive.names import GlobNames as gn
 from jive.names import ParamNames as pn
-from jive.names import Actions as act
 from jive.app import Module
 from jive.solver import Constrainer
 

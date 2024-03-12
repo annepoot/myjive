@@ -34,11 +34,11 @@ class ElasticModel(Model):
         f_ext = self._get_body_force(f_ext, globdat, **kwargs)
         return f_ext
 
-    def GETTABLE(self, name, table, tbwts, globdat):
+    def GETTABLE(self, name, table, tbwts, globdat, **kwargs):
         if "stress" in name:
-            table, tbwts = self._get_stresses(table, tbwts, globdat)
+            table, tbwts = self._get_stresses(table, tbwts, globdat, **kwargs)
         elif "strain" in name:
-            table, tbwts = self._get_strains(table, tbwts, globdat)
+            table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
     def configure(self, props, globdat):

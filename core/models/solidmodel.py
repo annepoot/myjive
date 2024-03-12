@@ -34,15 +34,15 @@ class SolidModel(Model):
         B, wts = self._get_strain_matrix(B, wts, globdat, **kwargs)
         return B, wts
 
-    def GETTABLE(self, name, table, tbwts, globdat):
+    def GETTABLE(self, name, table, tbwts, globdat, **kwargs):
         if "stress" in name:
-            table, tbwts = self._get_stresses(table, tbwts, globdat)
+            table, tbwts = self._get_stresses(table, tbwts, globdat, **kwargs)
         elif "strain" in name:
-            table, tbwts = self._get_strains(table, tbwts, globdat)
+            table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
         elif "stiffness" in name:
-            table, tbwts = self._get_stiffness(table, tbwts, globdat)
+            table, tbwts = self._get_stiffness(table, tbwts, globdat, **kwargs)
         elif "size" in name:
-            table, tbwts = self._get_elem_size(table, tbwts, globdat)
+            table, tbwts = self._get_elem_size(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
     def configure(self, props, globdat):

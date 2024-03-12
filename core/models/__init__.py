@@ -6,6 +6,3 @@ from .neumannmodel import *
 from .poissonmodel import *
 from .solidmodel import *
 from .timoshenkomodel import *
-from .xbarmodel import *
-from .xelasticmodel import *
-from .xpoissonmodel import *

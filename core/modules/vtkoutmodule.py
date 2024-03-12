@@ -2,9 +2,8 @@ import numpy as np
 
 from jive.app import Module
 from jive.names import GlobNames as gn
-from jive.names import ParamNames as pn
 import jive.util.proputils as pu
-from jive.util import Table, to_xtable
+from jive.util import to_xtable
 
 FILENAME = "file"
 TABLES = "tables"

@@ -1,6 +1,5 @@
 import numpy as np
 
-from jive.names import ParamNames as pn
 from jive.names import GlobNames as gn
 from jive.model.model import Model
 
@@ -19,8 +18,8 @@ class DirichletModel(Model):
         c = self._get_constraints(c, globdat, **kwargs)
         return c
 
-    def ADVANCE(self, params, globdat):
-        self._advance_step_constraints(params, globdat)
+    def ADVANCE(self, globdat):
+        self._advance_step_constraints(globdat)
 
     def configure(self, props, globdat):
         self._groups = pu.parse_list(props[GROUPS])
@@ -40,7 +39,7 @@ class DirichletModel(Model):
                 c.add_dirichlet(idof, val)
         return c
 
-    def _advance_step_constraints(self, params, globdat):
+    def _advance_step_constraints(self, globdat):
         self._vals = np.array(self._initDisp) + globdat[gn.TIMESTEP] * np.array(
             self._dispIncr
         )

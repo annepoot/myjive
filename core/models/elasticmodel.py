@@ -1,6 +1,5 @@
 import numpy as np
 
-from jive.names import ParamNames as pn
 from jive.names import GlobNames as gn
 from jive.model.model import Model
 from jive.util import Table, to_xtable

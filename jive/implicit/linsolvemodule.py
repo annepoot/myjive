@@ -47,9 +47,9 @@ class LinsolveModule(SolverModule):
         print("Running LinsolverModule")
         globdat[gn.TIMESTEP] = 1
 
-        K, _ = self.update_matrix(globdat)
+        K = self.update_matrix(globdat)
         f = self.get_ext_vector(globdat)
-        c = self.update_constraints(K, globdat)
+        c = self.update_constraints(globdat)
 
         # Optionally get the mass matrix
         if self._get_mass_matrix:
@@ -113,64 +113,57 @@ class LinsolveModule(SolverModule):
         pass
 
     def get_ext_vector(self, globdat):
-        f_ext = np.zeros(self._dc)
-        params = {pn.EXTFORCE: f_ext}
+        f_ext = None
 
         for model in self.get_relevant_models("GETEXTFORCE", self._models):
-            model.GETEXTFORCE(params, globdat)
+            f_ext = model.GETEXTFORCE(f_ext, globdat)
 
         return f_ext
 
     def get_neumann_vector(self, globdat):
-        f_neum = np.zeros(self._dc)
-        params = {pn.NEUMANNFORCE: f_neum}
+        f_neum = None
 
         for model in self.get_relevant_models("GETNEUMANNFORCE", self._models):
-            model.GETNEUMANNFORCE(params, globdat)
+            f_neum = model.GETNEUMANNFORCE(f_neum, globdat)
 
         return f_neum
 
     def update_matrix(self, globdat):
-        params = {}
-        params[pn.MATRIX0] = self._get_empty_matrix(globdat)
-        params[pn.INTFORCE] = np.zeros(self._dc)
+        K = self._get_empty_matrix(globdat)
 
         for model in self.get_relevant_models("GETMATRIX0", self._models):
-            model.GETMATRIX0(params, globdat)
+            K = model.GETMATRIX0(K, globdat)
 
-        return params[pn.MATRIX0], params[pn.INTFORCE]
+        return K
 
     def update_mass_matrix(self, globdat):
-        params = {}
-        params[pn.MATRIX2] = self._get_empty_matrix(globdat)
+        M = self._get_empty_matrix(globdat)
 
         for model in self.get_relevant_models("GETMATRIX2", self._models):
-            model.GETMATRIX2(params, globdat)
+            M = model.GETMATRIX2(M, globdat)
 
-        return params[pn.MATRIX2]
+        return M
 
     def update_strain_matrix(self, globdat):
-        params = {}
-        params[pn.MATRIXB] = self._get_empty_bmatrix(globdat)
-        params[pn.TABLEWEIGHTS] = np.zeros(params[pn.MATRIXB].shape[0])
+        B = self._get_empty_bmatrix(globdat)
+        wts = np.zeros(B.shape[0])
 
         for model in self.get_relevant_models("GETMATRIXB", self._models):
-            model.GETMATRIXB(params, globdat)
+            B, wts = model.GETMATRIXB(B, wts, globdat)
 
         # Divide non-zero entries by weights
-        str_indices, dof_indices = params[pn.MATRIXB].nonzero()
+        str_indices, dof_indices = B.nonzero()
         for i, str_idx in enumerate(str_indices):
             dof_idx = dof_indices[i]
-            params[pn.MATRIXB][str_idx, dof_idx] /= params[pn.TABLEWEIGHTS][str_idx]
+            B[str_idx, dof_idx] /= wts[str_idx]
 
-        return params[pn.MATRIXB]
+        return B
 
-    def update_constraints(self, K, globdat):
+    def update_constraints(self, globdat):
         c = Constraints()
-        params = {pn.CONSTRAINTS: c}
 
         for model in self.get_relevant_models("GETCONSTRAINTS", self._models):
-            model.GETCONSTRAINTS(params, globdat)
+            c = model.GETCONSTRAINTS(c, globdat)
 
         return c
 

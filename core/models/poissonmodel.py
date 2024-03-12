@@ -16,11 +16,13 @@ __all__ = ["PoissonModel"]
 
 
 class PoissonModel(Model):
-    def GETMATRIX0(self, params, globdat):
-        self._get_matrix(params, globdat)
+    def GETMATRIX0(self, K, globdat, **kwargs):
+        K = self._get_matrix(K, globdat, **kwargs)
+        return K
 
-    def GETMATRIX2(self, params, globdat):
-        self._get_mass_matrix(params, globdat)
+    def GETMATRIX2(self, M, globdat, **kwargs):
+        M = self._get_mass_matrix(M, globdat, **kwargs)
+        return M
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
@@ -60,7 +62,11 @@ class PoissonModel(Model):
             for inode in self._elems.get_unique_nodes_of(self._ielems):
                 globdat[gn.DOFSPACE].add_dof(inode, doftype)
 
-    def _get_matrix(self, params, globdat):
+    def _get_matrix(self, K, globdat):
+        if K is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            K = np.zeros((dc, dc))
+
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
@@ -76,20 +82,26 @@ class PoissonModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
-                D = self._get_D_matrix(ipcoords[:, ip])
+                B_elem = self._get_B_matrix(grads[:, :, ip])
+                D_elem = self._get_D_matrix(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
+                )
 
             # Add the element stiffness matrix to the global stiffness matrix
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            K[np.ix_(idofs, idofs)] += elmat
 
-    def _get_mass_matrix(self, params, globdat):
-        unit_matrix = params.get(pn.UNITMATRIX, False)
+        return K
+
+    def _get_mass_matrix(self, M, globdat, unit_matrix=False):
+        if M is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            M = np.zeros((dc, dc))
 
         if unit_matrix:
-            M = np.identity(1)
+            M_elem = np.identity(1)
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -107,16 +119,20 @@ class PoissonModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N = self._get_N_matrix(sfuncs[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[:, ip])
 
                 if not unit_matrix:
-                    M = self._get_M_matrix(ipcoords[:, ip])
+                    M_elem = self._get_M_matrix(ipcoords[:, ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
+                )
 
             # Add the element mass matrix to the global mass matrix
-            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+            M[np.ix_(idofs, idofs)] += elmat
+
+        return M
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((1, self._dofcount))

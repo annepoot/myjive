@@ -22,14 +22,17 @@ __all__ = ["ElasticModel"]
 
 
 class ElasticModel(Model):
-    def GETMATRIX0(self, params, globdat):
-        self._get_matrix(params, globdat)
+    def GETMATRIX0(self, K, globdat, **kwargs):
+        K = self._get_matrix(K, globdat, **kwargs)
+        return K
 
-    def GETMATRIX2(self, params, globdat):
-        self._get_mass_matrix(params, globdat)
+    def GETMATRIX2(self, M, globdat, **kwargs):
+        M = self._get_mass_matrix(M, globdat, **kwargs)
+        return M
 
-    def GETEXTFORCE(self, params, globdat):
-        self._get_body_force(params, globdat)
+    def GETEXTFORCE(self, f_ext, globdat, **kwargs):
+        f_ext = self._get_body_force(f_ext, globdat, **kwargs)
+        return f_ext
 
     def GETTABLE(self, params, globdat):
         if "stress" in params[pn.TABLENAME]:
@@ -87,7 +90,11 @@ class ElasticModel(Model):
             for node in nodes:
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
-    def _get_matrix(self, params, globdat):
+    def _get_matrix(self, K, globdat):
+        if K is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            K = np.zeros((dc, dc))
+
         for elem in self._elems:
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
@@ -103,16 +110,24 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
-                D = self._get_D_matrix(ipcoords[:, ip])
+                B_elem = self._get_B_matrix(grads[:, :, ip])
+                D_elem = self._get_D_matrix(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
+                )
 
             # Add the element stiffness matrix to the global stiffness matrix
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            K[np.ix_(idofs, idofs)] += elmat
 
-    def _get_mass_matrix(self, params, globdat):
+        return K
+
+    def _get_mass_matrix(self, M, globdat):
+        if M is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            M = np.zeros((dc, dc))
+
         for elem in self._elems:
             # Get the nodal coordinates of each element
             inodes = elem.get_nodes()
@@ -129,16 +144,23 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N = self._get_N_matrix(sfuncs[:, ip])
-                M = self._get_M_matrix(ipcoords[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[:, ip])
+                M_elem = self._get_M_matrix(ipcoords[:, ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
+                )
 
             # Add the element mass matrix to the global mass matrix
-            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+            M[np.ix_(idofs, idofs)] += elmat
 
-    def _get_body_force(self, params, globdat):
+        return M
+
+    def _get_body_force(self, f_ext, globdat):
+        if f_ext is None:
+            f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
+
         if self._rank == 2:
             for elem in self._elems:
                 # Get the nodal coordinates of each element
@@ -163,10 +185,9 @@ class ElasticModel(Model):
                     elfor += weights[ip] * np.matmul(np.transpose(N), b)
 
                 # Add the element force vector to the global force vector
-                params[pn.EXTFORCE][idofs] += elfor
+                f_ext[idofs] += elfor
 
-        else:
-            pass
+        return f_ext
 
     def _get_strains(self, params, globdat):
         table = params[pn.TABLE]

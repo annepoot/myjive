@@ -10,10 +10,7 @@ from core.models import (
     NeumannModel,
     PoissonModel,
     SolidModel,
-    TimoshenkoModel,
-    XBarModel,
-    XElasticModel,
-    XPoissonModel,
+    TimoshenkoModel
 )
 
 from core.modules import VTKOutModule
@@ -30,9 +27,6 @@ def declare_models(globdat):
     SolidModel.declare(factory)
     TimoshenkoModel.declare(factory)
     LoadModel.declare(factory)
-    XBarModel.declare(factory)
-    XElasticModel.declare(factory)
-    XPoissonModel.declare(factory)
 
     globdat[gn.MODELFACTORY] = factory
 

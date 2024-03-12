@@ -16,8 +16,9 @@ __all__ = ["TimoshenkoModel"]
 
 
 class TimoshenkoModel(Model):
-    def GETMATRIX0(self, params, globdat):
-        self._get_matrix(params, globdat)
+    def GETMATRIX0(self, K, globdat, **kwargs):
+        K = self._get_matrix(K, globdat, **kwargs)
+        return K
 
     def configure(self, props, globdat):
         self._EI = float(props[EI])
@@ -41,7 +42,11 @@ class TimoshenkoModel(Model):
             for node in nodes:
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
-    def _get_matrix(self, params, globdat):
+    def _get_matrix(self, K, globdat):
+        if K is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            K = np.zeros((dc, dc))
+
         for ielem in self._ielems:
             inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES)
@@ -69,4 +74,6 @@ class TimoshenkoModel(Model):
                     + np.matmul(B_v.transpose() * self._GAs, B_v)
                 )
 
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            K[np.ix_(idofs, idofs)] += elmat
+
+        return K

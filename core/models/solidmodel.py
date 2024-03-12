@@ -22,14 +22,17 @@ __all__ = ["SolidModel"]
 
 
 class SolidModel(Model):
-    def GETMATRIX0(self, params, globdat):
-        self._get_matrix(params, globdat)
+    def GETMATRIX0(self, K, globdat, **kwargs):
+        K = self._get_matrix(K, globdat, **kwargs)
+        return K
 
-    def GETMATRIX2(self, params, globdat):
-        self._get_mass_matrix(params, globdat)
+    def GETMATRIX2(self, M, globdat, **kwargs):
+        M = self._get_mass_matrix(M, globdat, **kwargs)
+        return M
 
-    def GETMATRIXB(self, params, globdat):
-        self._get_strain_matrix(params, globdat)
+    def GETMATRIXB(self, B, wts, globdat, **kwargs):
+        B, wts = self._get_strain_matrix(B, wts, globdat, **kwargs)
+        return B, wts
 
     def GETTABLE(self, params, globdat):
         if "stress" in params[pn.TABLENAME]:
@@ -77,11 +80,13 @@ class SolidModel(Model):
             for inode in self._elems.get_unique_nodes_of(self._ielems):
                 globdat[gn.DOFSPACE].add_dof(inode, doftype)
 
-    def _get_matrix(self, params, globdat):
-        unit_matrix = params.get(pn.UNITMATRIX, False)
+    def _get_matrix(self, K, globdat, unit_matrix=False):
+        if K is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            K = np.zeros((dc, dc))
 
         if unit_matrix:
-            D = np.identity(self._rank)
+            D_elem = np.identity(self._rank)
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -101,22 +106,28 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
+                B_elem = self._get_B_matrix(grads[:, :, ip])
 
                 if not unit_matrix:
-                    D = self._mat.stiff_at_point(ipcoords[:, ip])
+                    D_elem = self._mat.stiff_at_point(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(np.transpose(B), np.matmul(D, B))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
+                )
 
             # Add the element stiffness matrix to the global stiffness matrix
-            params[pn.MATRIX0][np.ix_(idofs, idofs)] += elmat
+            K[np.ix_(idofs, idofs)] += elmat
 
-    def _get_mass_matrix(self, params, globdat):
-        unit_matrix = params.get(pn.UNITMATRIX, False)
+        return K
+
+    def _get_mass_matrix(self, M, globdat, unit_matrix=False):
+        if M is None:
+            dc = globdat[gn.DOFSPACE].dof_count()
+            M = np.zeros((dc, dc))
 
         if unit_matrix:
-            M = np.identity(self._rank)
+            M_elem = np.identity(self._rank)
 
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
@@ -137,18 +148,22 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N = self._get_N_matrix(sfuncs[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[:, ip])
 
                 if not unit_matrix:
-                    M = self._mat.mass_at_point(ipcoords[:, ip])
+                    M_elem = self._mat.mass_at_point(ipcoords[:, ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(np.transpose(N), np.matmul(M, N))
+                elmat += weights[ip] * np.matmul(
+                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
+                )
 
             # Add the element mass matrix to the global mass matrix
-            params[pn.MATRIX2][np.ix_(idofs, idofs)] += elmat
+            M[np.ix_(idofs, idofs)] += elmat
 
-    def _get_strain_matrix(self, params, globdat):
+        return M
+
+    def _get_strain_matrix(self, B, wts, globdat):
         # Add the element weights to the global weights
         nc = self._nodes.size()
         node_count = self._shape.node_count()
@@ -169,12 +184,12 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
+                B_elem = self._get_B_matrix(grads[:, :, ip])
 
                 # Compute the element strain and weights
                 for i in range(self._strcount):
                     elbmat[i * node_count : (i + 1) * node_count, :] += np.outer(
-                        sfuncs[:, ip], B[i, :]
+                        sfuncs[:, ip], B_elem[i, :]
                     )
                     elwts[i * node_count : (i + 1) * node_count] += sfuncs[
                         :, ip
@@ -186,10 +201,12 @@ class SolidModel(Model):
                 node_idx[i * node_count : (i + 1) * node_count] = inodes + nc * i
 
             # Add the element strain matrix to the global strain matrix
-            params[pn.MATRIXB][np.ix_(node_idx, idofs)] += elbmat
+            B[np.ix_(node_idx, idofs)] += elbmat
 
             # Add the element weights to the global weights
-            params[pn.TABLEWEIGHTS][node_idx] += elwts
+            wts[node_idx] += elwts
+
+        return B, wts
 
     def _get_strains(self, params, globdat):
         table = params[pn.TABLE]

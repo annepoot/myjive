@@ -16,8 +16,9 @@ __all__ = ["LoadModel"]
 
 
 class LoadModel(Model):
-    def GETEXTFORCE(self, params, globdat):
-        self._get_body_force(params, globdat)
+    def GETEXTFORCE(self, f_ext, globdat, **kwargs):
+        f_ext = self._get_body_force(f_ext, globdat, **kwargs)
+        return f_ext
 
     def configure(self, props, globdat):
         # Get shape and element info
@@ -51,7 +52,10 @@ class LoadModel(Model):
         self._loadcount = len(self._doftypes)
         self._dofcount = self._loadcount * self._shape.node_count()
 
-    def _get_body_force(self, params, globdat):
+    def _get_body_force(self, f_ext, globdat):
+        if f_ext is None:
+            f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
+
         for ielem in self._ielems:
             # Get the nodal coordinates of each element
             inodes = self._elems.get_elem_nodes(ielem)
@@ -75,7 +79,9 @@ class LoadModel(Model):
                 elfor += weights[ip] * np.matmul(np.transpose(N), b)
 
             # Add the element force vector to the global force vector
-            params[pn.EXTFORCE][idofs] += elfor
+            f_ext[idofs] += elfor
+
+        return f_ext
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._loadcount, self._dofcount))

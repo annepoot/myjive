@@ -1,6 +1,5 @@
 import numpy as np
 
-from jive.names import ParamNames as pn
 from jive.names import GlobNames as gn
 from jive.model.model import Model
 
@@ -31,8 +30,8 @@ class NeumannModel(Model):
         f_unit = self._get_unit_force(f_unit, globdat, **kwargs)
         return f_unit
 
-    def ADVANCE(self, params, globdat):
-        self._advance_step(params, globdat)
+    def ADVANCE(self, globdat):
+        self._advance_step(globdat)
 
     def configure(self, props, globdat):
         self._groups = pu.parse_list(props[GROUPS])
@@ -88,7 +87,7 @@ class NeumannModel(Model):
 
         return f_unit
 
-    def _advance_step(self, params, globdat):
+    def _advance_step(self, globdat):
         self._vals = np.array(self._initLoad) + globdat[gn.TIMESTEP] * np.array(
             self._loadIncr
         )

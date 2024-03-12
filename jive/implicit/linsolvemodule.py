@@ -2,12 +2,11 @@ import numpy as np
 import scipy.sparse as spsp
 
 from jive.names import GlobNames as gn
-from jive.names import ParamNames as pn
 
 import jive.util.proputils as pu
 from .solvermodule import SolverModule
 from jive.solver import Constraints
-from jive.util import Table, to_xtable
+from jive.util import to_xtable
 
 SOLVER = "solver"
 PRECONDITIONER = "preconditioner"

@@ -118,28 +118,23 @@ class VTKOutModule(Module):
         pass
 
     def _write_tables(self, table_names, globdat):
-        nodecount = len(globdat[gn.NSET])
         models = globdat[gn.MODELS]
 
         if gn.TABLES not in globdat:
             globdat[gn.TABLES] = {}
 
         for name in table_names:
-            params = {}
-            params[pn.TABLE] = Table(size=nodecount)
-            params[pn.TABLENAME] = name
-            params[pn.TABLEWEIGHTS] = np.zeros(nodecount)
+            table = None
+            tbwts = None
 
             for model in self.get_relevant_models("GETTABLE", models):
-                model.GETTABLE(params, globdat)
+                table, tbwts = model.GETTABLE(name, table, tbwts, globdat)
 
-            to_xtable(params[pn.TABLE])
+            to_xtable(table)
 
-            for jcol in range(params[pn.TABLE].column_count()):
-                values = params[pn.TABLE].get_col_values(None, jcol)
-                params[pn.TABLE].set_col_values(
-                    None, jcol, values / params[pn.TABLEWEIGHTS]
-                )
+            for jcol in range(table.column_count()):
+                values = table.get_col_values(None, jcol)
+                table.set_col_values(None, jcol, values / tbwts)
 
-            params[pn.TABLE].to_table()
-            globdat[gn.TABLES][name] = params[pn.TABLE]
+            table.to_table()
+            globdat[gn.TABLES][name] = table

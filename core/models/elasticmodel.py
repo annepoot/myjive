@@ -3,7 +3,7 @@ import numpy as np
 from jive.names import ParamNames as pn
 from jive.names import GlobNames as gn
 from jive.model.model import Model
-from jive.util import to_xtable
+from jive.util import Table, to_xtable
 
 ELEMENTS = "elements"
 YOUNG = "young"
@@ -34,11 +34,12 @@ class ElasticModel(Model):
         f_ext = self._get_body_force(f_ext, globdat, **kwargs)
         return f_ext
 
-    def GETTABLE(self, params, globdat):
-        if "stress" in params[pn.TABLENAME]:
-            self._get_stresses(params, globdat)
-        elif "strain" in params[pn.TABLENAME]:
-            self._get_strains(params, globdat)
+    def GETTABLE(self, name, table, tbwts, globdat):
+        if "stress" in name:
+            table, tbwts = self._get_stresses(table, tbwts, globdat)
+        elif "strain" in name:
+            table, tbwts = self._get_strains(table, tbwts, globdat)
+        return table, tbwts
 
     def configure(self, props, globdat):
         # This function gets only the core values from props
@@ -189,18 +190,23 @@ class ElasticModel(Model):
 
         return f_ext
 
-    def _get_strains(self, params, globdat):
-        table = params[pn.TABLE]
-        tbwts = params[pn.TABLEWEIGHTS]
+    def _get_strains(self, table, tbwts, globdat, solution=None):
+        if table is None:
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+
+        if tbwts is None:
+            nodecount = len(globdat[gn.NSET])
+            tbwts = np.zeros(nodecount)
 
         # Convert the table to an XTable and store the original class
         xtable = to_xtable(table)
 
         # Get the STATE0 vector if no custom displacement field is provided
-        if pn.SOLUTION in params:
-            disp = params[pn.SOLUTION]
-        else:
+        if solution is None:
             disp = globdat[gn.STATE0]
+        else:
+            disp = solution
 
         # Add the columns of all stress components to the table
         if self._rank == 1:
@@ -246,20 +252,27 @@ class ElasticModel(Model):
             xtable.add_block(inodes, jcols, eleps)
 
         # Convert the table back to the original class
-        params[pn.TABLE] = xtable.to_table()
+        table = xtable.to_table()
 
-    def _get_stresses(self, params, globdat):
-        table = params[pn.TABLE]
-        tbwts = params[pn.TABLEWEIGHTS]
+        return table, tbwts
+
+    def _get_stresses(self, table, tbwts, globdat, solution=None):
+        if table is None:
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+
+        if tbwts is None:
+            nodecount = len(globdat[gn.NSET])
+            tbwts = np.zeros(nodecount)
 
         # Convert the table to an XTable and store the original class
         xtable = to_xtable(table)
 
         # Get the STATE0 vector if no custom displacement field is provided
-        if pn.SOLUTION in params:
-            disp = params[pn.SOLUTION]
-        else:
+        if solution is None:
             disp = globdat[gn.STATE0]
+        else:
+            disp = solution
 
         # Add the columns of all stress components to the table
         if self._rank == 1:
@@ -310,7 +323,9 @@ class ElasticModel(Model):
             xtable.add_block(inodes, jcols, elsig)
 
         # Convert the table back to the original class
-        params[pn.TABLE] = xtable.to_table()
+        table = xtable.to_table()
+
+        return table, tbwts
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._rank, self._dofcount))

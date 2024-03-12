@@ -16,12 +16,7 @@ from core.models import (
     XPoissonModel,
 )
 
-from core.modules import (
-    NonlinModule,
-    VTKOutModule,
-    LinBuckModule,
-    LoadDispModule,
-)
+from core.modules import VTKOutModule
 
 
 def declare_models(globdat):
@@ -45,9 +40,6 @@ def declare_models(globdat):
 def declare_modules(globdat):
     factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
-    NonlinModule.declare(factory)
     VTKOutModule.declare(factory)
-    LinBuckModule.declare(factory)
-    LoadDispModule.declare(factory)
 
     globdat[gn.MODULEFACTORY] = factory

@@ -1,8 +1,7 @@
 from jive.names import GlobNames as gn
 
 from jive.app import ModuleFactory, InitModule, OutputModule
-from jive.gl import FrameViewModule, GraphModule, ViewModule
-from jive.implicit import ArclenModule, LinsolveModule, SolverModule
+from jive.implicit import LinsolveModule, SolverModule
 from jive.model import ModelFactory
 from jive.solver import (
     SolverFactory,
@@ -52,10 +51,6 @@ def declare_modules(globdat):
     InitModule.declare(factory)
 
     OutputModule.declare(factory)
-    FrameViewModule.declare(factory)
-    GraphModule.declare(factory)
-    ViewModule.declare(factory)
-    ArclenModule.declare(factory)
     LinsolveModule.declare(factory)
     SolverModule.declare(factory)
 

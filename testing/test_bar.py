@@ -8,10 +8,10 @@ if rootdir not in sys.path:
 
 import numpy as np
 
-import jive.util.proputils as pu
-from jive.app import main
-from jive.solver import Constrainer
-from core import declare_all as declare_core
+import myjive.util.proputils as pu
+from myjive.app import main
+from myjive.solver import Constrainer
+from myjivex import declare_all as declarex
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +56,7 @@ def test_lin(props):
 
     mesher_lin(10, 64)
 
-    globdat = main.jive(props, extra_declares=[declare_core])
+    globdat = main.jive(props, extra_declares=[declarex])
 
     elems = globdat["elemSet"]
     nodes = globdat["nodeSet"]
@@ -92,7 +92,7 @@ def test_quad(props):
     props["model"]["bar"]["shape"]["intScheme"] = "Gauss3"
     mesher_quad(10, 64)
 
-    globdat = main.jive(props, extra_declares=[declare_core])
+    globdat = main.jive(props, extra_declares=[declarex])
 
     elems = globdat["elemSet"]
     nodes = globdat["nodeSet"]

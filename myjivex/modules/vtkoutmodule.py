@@ -1,9 +1,9 @@
 import numpy as np
 
-from jive.app import Module
-from jive.names import GlobNames as gn
-import jive.util.proputils as pu
-from jive.util import to_xtable
+from myjive.app import Module
+from myjive.names import GlobNames as gn
+import myjive.util.proputils as pu
+from myjive.util import to_xtable
 
 FILENAME = "file"
 TABLES = "tables"

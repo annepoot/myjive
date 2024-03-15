@@ -1,6 +1,6 @@
-from jive.names import GlobNames as gn
-from jive.app import ModuleFactory
-from jive.model import ModelFactory
+from myjive.names import GlobNames as gn
+from myjive.app import ModuleFactory
+from myjive.model import ModelFactory
 
 from .models import (
     BarModel,

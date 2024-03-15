@@ -1,8 +1,8 @@
 import numpy as np
 
-from jive.names import GlobNames as gn
-from jive.model.model import Model
-import jive.util.proputils as pu
+from myjive.names import GlobNames as gn
+from myjive.model.model import Model
+import myjive.util.proputils as pu
 
 ELEMENTS = "elements"
 SHAPE = "shape"

@@ -1,26 +1,26 @@
 import numpy as np
 
-from jive.names import GlobNames as gn
-from jive.model.model import Model
-from jive.util import Table, to_xtable
+from myjive.names import GlobNames as gn
+from myjive.model.model import Model
+from ..materials import new_material
+import myjive.util.proputils as pu
+from myjive.util import Table, to_xtable
+
+from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
 ELEMENTS = "elements"
-YOUNG = "young"
 RHO = "rho"
-THICKNESS = "thickness"
-POISSON = "poisson"
 SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
-STATE = "state"
 DOFTYPES = ["dx", "dy", "dz"]
-PE_STATE = "plane_strain"
-PS_STATE = "plane_stress"
+MATERIAL = "material"
+THICKNESS_PROP = "thickness"
 
-__all__ = ["ElasticModel"]
+__all__ = ["SolidModel"]
 
 
-class ElasticModel(Model):
+class SolidModel(Model):
     def GETMATRIX0(self, K, globdat, **kwargs):
         K = self._get_matrix(K, globdat, **kwargs)
         return K
@@ -29,33 +29,26 @@ class ElasticModel(Model):
         M = self._get_mass_matrix(M, globdat, **kwargs)
         return M
 
-    def GETEXTFORCE(self, f_ext, globdat, **kwargs):
-        f_ext = self._get_body_force(f_ext, globdat, **kwargs)
-        return f_ext
+    def GETMATRIXB(self, B, wts, globdat, **kwargs):
+        B, wts = self._get_strain_matrix(B, wts, globdat, **kwargs)
+        return B, wts
 
     def GETTABLE(self, name, table, tbwts, globdat, **kwargs):
         if "stress" in name:
             table, tbwts = self._get_stresses(table, tbwts, globdat, **kwargs)
         elif "strain" in name:
             table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
+        elif "stiffness" in name:
+            table, tbwts = self._get_stiffness(table, tbwts, globdat, **kwargs)
+        elif "size" in name:
+            table, tbwts = self._get_elem_size(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
     def configure(self, props, globdat):
-        # This function gets only the core values from props
-
-        # Get basic parameter values
-        self._young = float(props[YOUNG])
-        self._rho = float(props.get(RHO, 0))
-
-        if globdat[gn.MESHRANK] > 1:
-            self._poisson = float(props[POISSON])
-        if globdat[gn.MESHRANK] == 2:
-            self._thickness = float(props.get(THICKNESS, 1))
-            self._state = props[STATE]
-            if not self._state in (PE_STATE, PS_STATE):
-                raise RuntimeError(
-                    "ElasticModel: state in 2d should be plane_strain or plane_stress"
-                )
+        # Configure the material
+        matprops = props[MATERIAL]
+        self._mat = new_material(matprops)
+        self._mat.configure(matprops, globdat)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
@@ -70,34 +63,34 @@ class ElasticModel(Model):
         if self._shape.global_rank() != globdat[gn.MESHRANK]:
             raise RuntimeError("ElasticModel: Shape rank must agree with mesh rank")
 
-        # The rest of the configuration happens in configure_noprops
-        self._configure_noprops(globdat)
-
-    def _configure_noprops(self, globdat):
-        # This function gets additional info from self and globdat
-        # It has been split off from configure() to allow it to be used in inherited classes as well.
-
         # Get basic dimensionality info
         self._rank = self._shape.global_rank()
         self._ipcount = self._shape.ipoint_count()
         self._dofcount = self._rank * self._shape.node_count()
         self._strcount = self._rank * (self._rank + 1) // 2  # 1-->1, 2-->3, 3-->6
 
+        self._thickness = 1.0
+        if self._rank == 2:
+            self._thickness = props.get(THICKNESS_PROP, self._thickness)
+            self._thickness = pu.soft_cast(self._thickness, float)
+
         # Create a new dof for every node and dof type
-        nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
         for doftype in DOFTYPES[0 : self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
-                globdat[gn.DOFSPACE].add_dof(node, doftype)
+            for inode in self._elems.get_unique_nodes_of(self._ielems):
+                globdat[gn.DOFSPACE].add_dof(inode, doftype)
 
-    def _get_matrix(self, K, globdat):
+    def _get_matrix(self, K, globdat, unit_matrix=False):
         if K is None:
             dc = globdat[gn.DOFSPACE].dof_count()
             K = np.zeros((dc, dc))
 
-        for elem in self._elems:
+        if unit_matrix:
+            D_elem = np.identity(self._rank)
+
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -105,13 +98,18 @@ class ElasticModel(Model):
             grads, weights = self._shape.get_shape_gradients(coords)
             ipcoords = self._shape.get_global_integration_points(coords)
 
+            if self._rank == 2 and not unit_matrix:
+                weights *= self._thickness
+
             # Reset the element stiffness matrix
             elmat = np.zeros((self._dofcount, self._dofcount))
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
                 B_elem = self._get_B_matrix(grads[:, :, ip])
-                D_elem = self._get_D_matrix(ipcoords[:, ip])
+
+                if not unit_matrix:
+                    D_elem = self._mat.stiff_at_point(ipcoords[:, ip])
 
                 # Compute the element stiffness matrix
                 elmat += weights[ip] * np.matmul(
@@ -123,14 +121,17 @@ class ElasticModel(Model):
 
         return K
 
-    def _get_mass_matrix(self, M, globdat):
+    def _get_mass_matrix(self, M, globdat, unit_matrix=False):
         if M is None:
             dc = globdat[gn.DOFSPACE].dof_count()
             M = np.zeros((dc, dc))
 
-        for elem in self._elems:
+        if unit_matrix:
+            M_elem = np.identity(self._rank)
+
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -139,13 +140,18 @@ class ElasticModel(Model):
             weights = self._shape.get_integration_weights(coords)
             ipcoords = self._shape.get_global_integration_points(coords)
 
+            if self._rank == 2 and not unit_matrix:
+                weights *= self._thickness
+
             # Reset the element mass matrix
             elmat = np.zeros((self._dofcount, self._dofcount))
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
                 N_elem = self._get_N_matrix(sfuncs[:, ip])
-                M_elem = self._get_M_matrix(ipcoords[:, ip])
+
+                if not unit_matrix:
+                    M_elem = self._mat.mass_at_point(ipcoords[:, ip])
 
                 # Compute the element mass matrix
                 elmat += weights[ip] * np.matmul(
@@ -157,37 +163,50 @@ class ElasticModel(Model):
 
         return M
 
-    def _get_body_force(self, f_ext, globdat):
-        if f_ext is None:
-            f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
+    def _get_strain_matrix(self, B, wts, globdat):
+        # Add the element weights to the global weights
+        nc = self._nodes.size()
+        node_count = self._shape.node_count()
 
-        if self._rank == 2:
-            for elem in self._elems:
-                # Get the nodal coordinates of each element
-                inodes = elem.get_nodes()
-                idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
-                coords = self._nodes.get_some_coords(inodes)
+        for ielem in self._ielems:
+            # Get the nodal coordinates of each element
+            inodes = self._elems.get_elem_nodes(ielem)
+            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
+            coords = self._nodes.get_some_coords(inodes)
 
-                # Get the shape functions, weights and coordinates of each integration point
-                sfuncs = self._shape.get_shape_functions()
-                weights = self._shape.get_integration_weights(coords)
-                ipcoords = self._shape.get_global_integration_points(coords)
+            # Get the gradients, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            grads, weights = self._shape.get_shape_gradients(coords)
 
-                # Reset the element force vector
-                elfor = np.zeros(self._dofcount)
+            # Reset the element strain matrix
+            elbmat = np.zeros((node_count * self._strcount, self._dofcount))
+            elwts = np.zeros(node_count * self._strcount)
 
-                for ip in range(self._ipcount):
-                    # Get the N matrix and b vector for each integration point
-                    N = self._get_N_matrix(sfuncs[:, ip])
-                    b = self._get_b_vector(ipcoords[:, ip])
+            for ip in range(self._ipcount):
+                # Get the B and D matrices for each integration point
+                B_elem = self._get_B_matrix(grads[:, :, ip])
 
-                    # Compute the element force vector
-                    elfor += weights[ip] * np.matmul(np.transpose(N), b)
+                # Compute the element strain and weights
+                for i in range(self._strcount):
+                    elbmat[i * node_count : (i + 1) * node_count, :] += np.outer(
+                        sfuncs[:, ip], B_elem[i, :]
+                    )
+                    elwts[i * node_count : (i + 1) * node_count] += sfuncs[
+                        :, ip
+                    ].flatten()
 
-                # Add the element force vector to the global force vector
-                f_ext[idofs] += elfor
+            # Get the node index vector
+            node_idx = np.zeros(node_count * self._strcount, dtype=int)
+            for i in range(self._strcount):
+                node_idx[i * node_count : (i + 1) * node_count] = inodes + nc * i
 
-        return f_ext
+            # Add the element strain matrix to the global strain matrix
+            B[np.ix_(node_idx, idofs)] += elbmat
+
+            # Add the element weights to the global weights
+            wts[node_idx] += elwts
+
+        return B, wts
 
     def _get_strains(self, table, tbwts, globdat, solution=None):
         if table is None:
@@ -207,7 +226,7 @@ class ElasticModel(Model):
         else:
             disp = solution
 
-        # Add the columns of all stress components to the table
+        # Add the columns of all strain components to the table
         if self._rank == 1:
             jcols = xtable.add_columns(["xx"])
         elif self._rank == 2:
@@ -215,16 +234,15 @@ class ElasticModel(Model):
         elif self._rank == 3:
             jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
-        for elem in self._elems:
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
             # Get the shape functions, gradients, weights and coordinates of each integration point
             sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
-            ipcoords = self._shape.get_global_integration_points(coords)
 
             # Get the nodal displacements
             eldisp = disp[idofs]
@@ -281,9 +299,9 @@ class ElasticModel(Model):
         elif self._rank == 3:
             jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
-        for elem in self._elems:
+        for ielem in self._ielems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
+            inodes = self._elems.get_elem_nodes(ielem)
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -291,6 +309,9 @@ class ElasticModel(Model):
             sfuncs = self._shape.get_shape_functions()
             grads, weights = self._shape.get_shape_gradients(coords)
             ipcoords = self._shape.get_global_integration_points(coords)
+
+            if self._rank == 2:
+                weights *= self._thickness
 
             # Get the nodal displacements
             eldisp = disp[idofs]
@@ -300,16 +321,12 @@ class ElasticModel(Model):
             elwts = np.zeros(self._shape.node_count())
 
             for ip in range(self._ipcount):
-                # Get the B and D matrices for each integration point
+                # Get the B matrix for each integration point
                 B = self._get_B_matrix(grads[:, :, ip])
-                D = self._get_D_matrix(ipcoords[:, ip])
-
-                if self._rank == 2:
-                    D /= self._thickness
 
                 # Get the strain and stress of the element in the integration point
                 strain = np.matmul(B, eldisp)
-                stress = np.matmul(D, strain)
+                stress = self._mat.stress_at_point(strain, ipcoords[:, ip])
 
                 # Compute the element stress and weights
                 elsig += np.outer(sfuncs[:, ip], stress)
@@ -326,92 +343,102 @@ class ElasticModel(Model):
 
         return table, tbwts
 
+    def _get_stiffness(self, table, tbwts, globdat):
+        if table is None:
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+
+        if tbwts is None:
+            nodecount = len(globdat[gn.NSET])
+            tbwts = np.zeros(nodecount)
+
+        # Convert the table to an XTable and store the original class
+        xtable = to_xtable(table)
+
+        # Add the column of the Young's modulus to the table
+        jcol = xtable.add_column("")
+
+        for ielem in self._ielems:
+            # Get the nodal coordinates of each element
+            inodes = self._elems.get_elem_nodes(ielem)
+            coords = self._nodes.get_some_coords(inodes)
+
+            # Get the shape functions, gradients, weights and coordinates of each integration point
+            sfuncs = self._shape.get_shape_functions()
+            ipcoords = self._shape.get_global_integration_points(coords)
+
+            # Reset the element stress matrix and weights
+            elyoung = np.zeros((self._shape.node_count()))
+            elwts = np.zeros(self._shape.node_count())
+
+            for ip in range(self._ipcount):
+                # Get the stiffness in the integration point
+                E = self._mat._get_E(ipcoords[:, ip])
+
+                # Compute the element stiffness and weights
+                elyoung += E * sfuncs[:, ip]
+                elwts += sfuncs[:, ip].flatten()
+
+            # Add the element weights to the global weights
+            tbwts[inodes] += elwts
+
+            # Add the element stiffness to the global stiffness
+            xtable.add_col_values(inodes, jcol, elyoung)
+
+        # Convert the table back to the original class
+        table = xtable.to_table()
+
+        return table, tbwts
+
+    def _get_elem_size(self, table, tbwts, globdat):
+        if table is None:
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+
+        if tbwts is None:
+            nodecount = len(globdat[gn.NSET])
+            tbwts = np.zeros(nodecount)
+
+        # Convert the table to an XTable and store the original class
+        xtable = to_xtable(table)
+
+        # Add the columns of all stress components to the table
+        jcol = xtable.add_column("")
+
+        for ielem in self._ielems:
+            # Get the nodal coordinates of each element
+            inodes = self._elems.get_elem_nodes(ielem)
+            coords = self._nodes.get_some_coords(inodes)
+
+            # Compute the maximum edge length\
+            max_edge = 0.0
+            for i, inode in enumerate(inodes):
+                for j, jnode in enumerate(inodes):
+                    icoords = coords[:, i]
+                    jcoords = coords[:, j]
+                    edge = np.sqrt(np.sum((icoords - jcoords) ** 2))
+                    if edge > max_edge:
+                        max_edge = edge
+
+            # Reset the element size and weights
+            elsize = max_edge * np.ones(self._shape.node_count())
+            elwts = np.ones(self._shape.node_count())
+
+            # Add the element weights to the global weights
+            tbwts[inodes] += elwts
+
+            # Add the element stresses to the global stresses
+            xtable.add_col_values(inodes, jcol, elsize)
+
+        # Convert the table back to the original class
+        table = xtable.to_table()
+
+        return table, tbwts
+
     def _get_N_matrix(self, sfuncs):
-        N = np.zeros((self._rank, self._dofcount))
-        for i in range(self._rank):
-            N[i, i :: self._rank] = sfuncs.transpose()
-        return N
+        return get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
 
     def _get_B_matrix(self, grads):
-        B = np.zeros((self._strcount, self._dofcount))
-        if self._rank == 1:
-            B = grads.transpose()
-        elif self._rank == 2:
-            for inode in range(self._shape.node_count()):
-                i = 2 * inode
-                gi = grads[inode, :]
-                B[0:3, i : (i + 2)] = [[gi[0], 0.0], [0.0, gi[1]], [gi[1], gi[0]]]
-        elif self._rank == 3:
-            B = np.zeros((6, self._dofcount))
-            for inode in range(self._shape.node_count()):
-                i = 3 * inode
-                gi = grads[inode, :]
-                B[0:6, i : (i + 3)] = [
-                    [gi[0], 0.0, 0.0],
-                    [0.0, gi[1], 0.0],
-                    [0.0, 0.0, gi[2]],
-                    [gi[1], gi[0], 0.0],
-                    [0.0, gi[2], gi[1]],
-                    [gi[2], 0.0, gi[0]],
-                ]
-        return B
-
-    def _get_D_matrix(self, ipcoords):
-        D = np.zeros((self._strcount, self._strcount))
-        E = self._young
-        if self._rank == 1:
-            D[[0]] = E
-            return D
-        nu = self._poisson
-        g = 0.5 * E / (1.0 + nu)
-
-        if self._rank == 3:
-            a = E * (1.0 - nu) / ((1.0 + nu) * (1.0 - 2.0 * nu))
-            b = E * nu / ((1.0 + nu) * (1.0 - 2.0 * nu))
-            D[:, :] = [
-                [a, b, b, 0.0, 0.0, 0.0],
-                [b, a, b, 0.0, 0.0, 0.0],
-                [b, b, a, 0.0, 0.0, 0.0],
-                [0.0, 0.0, 0.0, g, 0.0, 0.0],
-                [0.0, 0.0, 0.0, 0.0, g, 0.0],
-                [0.0, 0.0, 0.0, 0.0, 0.0, g],
-            ]
-
-        elif self._rank == 2:
-            if self._state == PE_STATE:
-                a = E * (1.0 - nu) / ((1.0 + nu) * (1.0 - 2.0 * nu))
-                b = E * nu / ((1.0 + nu) * (1.0 - 2.0 * nu))
-                D[:, :] = [[a, b, 0.0], [b, a, 0.0], [0.0, 0.0, g]]
-            else:
-                assert self._state == PS_STATE
-                a = E / (1.0 - nu * nu)
-                b = a * nu
-                D[:, :] = [[a, b, 0.0], [b, a, 0.0], [0.0, 0.0, g]]
-
-            D *= self._thickness
-
-        return D
-
-    def _get_M_matrix(self, ipcoords):
-        M = self._rho * np.identity(self._rank)
-
-        if self._rank == 2:
-            M *= self._thickness
-
-        return M
-
-    def _get_b_vector(self, ipcoords):
-        if self._rank == 3:
-            gravity = np.array([0, -1, 0])
-            b = self._rho * gravity
-
-        elif self._rank == 2:
-            gravity = np.array([0, -1])
-            b = self._rho * self._thickness * gravity
-
-        else:
-            raise RuntimeError(
-                "ElasticModel: self weight can only be computed in 2d or 3d"
-            )
-
-        return b
+        return get_B_matrix_jit(
+            grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank
+        )

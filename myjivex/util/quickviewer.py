@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 
-from jive.names import GlobNames as gn
+from myjive.names import GlobNames as gn
 
 LINEWIDTH = "linewidth"
 PLOT = "plot"

@@ -1,9 +1,9 @@
-from jive.names import GlobNames as gn
+from .names import GlobNames as gn
 
-from jive.app import ModuleFactory, InitModule, OutputModule
-from jive.implicit import LinsolveModule, SolverModule
-from jive.model import ModelFactory
-from jive.solver import (
+from .app import ModuleFactory, InitModule, OutputModule
+from .implicit import LinsolveModule, SolverModule
+from .model import ModelFactory
+from .solver import (
     SolverFactory,
     CGSolver,
     CholmodSolver,
@@ -15,7 +15,7 @@ from jive.solver import (
     ICholPrecon,
     IdPrecon,
 )
-from jive.fem import (
+from .fem import (
     ShapeFactory,
     Tri3Shape,
     Tri6Shape,
@@ -25,10 +25,8 @@ from jive.fem import (
     Line3Shape,
 )
 
-import core.declare as core_declare
 
-
-def declare_all(globdat):
+def declare_all(globdat, extra_declares=[]):
     # Declare all standard jive models and modules in one go
     declare_models(globdat)
     declare_modules(globdat)
@@ -37,12 +35,14 @@ def declare_all(globdat):
     declare_shapes(globdat)
 
     # Declare all custom models and modules as well
-    core_declare.declare_models(globdat)
-    core_declare.declare_modules(globdat)
+    for extra_declare in extra_declares:
+        extra_declare(globdat)
 
 
 def declare_models(globdat):
-    pass
+    factory = globdat.get(gn.MODELFACTORY, ModelFactory())
+
+    globdat[gn.MODELFACTORY] = factory
 
 
 def declare_modules(globdat):

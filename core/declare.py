@@ -2,7 +2,7 @@ from jive.names import GlobNames as gn
 from jive.app import ModuleFactory
 from jive.model import ModelFactory
 
-from core.models import (
+from .models import (
     BarModel,
     DirichletModel,
     ElasticModel,
@@ -13,7 +13,15 @@ from core.models import (
     TimoshenkoModel
 )
 
-from core.modules import VTKOutModule
+from .modules import VTKOutModule
+
+__all__ = ["declare_all", "declare_models", "declare_modules"]
+
+
+def declare_all(globdat):
+    # Declare all core models and modules in one go
+    declare_models(globdat)
+    declare_modules(globdat)
 
 
 def declare_models(globdat):

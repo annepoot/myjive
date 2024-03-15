@@ -1,15 +1,15 @@
 import numpy as np
 
 from .module import Module
-from jive.fem import XNodeSet
-from jive.fem import NodeGroup
-from jive.fem import XElementSet
-from jive.fem import ElementGroup
-from jive.fem import DofSpace
+from ..fem import XNodeSet
+from ..fem import NodeGroup
+from ..fem import XElementSet
+from ..fem import ElementGroup
+from ..fem import DofSpace
 
-from jive.names import GlobNames as gn
+from ..names import GlobNames as gn
 
-import jive.util.proputils as pu
+from ..util import proputils as pu
 
 MESH = "mesh"
 TYPE = "type"

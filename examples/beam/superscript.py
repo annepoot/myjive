@@ -1,10 +1,4 @@
-import sys, os
-
-cwd = os.getcwd()
-rootdir = os.path.join(cwd[: cwd.rfind(os.path.sep + "myjive")], "myjive")
-if rootdir not in sys.path:
-    sys.path.append(rootdir)
-
+from core import declare_all as declare_core
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
@@ -21,7 +15,7 @@ uexact = F * L**3 / 48 / EI
 
 print("\n\n first run: as is\n\n")
 
-globdat = main.jive(props)
+globdat = main.jive(props, extra_declares=[declare_core])
 u = globdat["state0"]
 uref = u[globdat["dofSpace"].get_dof(3, "dy")]
 
@@ -31,7 +25,7 @@ props["model"]["diri"]["groups"] = "[lb,lb,rb]"
 props["model"]["diri"]["dofs"] = "[dx,dy,dy]"
 props["model"]["diri"]["values"] = "[0,0,0]"
 
-globdat = main.jive(props)
+globdat = main.jive(props, extra_declares=[declare_core])
 u = globdat["state0"]
 urol = u[globdat["dofSpace"].get_dof(3, "dy")]
 
@@ -46,7 +40,7 @@ weight_exact = H * L * t * rho
 props["model"]["neum"]["values"] = "[0.0]"
 props["model"]["load"]["values"] = "[-" + str(rho * t) + "]"
 
-globdat = main.jive(props)
+globdat = main.jive(props, extra_declares=[declare_core])
 K = globdat["matrix0"]
 u = globdat["state0"]
 f = K @ u

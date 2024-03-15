@@ -10,6 +10,7 @@ import numpy as np
 import jive.util.proputils as pu
 from jive.app import main
 from jive.solver import Constrainer
+from core import declare_all as declare_core
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +28,7 @@ def props():
 @pytest.mark.cantilever
 @pytest.mark.core
 def test_cantilever(props):
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
 
     K = globdat["matrix0"]
     u = globdat["state0"]

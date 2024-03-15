@@ -10,6 +10,7 @@ import numpy as np
 import jive.util.proputils as pu
 from jive.app import main
 from jive.solver import Constrainer
+from core import declare_all as declare_core
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +37,7 @@ def test_solidbeam(props1):
     props1["model"]["diri"]["dofs"] = "[dx,dy,dy]"
     props1["model"]["diri"]["values"] = "[0,0,0]"
 
-    globdat = main.jive(props1)
+    globdat = main.jive(props1, extra_declares=[declare_core])
 
     K = globdat["matrix0"]
     u = globdat["state0"]
@@ -75,7 +76,7 @@ def test_2partbeam(props2):
     props2["model"]["diri"]["dofs"] = "[dx,dy,dy]"
     props2["model"]["diri"]["values"] = "[0,0,0]"
 
-    globdat = main.jive(props2)
+    globdat = main.jive(props2, extra_declares=[declare_core])
 
     K = globdat["matrix0"]
     u = globdat["state0"]

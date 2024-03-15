@@ -1,14 +1,8 @@
-import sys, os
-
-cwd = os.getcwd()
-rootdir = os.path.join(cwd[: cwd.rfind(os.path.sep + "myjive")], "myjive")
-if rootdir not in sys.path:
-    sys.path.append(rootdir)
-
 import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
+from core import declare_all as declare_core
 
 
 def mesher(L, n):
@@ -39,10 +33,10 @@ for i in range(len(ns)):
     mesher(L, ns[i])
 
     props["model"]["timoshenko"]["shape"]["intScheme"] = "Gauss1"
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
     u1[i] = globdat["state0"][-1]
     props["model"]["timoshenko"]["shape"]["intScheme"] = "Gauss2"
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
     u2[i] = globdat["state0"][-1]
 
 plt.figure()

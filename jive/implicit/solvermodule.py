@@ -1,4 +1,4 @@
-from jive.app import Module
+from ..app import Module
 
 __all__ = ["SolverModule"]
 

@@ -1,15 +1,9 @@
-import sys, os
-
-cwd = os.getcwd()
-rootdir = os.path.join(cwd[: cwd.rfind(os.path.sep + "myjive")], "myjive")
-if rootdir not in sys.path:
-    sys.path.append(rootdir)
-
 from math import exp
 import matplotlib.pyplot as plt
 import numpy as np
 from jive.app import main
 import jive.util.proputils as pu
+from core import declare_all as declare_core
 
 
 def mesher_lin(L, n):
@@ -57,7 +51,7 @@ for i in range(len(ns)):
     props["model"]["bar"]["shape"]["intScheme"] = "Gauss2"
     props["model"]["diri"]["values"] = "[" + str(u_L) + "]"
     mesher_lin(L, ns[i])
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
     K = globdat["matrix0"]
     u = globdat["state0"]
     E1[i] = 0.5 * u @ K @ u
@@ -65,7 +59,7 @@ for i in range(len(ns)):
     props["model"]["bar"]["shape"]["type"] = "Line3"
     props["model"]["bar"]["shape"]["intScheme"] = "Gauss3"
     mesher_quad(L, ns[i])
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
     K = globdat["matrix0"]
     u = globdat["state0"]
     E2[i] = 0.5 * u @ K @ u

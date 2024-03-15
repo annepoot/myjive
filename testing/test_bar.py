@@ -11,6 +11,7 @@ import numpy as np
 import jive.util.proputils as pu
 from jive.app import main
 from jive.solver import Constrainer
+from core import declare_all as declare_core
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +56,7 @@ def test_lin(props):
 
     mesher_lin(10, 64)
 
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
 
     elems = globdat["elemSet"]
     nodes = globdat["nodeSet"]
@@ -91,7 +92,7 @@ def test_quad(props):
     props["model"]["bar"]["shape"]["intScheme"] = "Gauss3"
     mesher_quad(10, 64)
 
-    globdat = main.jive(props)
+    globdat = main.jive(props, extra_declares=[declare_core])
 
     elems = globdat["elemSet"]
     nodes = globdat["nodeSet"]

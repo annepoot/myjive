@@ -1,4 +1,4 @@
-name: bfem
+name: myjive
 channels:
   - conda-forge
   - defaults
@@ -6,16 +6,6 @@ dependencies:
   - matplotlib=3.5.2
   - numba=0.56.4
   - numpy=1.23.5
-  - opencv=4.6.0
-  - pandas=1.4.3
-  - pip=22.1.2
   - pytest=7.1.2
-  - pyqtwebengine=5.15.4
-  - pyvista=0.36.1
-  - scikit-learn=1.1.1
   - scikit-sparse=0.4.7
   - scipy=1.8.1
-  - seaborn=0.12.0
-  - spyder=5.2.2
-  - pip:
-    - pygmsh==7.1.17

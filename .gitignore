@@ -15,3 +15,5 @@ beam_fine7.msh
 beam_fine8.msh
 gpexamples/gphole/meshes/q4/
 gpexamples/gphole/meshes/q9/
+dist/
+myjive.egg-info/

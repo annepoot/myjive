@@ -1,6 +1,6 @@
-from jive.app import main
-import jive.util.proputils as pu
-from core import declare_all as declare_core
+from myjive.app import main
+import myjive.util.proputils as pu
+from myjivex import declare_all as declarex
 
 props = pu.parse_file("2partbeam.pro")
 
@@ -13,7 +13,7 @@ F = 1
 # uexact = F*L**3/48/EI
 uexact = 1 / 96 * F * L**3 / EI_left
 
-globdat = main.jive(props, extra_declares=[declare_core])
+globdat = main.jive(props, extra_declares=[declarex])
 u = globdat["state0"]
 umid = u[globdat["dofSpace"].get_dof(4, "dy")]
 

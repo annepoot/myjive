@@ -7,10 +7,10 @@ if rootdir not in sys.path:
     sys.path.append(rootdir)
 
 import numpy as np
-import jive.util.proputils as pu
-from jive.app import main
-from jive.solver import Constrainer
-from core import declare_all as declare_core
+import myjive.util.proputils as pu
+from myjive.app import main
+from myjive.solver import Constrainer
+from myjivex import declare_all as declarex
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +28,7 @@ def props():
 @pytest.mark.cantilever
 @pytest.mark.core
 def test_cantilever(props):
-    globdat = main.jive(props, extra_declares=[declare_core])
+    globdat = main.jive(props, extra_declares=[declarex])
 
     K = globdat["matrix0"]
     u = globdat["state0"]

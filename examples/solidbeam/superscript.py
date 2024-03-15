@@ -1,8 +1,8 @@
 import numpy as np
-from jive.app import main
-import jive.util.proputils as pu
-from core.util import QuickViewer
-from core import declare_all as declare_core
+from myjive.app import main
+import myjive.util.proputils as pu
+from myjivex.util import QuickViewer
+from myjivex import declare_all as declarex
 
 props = pu.parse_file("beam.pro")
 
@@ -16,7 +16,7 @@ uexact = F * L**3 / 48 / EI
 
 print("\n\n first run: as is\n\n")
 
-globdat = main.jive(props, extra_declares=[declare_core])
+globdat = main.jive(props, extra_declares=[declarex])
 u = globdat["state0"]
 uref = u[globdat["dofSpace"].get_dof(3, "dy")]
 
@@ -26,7 +26,7 @@ props["model"]["diri"]["groups"] = "[lb,lb,rb]"
 props["model"]["diri"]["dofs"] = "[dx,dy,dy]"
 props["model"]["diri"]["values"] = "[0,0,0]"
 
-globdat = main.jive(props, extra_declares=[declare_core])
+globdat = main.jive(props, extra_declares=[declarex])
 u = globdat["state0"]
 urol = u[globdat["dofSpace"].get_dof(3, "dy")]
 
@@ -41,7 +41,7 @@ weight_exact = H * L * t * rho
 props["model"]["neum"]["values"] = "[0.0]"
 props["model"]["load"]["values"] = "[-" + str(rho * t) + "]"
 
-globdat = main.jive(props, extra_declares=[declare_core])
+globdat = main.jive(props, extra_declares=[declarex])
 K = globdat["matrix0"]
 u = globdat["state0"]
 f = K @ u

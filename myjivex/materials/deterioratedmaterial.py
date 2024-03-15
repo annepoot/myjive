@@ -1,8 +1,8 @@
 from .heterogeneousmaterial import HeterogeneousMaterial
-from jive.names import GlobNames as gn
+from myjive.names import GlobNames as gn
 from scipy.stats import norm
 import numpy as np
-import jive.util.proputils as pu
+import myjive.util.proputils as pu
 
 DETER_PROP = "deteriorations"
 SCALE_PROP = "scale"

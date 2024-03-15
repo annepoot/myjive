@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
   name = 'myjive',
-  packages = find_packages(include=["jive*", "core*"]),
+  packages = find_packages(include=["myjive*", "myjivex*"]),
   version = '<X.X.X>',
   license='MIT',
   description = 'Personal implementation of jive C++ library in Python',

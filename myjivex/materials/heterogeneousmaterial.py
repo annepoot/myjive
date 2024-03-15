@@ -6,7 +6,7 @@ from .isotropicmaterial import (
     AREA_PROP,
     ANMODEL_PROP,
 )
-import jive.util.proputils as pu
+import myjive.util.proputils as pu
 
 __all__ = ["HeterogeneousMaterial"]
 

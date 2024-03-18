@@ -2,6 +2,7 @@ from myjive.app import main
 from myjive.solver import Constrainer
 import myjive.util.proputils as pu
 from myjivex import declare_all as declarex
+
 props = pu.parse_file("elem.pro")
 
 H = 1

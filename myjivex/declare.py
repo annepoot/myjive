@@ -10,7 +10,7 @@ from .models import (
     NeumannModel,
     PoissonModel,
     SolidModel,
-    TimoshenkoModel
+    TimoshenkoModel,
 )
 
 from .modules import VTKOutModule

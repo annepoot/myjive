@@ -3,10 +3,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  # python version
   - python=3.10
+  # mandatory packages
   - matplotlib=3.5.2
   - numba=0.56.4
   - numpy=1.23.5
-  - pytest=7.1.2
-  - scikit-sparse=0.4.7
+  - scikit-sparse=0.4.12
   - scipy=1.8.1
+  # support packages
+  - black
+  - pytest

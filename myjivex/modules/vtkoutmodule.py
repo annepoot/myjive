@@ -3,7 +3,7 @@ import numpy as np
 from myjive.app import Module
 from myjive.names import GlobNames as gn
 import myjive.util.proputils as pu
-from myjive.util import to_xtable
+from myjive.util import Table, to_xtable
 
 FILENAME = "file"
 TABLES = "tables"
@@ -123,8 +123,9 @@ class VTKOutModule(Module):
             globdat[gn.TABLES] = {}
 
         for name in table_names:
-            table = None
-            tbwts = None
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+            tbwts = np.zeros(nodecount)
 
             for model in self.get_relevant_models("GETTABLE", models):
                 table, tbwts = model.GETTABLE(name, table, tbwts, globdat)

@@ -6,7 +6,7 @@ from ..names import GlobNames as gn
 from ..util import proputils as pu
 from .solvermodule import SolverModule
 from ..solver import Constraints
-from ..util import to_xtable
+from ..util import Table, to_xtable
 
 SOLVER = "solver"
 PRECONDITIONER = "preconditioner"
@@ -85,8 +85,9 @@ class LinsolveModule(SolverModule):
             globdat[gn.TABLES] = {}
 
         for name in self._tnames:
-            table = None
-            tbwts = None
+            nodecount = len(globdat[gn.NSET])
+            table = Table(size=nodecount)
+            tbwts = np.zeros(nodecount)
 
             for model in self.get_relevant_models("GETTABLE", self._models):
                 table, tbwts = model.GETTABLE(name, table, tbwts, globdat)
@@ -106,7 +107,7 @@ class LinsolveModule(SolverModule):
         pass
 
     def get_ext_vector(self, globdat):
-        f_ext = None
+        f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
 
         for model in self.get_relevant_models("GETEXTFORCE", self._models):
             f_ext = model.GETEXTFORCE(f_ext, globdat)
@@ -114,7 +115,7 @@ class LinsolveModule(SolverModule):
         return f_ext
 
     def get_neumann_vector(self, globdat):
-        f_neum = None
+        f_neum = np.zeros(globdat[gn.DOFSPACE].dof_count())
 
         for model in self.get_relevant_models("GETNEUMANNFORCE", self._models):
             f_neum = model.GETNEUMANNFORCE(f_neum, globdat)

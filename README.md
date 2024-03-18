@@ -1,8 +1,13 @@
 # MyJive
 A personal adaptation of [PyJive](https://gitlab.tudelft.nl/fmeer/pyjive) that is set up in a more "Pythonic" way.
 
-## Contributors
-Anne Poot (a.poot-1@tudelft.nl)
+## Getting started
+Run the following anaconda commands to take care of all dependencies:
+
+```
+conda env create -f ENVIRONMENT.yml
+conda activate myjive
+```
 
 ## Differences with PyJive
 PyJive is a Python adaptation of the C++ Jive library that stays very close to C++ setup.

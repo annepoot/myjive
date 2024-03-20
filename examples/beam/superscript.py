@@ -21,9 +21,9 @@ uref = u[globdat["dofSpace"].get_dof(3, "dy")]
 
 print("\n\n second run: with one roller\n\n")
 
-props["model"]["diri"]["groups"] = "[lb,lb,rb]"
-props["model"]["diri"]["dofs"] = "[dx,dy,dy]"
-props["model"]["diri"]["values"] = "[0,0,0]"
+props["model"]["diri"]["groups"] = ["lb", "lb", "rb"]
+props["model"]["diri"]["dofs"] = ["dx", "dy", "dy"]
+props["model"]["diri"]["values"] = [0, 0, 0]
 
 globdat = main.jive(props, extra_declares=[declarex])
 u = globdat["state0"]
@@ -37,8 +37,8 @@ print(
 rho = 1
 q = rho * H * t
 weight_exact = H * L * t * rho
-props["model"]["neum"]["values"] = "[0.0]"
-props["model"]["load"]["values"] = "[-" + str(rho * t) + "]"
+props["model"]["neum"]["values"] = [0.0]
+props["model"]["load"]["values"] = [-rho * t]
 
 globdat = main.jive(props, extra_declares=[declarex])
 K = globdat["matrix0"]

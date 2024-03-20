@@ -1,11 +1,7 @@
 from .material import Material
+from myjive.util.proputils import mandatory_argument, optional_argument
 import numpy as np
 
-E_PROP = "E"
-NU_PROP = "nu"
-RHO_PROP = "rho"
-AREA_PROP = "area"
-ANMODEL_PROP = "anmodel"
 BAR = "bar"
 PLANE_STRESS = "plane_stress"
 PLANE_STRAIN = "plane_strain"
@@ -15,52 +11,26 @@ __all__ = ["IsotropicMaterial"]
 
 
 class IsotropicMaterial(Material):
-    def __init__(self, rank):
-        super().__init__(rank)
+    def configure(self, globdat, **props):
 
-        self._rank = rank
+        # Get props
+        self._rank = mandatory_argument(self, props, "rank")
+        self._anmodel = mandatory_argument(self, props, "anmodel")
+        self._E = optional_argument(self, props, "E", default=1.0)
+        self._nu = optional_argument(self, props, "nu", default=0.0)
+        self._rho = optional_argument(self, props, "rho", default=0.0)
+        self._area = optional_argument(self, props, "area", default=1.0)
+
         self._strcount = self._rank * (self._rank + 1) // 2
-
-        self._anmodel = ""
-
-        self._E = 1.0
-        self._nu = 0.0
-        self._rho = 0.0
-
-        if self._rank == 1:
-            self._area = 1.0
-
-        self._stiff_matrix = np.zeros((self._strcount, self._strcount))
-        self._mass_matrix = np.zeros((self._rank, self._rank))
-
-    def configure(self, props, globdat):
-        self._anmodel = props.get(ANMODEL_PROP, self._anmodel)
         assert self._is_valid_anmodel(self._anmodel), (
             "Analysis model " + self._anmodel + " not valid for rank " + str(self._rank)
         )
 
-        self._E = float(props.get(E_PROP, self._E))
-        self._nu = float(props.get(NU_PROP, self._nu))
-        self._rho = float(props.get(RHO_PROP, self._rho))
-
-        if self._rank == 1:
-            self._area = float(props.get(AREA_PROP, self._area))
+        self._stiff_matrix = np.zeros((self._strcount, self._strcount))
+        self._mass_matrix = np.zeros((self._rank, self._rank))
 
         self._stiff_matrix = self._compute_stiff_matrix()
         self._mass_matrix = self._compute_mass_matrix()
-
-    def get_config(self):
-        config = {
-            ANMODEL_PROP: self._anmodel,
-            E_PROP: self._E,
-            NU_PROP: self._nu,
-            RHO_PROP: self._rho,
-        }
-
-        if self._rank == 1:
-            config[AREA_PROP] = self._area
-
-        return config
 
     def stress_at_point(self, strain, ipoint=None):
         stiff = self.stiff_at_point(ipoint)

@@ -2,14 +2,11 @@ import numpy as np
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
+from myjive.util.proputils import mandatory_argument, mandatory_dict
 
-ELEMENTS = "elements"
-EI = "EI"
-GAs = "GAs"
-SHAPE = "shape"
+TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["phi", "dy"]
-TYPE = "type"
 
 __all__ = ["TimoshenkoModel"]
 
@@ -19,15 +16,22 @@ class TimoshenkoModel(Model):
         K = self._get_matrix(K, globdat, **kwargs)
         return K
 
-    def configure(self, props, globdat):
-        self._EI = float(props[EI])
-        self._GAs = float(props[GAs])
+    def configure(self, globdat, **props):
+
+        # Get props
+        shapeprops = mandatory_dict(
+            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
+        )
+        elements = mandatory_argument(self, props, "elements")
+        self._EI = mandatory_argument(self, props, "EI")
+        self._GAs = mandatory_argument(self, props, "GAs")
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+            shapeprops[TYPE], shapeprops[INTSCHEME]
         )
-        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+
+        egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()

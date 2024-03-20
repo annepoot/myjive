@@ -5,17 +5,12 @@ from myjive.model.model import Model
 from ..materials import new_material
 import myjive.util.proputils as pu
 from myjive.util import Table, to_xtable
-
+from myjive.util.proputils import mandatory_argument, mandatory_dict, optional_argument
 from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
-ELEMENTS = "elements"
-RHO = "rho"
-SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["dx", "dy", "dz"]
-MATERIAL = "material"
-THICKNESS_PROP = "thickness"
 
 __all__ = ["SolidModel"]
 
@@ -44,17 +39,27 @@ class SolidModel(Model):
             table, tbwts = self._get_elem_size(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
-    def configure(self, props, globdat):
+    def configure(self, globdat, **props):
+
+        # Get props
+        shapeprops = mandatory_dict(
+            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
+        )
+        elements = mandatory_argument(self, props, "elements")
+        matprops = mandatory_dict(self, props, "material", mandatory_keys=[TYPE])
+        self._thickness = optional_argument(self, props, "thickness", default=1.0)
+
         # Configure the material
-        matprops = props[MATERIAL]
-        self._mat = new_material(matprops)
-        self._mat.configure(matprops, globdat)
+        mattype = matprops[TYPE]
+        self._mat = new_material(mattype)
+        self._mat.configure(globdat, **matprops)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+            shapeprops[TYPE], shapeprops[INTSCHEME]
         )
-        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+
+        egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()
@@ -69,9 +74,7 @@ class SolidModel(Model):
         self._dofcount = self._rank * self._shape.node_count()
         self._strcount = self._rank * (self._rank + 1) // 2  # 1-->1, 2-->3, 3-->6
 
-        self._thickness = 1.0
         if self._rank == 2:
-            self._thickness = props.get(THICKNESS_PROP, self._thickness)
             self._thickness = pu.soft_cast(self._thickness, float)
 
         # Create a new dof for every node and dof type

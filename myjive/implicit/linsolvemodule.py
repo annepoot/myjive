@@ -3,44 +3,47 @@ import scipy.sparse as spsp
 
 from ..names import GlobNames as gn
 
-from ..util import proputils as pu
 from .solvermodule import SolverModule
 from ..solver import Constraints
 from ..util import Table, to_xtable
+from ..util.proputils import optional_argument
 
-SOLVER = "solver"
-PRECONDITIONER = "preconditioner"
 TYPE = "type"
-GETMASSMATRIX = "getMassMatrix"
-GETSTRAINMATRIX = "getStrainMatrix"
-TABLES = "tables"
 
 __all__ = ["LinsolveModule"]
 
 
 class LinsolveModule(SolverModule):
-    def init(self, props, globdat):
-        super().init(props, globdat)
+    def init(self, globdat, **props):
 
-        myprops = props[self._name]
-        self._get_mass_matrix = bool(eval(myprops.get(GETMASSMATRIX, "False")))
-        self._get_strain_matrix = bool(eval(myprops.get(GETSTRAINMATRIX, "False")))
-        self._tnames = pu.parse_list(myprops.get(TABLES, "[]"))
+        super().init(globdat, **props)
+
+        # Get props
+        solverprops = optional_argument(
+            self, props, "solver", default={TYPE: "Cholmod"}
+        )
+        preconprops = optional_argument(self, props, "preconditioner", default={})
+        self._get_mass_matrix = optional_argument(
+            self, props, "getMassMatrix", default=False
+        )
+        self._get_strain_matrix = optional_argument(
+            self, props, "getStrainMatrix", default=False
+        )
+        self._tnames = optional_argument(self, props, "tables", default=[])
 
         self._models = globdat[gn.MODELS]
         self._dc = globdat[gn.DOFSPACE].dof_count()
 
-        solverprops = myprops.get(SOLVER, {})
-        solver = solverprops.get(TYPE, "Cholmod")
-        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solver)
-        self._solver.configure(solverprops, globdat)
+        solvertype = solverprops[TYPE]
+        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype)
+        self._solver.configure(globdat, **solverprops)
 
-        preconprops = myprops.get(PRECONDITIONER, {})
         self._precon = None
-        precon = preconprops.get(TYPE)
-        if precon is not None:
-            self._precon = globdat[gn.PRECONFACTORY].get_precon(precon)
-            self._precon.configure(preconprops, globdat)
+
+        if len(preconprops) > 0:
+            precontype = preconprops[TYPE]
+            self._precon = globdat[gn.PRECONFACTORY].get_precon(precontype)
+            self._precon.configure(globdat, **preconprops)
 
     def solve(self, globdat):
         print("Running LinsolverModule")
@@ -102,9 +105,6 @@ class LinsolveModule(SolverModule):
             globdat[gn.TABLES][name] = table
 
         return "ok"
-
-    def configure(self, props, globdat):
-        pass
 
     def get_ext_vector(self, globdat):
         f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())

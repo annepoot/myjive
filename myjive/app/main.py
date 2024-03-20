@@ -30,7 +30,9 @@ def jive(props, extra_declares=[]):
 
     # Initialize chain
     for module in chain:
-        module.init(props, globdat)
+        modelprops = props[gn.MODELS]
+        moduleprops = props[module._name]
+        module.init(globdat, modelprops=modelprops, **moduleprops)
 
     # Run chain until one of the modules ends the computation
     print("Running chain...")

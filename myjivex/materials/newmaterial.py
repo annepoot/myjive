@@ -1,21 +1,18 @@
 from .isotropicmaterial import IsotropicMaterial
 from .heterogeneousmaterial import HeterogeneousMaterial
 from .deterioratedmaterial import DeterioratedMaterial
-from .material import TYPE, RANK
 
 __all__ = ["new_material"]
 
 
-def new_material(props):
-    typ = props[TYPE]
-    rank = int(props[RANK])
+def new_material(typ):
 
     if typ == "Isotropic":
-        mat = IsotropicMaterial(rank)
+        mat = IsotropicMaterial()
     elif typ == "Heterogeneous":
-        mat = HeterogeneousMaterial(rank)
+        mat = HeterogeneousMaterial()
     elif typ == "Deteriorated":
-        mat = DeterioratedMaterial(rank)
+        mat = DeterioratedMaterial()
     else:
         raise ValueError(typ + " is not a valid material")
 

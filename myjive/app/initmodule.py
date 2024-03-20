@@ -9,9 +9,8 @@ from ..fem import DofSpace
 
 from ..names import GlobNames as gn
 
-from ..util import proputils as pu
+from ..util.proputils import optional_argument, mandatory_dict
 
-MESH = "mesh"
 TYPE = "type"
 FILE = "file"
 MODELS = "models"
@@ -23,25 +22,23 @@ class InitModule(Module):
     # Predefine some parameters
     _ctol = 1.0e-5
 
-    def init(self, props, globdat):
-        myprops = props.get(self._name)
+    def init(self, globdat, **props):
 
-        if not myprops:
-            raise KeyError("Properties for InitModule not found")
+        # Get props
+        modelprops = mandatory_dict(self, props, "modelprops", mandatory_keys=[MODELS])
+        meshprops = mandatory_dict(self, props, "mesh", mandatory_keys=[TYPE, FILE])
+        nodeGroups = optional_argument(self, props, "nodeGroups", default=[])
+        elemGroups = optional_argument(self, props, "elemGroups", default=[])
 
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
         globdat[gn.EGROUPS] = {}
 
         modelfac = globdat[gn.MODELFACTORY]
-        modelprops = props[gn.MODELS]
 
         # Initialize DofSpace
         print("InitModule: Creating DofSpace...")
         globdat[gn.DOFSPACE] = DofSpace()
-
-        # Read mesh
-        meshprops = myprops[MESH]
 
         if "gmsh" in meshprops[TYPE]:
             self._read_gmsh(meshprops[FILE], globdat)
@@ -55,24 +52,22 @@ class InitModule(Module):
             raise KeyError("InitModule: Mesh input type unknown")
 
         # Create node groups
-        if gn.NGROUPS in myprops:
+        if nodeGroups is not None:
             print("InitModule: Creating node groups...")
-            groups = pu.parse_list(myprops[gn.NGROUPS])
-            self._create_ngroups(groups, myprops, globdat)
+            self._create_ngroups(nodeGroups, globdat, **props)
 
         # Create element groups
-        if gn.EGROUPS in myprops:
+        if elemGroups is not None:
             print("InitModule: Creating element groups...")
-            groups = pu.parse_list(myprops[gn.EGROUPS])
-            self._create_egroups(groups, globdat)
+            self._create_egroups(elemGroups, globdat)
 
         # Initialize model
         print("InitModule: Creating models...")
-        name_list = pu.parse_list(modelprops[MODELS])
+        name_list = modelprops[MODELS]
         model_list = []
         for name in name_list:
             m = modelfac.get_model(modelprops[name][TYPE], name)
-            m.configure(modelprops[name], globdat)
+            m.configure(globdat, **(modelprops[name]))
             model_list.append(m)
         globdat[gn.MODELS] = model_list
 
@@ -346,7 +341,7 @@ class InitModule(Module):
         globdat[gn.NGROUPS]["all"] = NodeGroup(nodes, [*range(nodes.size())])
         globdat[gn.EGROUPS]["all"] = ElementGroup(elems, [*range(elems.size())])
 
-    def _create_ngroups(self, groups, props, globdat):
+    def _create_ngroups(self, groups, globdat, **props):
         coords = globdat[gn.NSET].get_coords()
         cmax = np.max(coords, axis=1)
         cmin = np.min(coords, axis=1)
@@ -377,7 +372,7 @@ class InitModule(Module):
                         else:
                             pass
             else:
-                group = pu.parse_list(gprops, int)
+                group = gprops
 
             globdat[gn.NGROUPS][g] = NodeGroup(globdat[gn.NSET], group)
 

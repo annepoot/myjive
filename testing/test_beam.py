@@ -63,9 +63,9 @@ def test_point_load(props):
 @pytest.mark.beam
 @pytest.mark.core
 def test_point_load_roll(props):
-    props["model"]["diri"]["groups"] = "[lb,lb,rb]"
-    props["model"]["diri"]["dofs"] = "[dx,dy,dy]"
-    props["model"]["diri"]["values"] = "[0,0,0]"
+    props["model"]["diri"]["groups"] = ["lb", "lb", "rb"]
+    props["model"]["diri"]["dofs"] = ["dx", "dy", "dy"]
+    props["model"]["diri"]["values"] = [0, 0, 0]
 
     globdat = main.jive(props, extra_declares=[declarex])
 
@@ -102,12 +102,12 @@ def test_point_load_roll(props):
 @pytest.mark.beam
 @pytest.mark.core
 def test_body_load(props):
-    props["model"]["diri"]["groups"] = "[lb,lb,rb]"
-    props["model"]["diri"]["dofs"] = "[dx,dy,dy]"
-    props["model"]["diri"]["values"] = "[0,0,0]"
+    props["model"]["diri"]["groups"] = ["lb", "lb", "rb"]
+    props["model"]["diri"]["dofs"] = ["dx", "dy", "dy"]
+    props["model"]["diri"]["values"] = [0, 0, 0]
 
-    props["model"]["neum"]["values"] = "[0.0]"
-    props["model"]["load"]["values"] = "[-0.2]"
+    props["model"]["neum"]["values"] = [0.0]
+    props["model"]["load"]["values"] = [-0.2]
 
     globdat = main.jive(props, extra_declares=[declarex])
 

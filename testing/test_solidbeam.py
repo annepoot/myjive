@@ -33,9 +33,9 @@ def props2():
 @pytest.mark.solidbeam
 @pytest.mark.core
 def test_solidbeam(props1):
-    props1["model"]["diri"]["groups"] = "[lb,lb,rb]"
-    props1["model"]["diri"]["dofs"] = "[dx,dy,dy]"
-    props1["model"]["diri"]["values"] = "[0,0,0]"
+    props1["model"]["diri"]["groups"] = ["lb", "lb", "rb"]
+    props1["model"]["diri"]["dofs"] = ["dx", "dy", "dy"]
+    props1["model"]["diri"]["values"] = [0, 0, 0]
 
     globdat = main.jive(props1, extra_declares=[declarex])
 
@@ -72,9 +72,9 @@ def test_solidbeam(props1):
 @pytest.mark.solidbeam
 @pytest.mark.core
 def test_2partbeam(props2):
-    props2["model"]["diri"]["groups"] = "[lb,lb,rb]"
-    props2["model"]["diri"]["dofs"] = "[dx,dy,dy]"
-    props2["model"]["diri"]["values"] = "[0,0,0]"
+    props2["model"]["diri"]["groups"] = ["lb", "lb", "rb"]
+    props2["model"]["diri"]["dofs"] = ["dx", "dy", "dy"]
+    props2["model"]["diri"]["values"] = [0, 0, 0]
 
     globdat = main.jive(props2, extra_declares=[declarex])
 

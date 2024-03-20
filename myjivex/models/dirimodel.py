@@ -3,12 +3,7 @@ import numpy as np
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 
-import myjive.util.proputils as pu
-
-GROUPS = "groups"
-DOFS = "dofs"
-VALS = "values"
-INCR = "dispIncr"
+from myjive.util.proputils import mandatory_list, optional_argument
 
 __all__ = ["DirichletModel"]
 
@@ -21,15 +16,19 @@ class DirichletModel(Model):
     def ADVANCE(self, globdat):
         self._advance_step_constraints(globdat)
 
-    def configure(self, props, globdat):
-        self._groups = pu.parse_list(props[GROUPS])
-        self._dofs = pu.parse_list(props[DOFS])
-        self._vals = pu.parse_list(props[VALS], float)
+    def configure(self, globdat, **props):
+
+        # Get props
+        self._groups = mandatory_list(self, props, "groups")
+        self._dofs = mandatory_list(self, props, "dofs")
+        self._vals = mandatory_list(self, props, "values")
+        dispIncr = optional_argument(self, props, "dispIncr")
+
         self._initDisp = self._vals
-        if INCR in props:
-            self._dispIncr = pu.parse_list(props[INCR], float)
-        else:
+        if dispIncr is None:
             self._dispIncr = np.zeros(len(self._vals))
+        else:
+            self._dispIncr = dispIncr
 
     def _get_constraints(self, c, globdat):
         ds = globdat[gn.DOFSPACE]

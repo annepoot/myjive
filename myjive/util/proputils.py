@@ -1,3 +1,6 @@
+from ast import literal_eval
+
+
 def parse_file(fname):
     fileraw = open(fname, "r").read()
 
@@ -34,7 +37,16 @@ def read_level(line, i, sp):
             return subdata, i, sp
         elif "=" in line:
             [key, value] = line.split("=")
-            subdata[key] = value
+
+            if value.startswith("[") and value.endswith("]"):
+                valuelist = value.strip("[").strip("]").split(",")
+                parsedlist = []
+                for val in valuelist:
+                    parsedlist.append(try_literal_eval(val))
+                subdata[key] = parsedlist
+            else:
+                subdata[key] = try_literal_eval(value)
+
         elif line != "":
             raise RuntimeError("Unable to parse: %s" % line)
 
@@ -46,15 +58,6 @@ def read_level(line, i, sp):
             )
 
         line = sp[i].replace(" ", "")
-
-
-def parse_list(lst, typ=str):
-    shortlist = lst.strip("[").strip("]").replace(" ", "")
-
-    if shortlist == "":
-        return []
-    else:
-        return list(map(typ, shortlist.split(",")))
 
 
 def uncomment_file(fileraw):
@@ -115,6 +118,13 @@ def uncomment_line(line):
     return clean_line
 
 
+def try_literal_eval(val):
+    try:
+        return literal_eval(val)
+    except:
+        return val
+
+
 def soft_cast(value, typ):
     # This function attempts to convert value to typ
     # If this conversion fails, it returns the original value
@@ -147,3 +157,50 @@ def get_eval_dict(coords, rank, extra_dict=None):
         eval_dict.update(extra_dict)
 
     return eval_dict
+
+
+def optional_argument(obj, props, arg, default=None):
+    val = props.get(arg, default)
+    return val
+
+
+def mandatory_argument(obj, props, arg):
+    name = obj.__class__.__name__
+    val = props.get(arg)
+    if val is None:
+        raise ValueError("Unspecified argument in {}".format(name))
+    else:
+        return val
+
+
+def mandatory_list(obj, props, arg, min_length=0):
+    name = obj.__class__.__name__
+    val = props.get(arg)
+    if val is None:
+        raise ValueError("Unspecified argument in {}".format(name))
+    elif type(val) is not list:
+        raise ValueError("Argument in {} must be a list".format(name))
+    elif len(val) < min_length:
+        raise ValueError(
+            "Argument in {} must be a list containing at least {} values".format(
+                name, min_length
+            )
+        )
+    else:
+        return val
+
+
+def mandatory_dict(obj, props, arg, mandatory_keys=[]):
+    name = obj.__class__.__name__
+    val = props.get(arg)
+    if val is None:
+        raise ValueError("Unspecified argument in {}".format(name))
+    elif type(val) is not dict:
+        raise ValueError("Argument in {} must be a dict".format(name))
+    else:
+        for key in mandatory_keys:
+            if key not in val.keys():
+                raise ValueError(
+                    "Argument in {} must contain '{}' key".format(name, key)
+                )
+        return val

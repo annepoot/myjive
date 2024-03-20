@@ -36,7 +36,7 @@ class Module:
                 model_list.append(model)
         return model_list
 
-    def init(self, props, globdat):
+    def init(self, globdat, **props):
         print("Empty module init")
 
     def run(self, globdat):

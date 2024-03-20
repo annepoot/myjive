@@ -1,6 +1,6 @@
+from myjive.util.proputils import optional_argument
 import numpy as np
 
-PRECISION = "precision"
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
 __all__ = ["Solver", "SolverFactory"]
@@ -25,7 +25,6 @@ class SolverFactory:
 
 class Solver:
     def __init__(self):
-        self._precision = 1e-8
         self.precon_mode = False
 
     @classmethod
@@ -35,8 +34,8 @@ class Solver:
             name = name[:-6]
         factory.declare_solver(name, cls)
 
-    def configure(self, props, globdat):
-        self._precision = props.get(PRECISION, self._precision)
+    def configure(self, globdat, **props):
+        self._precision = optional_argument(self, props, "precision", default=1e-8)
 
     def start(self):
         pass

@@ -2,38 +2,25 @@ from .heterogeneousmaterial import HeterogeneousMaterial
 from myjive.names import GlobNames as gn
 from scipy.stats import norm
 import numpy as np
+from myjive.util.proputils import mandatory_argument, optional_argument
 import myjive.util.proputils as pu
 
-DETER_PROP = "deteriorations"
-SCALE_PROP = "scale"
-SEED_PROP = "seed"
-LOC_X_PROP = "locX"
-LOC_Y_PROP = "locY"
-STD_X_PROP = "stdX"
-STD_Y_PROP = "stdY"
-SHAPE = "shape"
-TYPE = "type"
-INTSCHEME = "intScheme"
 
 __all__ = ["DeterioratedMaterial"]
 
 
 class DeterioratedMaterial(HeterogeneousMaterial):
-    def configure(self, props, globdat):
-        super().configure(props, globdat)
+    def configure(self, globdat, **props):
+        super().configure(globdat, **props)
 
-        self._ndet = int(props[DETER_PROP])
-        self._detscale = float(props.get(SCALE_PROP, 1.0))
-
-        self._seed = None
-        if SEED_PROP in props:
-            self._seed = int(props[SEED_PROP])
-
-        # Get the location and standard deviation of the deterioration from the props file
-        self._locx = props.get(LOC_X_PROP, "x")
-        self._locy = props.get(LOC_Y_PROP, "y")
-        self._stdx = props.get(STD_X_PROP, 1.0)
-        self._stdy = props.get(STD_Y_PROP, 1.0)
+        # Get props
+        self._ndet = mandatory_argument(self, props, "deteriorations")
+        self._detscale = optional_argument(self, props, "scale", default=1.0)
+        self._locx = optional_argument(self, props, "locX", default="x")
+        self._locy = optional_argument(self, props, "locY", default="y")
+        self._stdx = optional_argument(self, props, "stdX", default=1.0)
+        self._stdy = optional_argument(self, props, "stdY", default=1.0)
+        self._seed = optional_argument(self, props, "seed", default=None)
 
         self._detlocs = np.zeros((self._rank, self._ndet))
         self._detrads = np.zeros((self._rank, self._ndet))

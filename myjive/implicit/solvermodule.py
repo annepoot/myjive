@@ -4,7 +4,7 @@ __all__ = ["SolverModule"]
 
 
 class SolverModule(Module):
-    def init(self, props, globdat):
+    def init(self, globdat, **props):
         pass
 
     def run(self, globdat):
@@ -21,9 +21,6 @@ class SolverModule(Module):
             self.cancel(globdat)
 
         return "ok"
-
-    def configure(self, props, globdat):
-        pass
 
     def advance(self, globat):
         pass

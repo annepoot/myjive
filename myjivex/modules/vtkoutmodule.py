@@ -2,27 +2,19 @@ import numpy as np
 
 from myjive.app import Module
 from myjive.names import GlobNames as gn
-import myjive.util.proputils as pu
 from myjive.util import Table, to_xtable
+from myjive.util.proputils import optional_argument
 
-FILENAME = "file"
-TABLES = "tables"
 
 __all__ = ["VTKOutModule"]
 
 
 class VTKOutModule(Module):
-    def init(self, props, globdat):
-        self._fname = ""
-        self._tnames = []
+    def init(self, globdat, **props):
 
-        if self._name in props:
-            myprops = props.get(self._name)
-
-            if FILENAME in myprops:
-                self._fname = myprops[FILENAME]
-            if TABLES in myprops:
-                self._tnames = pu.parse_list(myprops[TABLES])
+        # Get props
+        self._fname = optional_argument(self, props, "file", default="")
+        self._tnames = optional_argument(self, props, "tables", default=[])
 
     def run(self, globdat):
         nodes = globdat[gn.NSET]

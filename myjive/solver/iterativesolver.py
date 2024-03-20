@@ -1,11 +1,10 @@
 import numpy as np
 import warnings
 
+from myjive.util.proputils import optional_argument
 from .solver import Solver
 from .constrainer import Constrainer
 
-MAXITER = "maxIter"
-ALLOWMAXITER = "allowMaxIter"
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
 __all__ = ["IterativeSolver"]
@@ -22,14 +21,13 @@ class IterativeSolver(Solver):
 
         self._init_guess = None
 
-        self._maxiter = 2000
-        self._allow_max_iter = False
+    def configure(self, globdat, **props):
+        super().configure(globdat, **props)
 
-    def configure(self, props, globdat):
-        super().configure(props, globdat)
-        self._maxiter = int(props.get(MAXITER, self._maxiter))
-        if ALLOWMAXITER in props:
-            self._allow_max_iter = bool(eval(props[ALLOWMAXITER]))
+        self._maxiter = optional_argument(self, props, "maxIter", default=2000)
+        self._allow_max_iter = optional_argument(
+            self, props, "allowMaxIter", default=False
+        )
 
     def update(self, matrix, constraints, preconditioner=None):
         self._cons = constraints

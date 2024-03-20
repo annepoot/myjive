@@ -3,16 +3,10 @@ import numpy as np
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 from myjive.util import Table, to_xtable
+from myjive.util.proputils import mandatory_argument, mandatory_dict, optional_argument
 
-ELEMENTS = "elements"
-YOUNG = "young"
-RHO = "rho"
-THICKNESS = "thickness"
-POISSON = "poisson"
-SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
-STATE = "state"
 DOFTYPES = ["dx", "dy", "dz"]
 PE_STATE = "plane_strain"
 PS_STATE = "plane_stress"
@@ -40,18 +34,21 @@ class ElasticModel(Model):
             table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
-    def configure(self, props, globdat):
-        # This function gets only the core values from props
+    def configure(self, globdat, **props):
 
-        # Get basic parameter values
-        self._young = float(props[YOUNG])
-        self._rho = float(props.get(RHO, 0))
+        # Get props
+        shapeprops = mandatory_dict(
+            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
+        )
+        elements = mandatory_argument(self, props, "elements")
+        self._young = mandatory_argument(self, props, "young")
+        self._rho = optional_argument(self, props, "rho", default=0.0)
 
         if globdat[gn.MESHRANK] > 1:
-            self._poisson = float(props[POISSON])
+            self._poisson = mandatory_argument(self, props, "poisson")
         if globdat[gn.MESHRANK] == 2:
-            self._thickness = float(props.get(THICKNESS, 1))
-            self._state = props[STATE]
+            self._thickness = optional_argument(self, props, "thickness", default=1.0)
+            self._state = mandatory_argument(self, props, "state")
             if not self._state in (PE_STATE, PS_STATE):
                 raise RuntimeError(
                     "ElasticModel: state in 2d should be plane_strain or plane_stress"
@@ -59,9 +56,9 @@ class ElasticModel(Model):
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+            shapeprops[TYPE], shapeprops[INTSCHEME]
         )
-        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+        egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()

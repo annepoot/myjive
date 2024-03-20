@@ -3,13 +3,10 @@ import numpy as np
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 import myjive.util.proputils as pu
+from myjive.util.proputils import mandatory_argument, mandatory_dict, mandatory_list
 
-ELEMENTS = "elements"
-SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
-DOFTYPES = "dofs"
-LOADS = "values"
 
 __all__ = ["LoadModel"]
 
@@ -19,12 +16,21 @@ class LoadModel(Model):
         f_ext = self._get_body_force(f_ext, globdat, **kwargs)
         return f_ext
 
-    def configure(self, props, globdat):
+    def configure(self, globdat, **props):
+
+        # Get props
+        shapeprops = mandatory_dict(
+            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
+        )
+        elements = mandatory_argument(self, props, "elements")
+        self._doftypes = mandatory_list(self, props, "dofs")
+        self._loads = mandatory_list(self, props, "values")
+
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+            shapeprops[TYPE], shapeprops[INTSCHEME]
         )
-        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+        egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()
@@ -38,8 +44,6 @@ class LoadModel(Model):
         self._ipcount = self._shape.ipoint_count()
 
         # Get the relevant dofs
-        self._doftypes = pu.parse_list(props[DOFTYPES])
-        self._loads = pu.parse_list(props[LOADS])
         for i, load in enumerate(self._loads):
             self._loads[i] = pu.soft_cast(load, float)
 

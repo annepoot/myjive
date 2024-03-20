@@ -49,7 +49,7 @@ for i in range(len(ns)):
 
     props["model"]["bar"]["shape"]["type"] = "Line2"
     props["model"]["bar"]["shape"]["intScheme"] = "Gauss2"
-    props["model"]["diri"]["values"] = "[" + str(u_L) + "]"
+    props["model"]["diri"]["values"] = [u_L]
     mesher_lin(L, ns[i])
     globdat = main.jive(props, extra_declares=[declarex])
     K = globdat["matrix0"]

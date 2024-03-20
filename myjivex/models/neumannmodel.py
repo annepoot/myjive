@@ -2,13 +2,7 @@ import numpy as np
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
-
-import myjive.util.proputils as pu
-
-GROUPS = "groups"
-DOFS = "dofs"
-VALS = "values"
-INCR = "loadIncr"
+from myjive.util.proputils import mandatory_list, optional_argument
 
 __all__ = ["NeumannModel"]
 
@@ -33,15 +27,19 @@ class NeumannModel(Model):
     def ADVANCE(self, globdat):
         self._advance_step(globdat)
 
-    def configure(self, props, globdat):
-        self._groups = pu.parse_list(props[GROUPS])
-        self._dofs = pu.parse_list(props[DOFS])
-        self._vals = pu.parse_list(props[VALS], float)
+    def configure(self, globdat, **props):
+
+        # Get props
+        self._groups = mandatory_list(self, props, "groups")
+        self._dofs = mandatory_list(self, props, "dofs")
+        self._vals = mandatory_list(self, props, "values")
+        loadIncr = optional_argument(self, props, "loadIncr")
+
         self._initLoad = self._vals
-        if INCR in props:
-            self._loadIncr = pu.parse_list(props[INCR], float)
-        else:
+        if loadIncr is None:
             self._loadIncr = np.zeros(len(self._vals))
+        else:
+            self._loadIncr = loadIncr
 
     def _get_constraints(self, c, globdat):
         ds = globdat[gn.DOFSPACE]

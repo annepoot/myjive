@@ -2,11 +2,8 @@ import numpy as np
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
+from myjive.util.proputils import mandatory_argument, mandatory_dict, optional_argument
 
-ELEMENTS = "elements"
-KAPPA = "kappa"
-RHO = "rho"
-SHAPE = "shape"
 TYPE = "type"
 INTSCHEME = "intScheme"
 DOFTYPES = ["u"]
@@ -23,18 +20,21 @@ class PoissonModel(Model):
         M = self._get_mass_matrix(M, globdat, **kwargs)
         return M
 
-    def configure(self, props, globdat):
-        # This function gets only the core values from props
+    def configure(self, globdat, **props):
 
-        # Get basic parameter values
-        self._kappa = float(props[KAPPA])
-        self._rho = float(props.get(RHO, 0))
+        # Get props
+        shapeprops = mandatory_dict(
+            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
+        )
+        elements = mandatory_argument(self, props, "elements")
+        self._kappa = mandatory_argument(self, props, "kappa")
+        self._rho = optional_argument(self, props, "rho", default=0.0)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            props[SHAPE][TYPE], props[SHAPE][INTSCHEME]
+            shapeprops[TYPE], shapeprops[INTSCHEME]
         )
-        egroup = globdat[gn.EGROUPS][props[ELEMENTS]]
+        egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
         self._nodes = self._elems.get_nodes()

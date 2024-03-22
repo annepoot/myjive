@@ -17,3 +17,4 @@ gpexamples/gphole/meshes/q4/
 gpexamples/gphole/meshes/q9/
 dist/
 myjive.egg-info/
+myjive/meta.yaml

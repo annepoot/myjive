@@ -223,7 +223,8 @@ class InitModule(Module):
                     globdat[gn.MESHRANK] = len(sp) - 1
 
                 elif parse_elems and len(sp) > 0:
-                    elems.add_element(sp)
+                    inodes = nodes.find_nodes(sp)
+                    elems.add_element(inodes)
 
         # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
         globdat[gn.NSET] = nodes.to_nodeset()

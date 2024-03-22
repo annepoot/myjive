@@ -31,9 +31,6 @@ class LinsolveModule(SolverModule):
         )
         self._tnames = optional_argument(self, props, "tables", default=[])
 
-        self._models = globdat[gn.MODELS]
-        self._dc = globdat[gn.DOFSPACE].dof_count()
-
         solvertype = solverprops[TYPE]
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype)
         self._solver.configure(globdat, **solverprops)
@@ -92,7 +89,7 @@ class LinsolveModule(SolverModule):
             table = Table(size=nodecount)
             tbwts = np.zeros(nodecount)
 
-            for model in self.get_relevant_models("GETTABLE", self._models):
+            for model in self.get_relevant_models("GETTABLE", globdat[gn.MODELS]):
                 table, tbwts = model.GETTABLE(name, table, tbwts, globdat)
 
             to_xtable(table)
@@ -109,7 +106,7 @@ class LinsolveModule(SolverModule):
     def get_ext_vector(self, globdat):
         f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
 
-        for model in self.get_relevant_models("GETEXTFORCE", self._models):
+        for model in self.get_relevant_models("GETEXTFORCE", globdat[gn.MODELS]):
             f_ext = model.GETEXTFORCE(f_ext, globdat)
 
         return f_ext
@@ -117,7 +114,7 @@ class LinsolveModule(SolverModule):
     def get_neumann_vector(self, globdat):
         f_neum = np.zeros(globdat[gn.DOFSPACE].dof_count())
 
-        for model in self.get_relevant_models("GETNEUMANNFORCE", self._models):
+        for model in self.get_relevant_models("GETNEUMANNFORCE", globdat[gn.MODELS]):
             f_neum = model.GETNEUMANNFORCE(f_neum, globdat)
 
         return f_neum
@@ -125,7 +122,7 @@ class LinsolveModule(SolverModule):
     def update_matrix(self, globdat):
         K = self._get_empty_matrix(globdat)
 
-        for model in self.get_relevant_models("GETMATRIX0", self._models):
+        for model in self.get_relevant_models("GETMATRIX0", globdat[gn.MODELS]):
             K = model.GETMATRIX0(K, globdat)
 
         return K
@@ -133,7 +130,7 @@ class LinsolveModule(SolverModule):
     def update_mass_matrix(self, globdat):
         M = self._get_empty_matrix(globdat)
 
-        for model in self.get_relevant_models("GETMATRIX2", self._models):
+        for model in self.get_relevant_models("GETMATRIX2", globdat[gn.MODELS]):
             M = model.GETMATRIX2(M, globdat)
 
         return M
@@ -142,7 +139,7 @@ class LinsolveModule(SolverModule):
         B = self._get_empty_bmatrix(globdat)
         wts = np.zeros(B.shape[0])
 
-        for model in self.get_relevant_models("GETMATRIXB", self._models):
+        for model in self.get_relevant_models("GETMATRIXB", globdat[gn.MODELS]):
             B, wts = model.GETMATRIXB(B, wts, globdat)
 
         # Divide non-zero entries by weights
@@ -156,7 +153,7 @@ class LinsolveModule(SolverModule):
     def update_constraints(self, globdat):
         c = Constraints()
 
-        for model in self.get_relevant_models("GETCONSTRAINTS", self._models):
+        for model in self.get_relevant_models("GETCONSTRAINTS", globdat[gn.MODELS]):
             c = model.GETCONSTRAINTS(c, globdat)
 
         return c

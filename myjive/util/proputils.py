@@ -13,7 +13,7 @@ def parse_file(fname):
 
     while i < len(sp):
         line = sp[i].replace(" ", "")
-        if "{" in line:
+        if "={" in line:
             key = line.split("={")[0]
             newline = "={".join(line.split("={")[1:])
             data[key], i, sp = read_level(newline, i, sp)
@@ -29,12 +29,10 @@ def read_level(line, i, sp):
     subdata = {}
 
     while True:
-        if "{" in line:
+        if "={" in line:
             key = line.split("={")[0]
             newline = "={".join(line.split("={")[1:])
             subdata[key], i, sp = read_level(newline, i, sp)
-        elif "}" in line:
-            return subdata, i, sp
         elif "=" in line:
             [key, value] = line.split("=")
 
@@ -46,6 +44,8 @@ def read_level(line, i, sp):
                 subdata[key] = parsedlist
             else:
                 subdata[key] = try_literal_eval(value)
+        elif "}" in line:
+            return subdata, i, sp
 
         elif line != "":
             raise RuntimeError("Unable to parse: %s" % line)
@@ -159,23 +159,56 @@ def get_eval_dict(coords, rank, extra_dict=None):
     return eval_dict
 
 
-def optional_argument(obj, props, arg, default=None):
+def get_empty_val(dtype):
+    if dtype is str:
+        return ""
+    elif dtype is list:
+        return []
+    elif dtype is tuple:
+        return tuple()
+    elif dtype is dict:
+        return {}
+    else:
+        return dtype(0)
+
+
+def convert_type(val, dtype=None):
+    if dtype is None:
+        return val
+    else:
+        if val is None:
+            return get_empty_val(dtype)
+        else:
+            return dtype(val)
+
+
+def optional_argument(obj, props, arg, default=None, dtype=None):
     val = props.get(arg, default)
+    val = convert_type(val, dtype)
     return val
 
 
-def mandatory_argument(obj, props, arg):
+def optarg(*args, **kwargs):
+    return optional_argument(*args, **kwargs)
+
+
+def mandatory_argument(obj, props, arg, dtype=None):
     name = obj.__class__.__name__
     val = props.get(arg)
     if val is None:
         raise ValueError("Unspecified argument in {}".format(name))
-    else:
-        return val
+    val = convert_type(val, dtype)
+    return val
+
+
+def mdtarg(*args, **kwargs):
+    return mandatory_argument(*args, **kwargs)
 
 
 def mandatory_list(obj, props, arg, min_length=0):
     name = obj.__class__.__name__
     val = props.get(arg)
+
     if val is None:
         raise ValueError("Unspecified argument in {}".format(name))
     elif type(val) is not list:
@@ -186,13 +219,18 @@ def mandatory_list(obj, props, arg, min_length=0):
                 name, min_length
             )
         )
-    else:
-        return val
+
+    return val
+
+
+def mdtlist(*args, **kwargs):
+    return mandatory_list(*args, **kwargs)
 
 
 def mandatory_dict(obj, props, arg, mandatory_keys=[]):
     name = obj.__class__.__name__
     val = props.get(arg)
+
     if val is None:
         raise ValueError("Unspecified argument in {}".format(name))
     elif type(val) is not dict:
@@ -203,4 +241,9 @@ def mandatory_dict(obj, props, arg, mandatory_keys=[]):
                 raise ValueError(
                     "Argument in {} must contain '{}' key".format(name, key)
                 )
-        return val
+
+    return val
+
+
+def mdtdict(*args, **kwargs):
+    return mandatory_dict(*args, **kwargs)

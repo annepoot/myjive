@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from ast import literal_eval
 
 
@@ -13,9 +14,12 @@ def parse_file(fname):
     sp = filestr.split(";")
 
     while i < len(sp):
-        line = sp[i].replace(" ", "")
+        line = re.sub("=\s*{", "={", sp[i])
+
         if "={" in line:
             key = line.split("={")[0]
+            key = key.strip()
+
             newline = "={".join(line.split("={")[1:])
             data[key], i, sp = read_level(newline, i, sp)
         elif line != "":
@@ -32,16 +36,22 @@ def read_level(line, i, sp):
     while True:
         if "={" in line:
             key = line.split("={")[0]
+            key = key.strip()
+
             newline = "={".join(line.split("={")[1:])
             subdata[key], i, sp = read_level(newline, i, sp)
         elif "=" in line:
             [key, value] = line.split("=")
+            key = key.strip()
+            value = value.strip()
 
             if value.startswith("[") and value.endswith("]"):
                 valuelist = value.strip("[").strip("]").split(",")
                 parsedlist = []
-                for val in valuelist:
-                    parsedlist.append(try_literal_eval(val))
+                for value in valuelist:
+                    val = value.strip()
+                    val = try_literal_eval(val)
+                    parsedlist.append(val)
                 subdata[key] = parsedlist
             else:
                 subdata[key] = try_literal_eval(value)
@@ -58,7 +68,7 @@ def read_level(line, i, sp):
                 "EOF reached while parsing an input block. Did you forget to close a bracket?"
             )
 
-        line = sp[i].replace(" ", "")
+        line = re.sub("=\s*{", "={", sp[i])
 
 
 def uncomment_file(fileraw):
@@ -90,7 +100,7 @@ def uncomment_file(fileraw):
                 line = line[:start]
 
         # Add the line to the file string
-        filestr += line.replace("\t", "")
+        filestr += line
 
     return filestr
 

@@ -3,7 +3,12 @@ import numpy as np
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 import myjive.util.proputils as pu
-from myjive.util.proputils import mandatory_argument, mandatory_dict, mandatory_list
+from myjive.util.proputils import (
+    mandatory_argument,
+    mandatory_dict,
+    mandatory_list,
+    optional_argument,
+)
 
 TYPE = "type"
 INTSCHEME = "intScheme"
@@ -25,6 +30,7 @@ class LoadModel(Model):
         elements = mandatory_argument(self, props, "elements")
         self._doftypes = mandatory_list(self, props, "dofs")
         self._loads = mandatory_list(self, props, "values")
+        eval_params = optional_argument(self, props, "params", dtype=dict)
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(
@@ -54,6 +60,10 @@ class LoadModel(Model):
         # Get the dofcount (of only the relevant dofs!)
         self._loadcount = len(self._doftypes)
         self._dofcount = self._loadcount * self._shape.node_count()
+
+        # Get the dictionary for load evaluation
+        self._eval_dict = pu.get_core_eval_dict()
+        self._eval_dict.update(eval_params)
 
     def _get_body_force(self, f_ext, globdat):
         if f_ext is None:
@@ -95,5 +105,7 @@ class LoadModel(Model):
     def _get_b_vector(self, ipcoords):
         b = np.zeros((self._loadcount))
         for i in range(self._loadcount):
-            b[i] = pu.evaluate(self._loads[i], ipcoords, self._rank)
+            b[i] = pu.evaluate(
+                self._loads[i], ipcoords, self._rank, extra_dict=self._eval_dict
+            )
         return b

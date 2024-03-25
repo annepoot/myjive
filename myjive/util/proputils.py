@@ -1,3 +1,4 @@
+import numpy as np
 from ast import literal_eval
 
 
@@ -157,6 +158,18 @@ def get_eval_dict(coords, rank, extra_dict=None):
         eval_dict.update(extra_dict)
 
     return eval_dict
+
+
+def get_core_eval_dict():
+    core_eval_dict = {
+        "exp": np.exp,
+        "sin": np.sin,
+        "cos": np.cos,
+        "tan": np.tan,
+        "pi": np.pi,
+    }
+
+    return core_eval_dict
 
 
 def get_empty_val(dtype):

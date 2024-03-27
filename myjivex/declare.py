@@ -13,7 +13,7 @@ from .models import (
     TimoshenkoModel,
 )
 
-from .modules import VTKOutModule
+from .modules import VTKOutModule, ViewModule
 
 __all__ = ["declare_all", "declare_models", "declare_modules"]
 
@@ -43,5 +43,6 @@ def declare_modules(globdat):
     factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
     VTKOutModule.declare(factory)
+    ViewModule.declare(factory)
 
     globdat[gn.MODULEFACTORY] = factory

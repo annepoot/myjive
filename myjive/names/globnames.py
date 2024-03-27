@@ -26,6 +26,7 @@ class GlobNames:
     MATRIX2 = "matrix2"
     MATRIXB = "matrixB"
     TABLES = "tables"
+    ELEMTABLES = "elemTables"
     LAMBDA = "lambda"
     MODULEDATA = "module"
     SLIDERS = "sliders"

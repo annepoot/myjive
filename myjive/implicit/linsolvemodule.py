@@ -30,6 +30,7 @@ class LinsolveModule(SolverModule):
             self, props, "getStrainMatrix", default=False
         )
         self._tnames = optional_argument(self, props, "tables", default=[])
+        self._etnames = optional_argument(self, props, "elemTables", default=[])
 
         solvertype = solverprops[TYPE]
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype)
@@ -100,6 +101,18 @@ class LinsolveModule(SolverModule):
 
             table.to_table()
             globdat[gn.TABLES][name] = table
+
+        if gn.ELEMTABLES not in globdat:
+            globdat[gn.ELEMTABLES] = {}
+
+        for name in self._etnames:
+            elemcount = len(globdat[gn.ESET])
+            table = Table(size=elemcount)
+
+            for model in self.get_relevant_models("GETELEMTABLE", globdat[gn.MODELS]):
+                table = model.GETELEMTABLE(name, table, globdat)
+
+            globdat[gn.ELEMTABLES][name] = table
 
         return "ok"
 

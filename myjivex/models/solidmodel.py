@@ -4,7 +4,7 @@ from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 from ..materials import new_material
 import myjive.util.proputils as pu
-from myjive.util import Table, to_xtable
+from myjive.util import to_xtable
 from myjive.util.proputils import mandatory_argument, mandatory_dict, optional_argument
 from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
@@ -29,15 +29,26 @@ class SolidModel(Model):
         return B, wts
 
     def GETTABLE(self, name, table, tbwts, globdat, **kwargs):
-        if "stress" in name:
-            table, tbwts = self._get_stresses(table, tbwts, globdat, **kwargs)
-        elif "strain" in name:
-            table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
+        if "strain" in name:
+            table, tbwts = self._get_strain_by_node(table, tbwts, globdat, **kwargs)
+        elif "stress" in name:
+            table, tbwts = self._get_stress_by_node(table, tbwts, globdat, **kwargs)
         elif "stiffness" in name:
-            table, tbwts = self._get_stiffness(table, tbwts, globdat, **kwargs)
+            table, tbwts = self._get_stiffness_by_node(table, tbwts, globdat, **kwargs)
         elif "size" in name:
-            table, tbwts = self._get_elem_size(table, tbwts, globdat, **kwargs)
+            table, tbwts = self._get_elem_size_by_node(table, tbwts, globdat, **kwargs)
         return table, tbwts
+
+    def GETELEMTABLE(self, name, table, globdat, **kwargs):
+        if "strain" in name:
+            table = self._get_strain_by_elem(table, globdat, **kwargs)
+        elif "stress" in name:
+            table = self._get_stress_by_elem(table, globdat, **kwargs)
+        elif "stiffness" in name:
+            table = self._get_stiffness_by_elem(table, globdat, **kwargs)
+        elif "size" in name:
+            table = self._get_elem_size_by_elem(table, globdat, **kwargs)
+        return table
 
     def configure(self, globdat, **props):
 
@@ -211,232 +222,206 @@ class SolidModel(Model):
 
         return B, wts
 
-    def _get_strains(self, table, tbwts, globdat, solution=None):
-        if table is None:
-            nodecount = len(globdat[gn.NSET])
-            table = Table(size=nodecount)
+    def _get_strain_by_node(self, table, tbwts, globdat, solution=None):
+        disp = globdat[gn.STATE0] if solution is None else solution
 
-        if tbwts is None:
-            nodecount = len(globdat[gn.NSET])
-            tbwts = np.zeros(nodecount)
+        comps = self._get_gradient_comps()
+        func = self._get_node_strain
+        table, tbwts = self._fill_by_node(table, tbwts, comps, func, globdat, disp=disp)
+        return table, tbwts
 
-        # Convert the table to an XTable and store the original class
+    def _get_stress_by_node(self, table, tbwts, globdat, solution=None):
+        disp = globdat[gn.STATE0] if solution is None else solution
+
+        comps = self._get_gradient_comps()
+        func = self._get_node_stress
+        table, tbwts = self._fill_by_node(table, tbwts, comps, func, globdat, disp=disp)
+        return table, tbwts
+
+    def _get_stiffness_by_node(self, table, tbwts, globdat):
+        comps = [""]
+        func = self._get_node_stiffness
+        table, tbwts = self._fill_by_node(table, tbwts, comps, func, globdat)
+        return table, tbwts
+
+    def _get_elem_size_by_node(self, table, tbwts, globdat):
+        comps = [""]
+        func = self._get_node_size
+        table, tbwts = self._fill_by_node(table, tbwts, comps, func, globdat)
+        return table, tbwts
+
+    def _get_strain_by_elem(self, table, globdat, solution=None):
+        disp = globdat[gn.STATE0] if solution is None else solution
+        if self._ipcount != 1:
+            raise ValueError("element strain only works with a single Gauss point")
+
+        comps = self._get_gradient_comps()
+        func = self._get_elem_strain
+        table = self._fill_by_elem(table, comps, func, globdat, disp=disp)
+        return table
+
+    def _get_stress_by_elem(self, table, globdat, solution=None):
+        disp = globdat[gn.STATE0] if solution is None else solution
+        if self._ipcount != 1:
+            raise ValueError("element stress only works with a single Gauss point")
+
+        comps = self._get_gradient_comps()
+        func = self._get_elem_stress
+        table = self._fill_by_elem(table, comps, func, globdat, disp=disp)
+        return table
+
+    def _get_stiffness_by_elem(self, table, globdat, solution=None):
+        if self._ipcount != 1:
+            raise ValueError("element stiffness only works with a single Gauss point")
+
+        comps = [""]
+        func = self._get_elem_stiffness
+        table = self._fill_by_elem(table, comps, func, globdat)
+        return table
+
+    def _get_elem_size_by_elem(self, table, globdat, solution=None):
+        comps = [""]
+        func = self._get_elem_size
+        table = self._fill_by_elem(table, comps, func, globdat)
+        return table
+
+    def _fill_by_elem(self, table, comps, func, globdat, **fargs):
         xtable = to_xtable(table)
+        jcols = xtable.add_columns(comps)
 
-        # Get the STATE0 vector if no custom displacement field is provided
-        if solution is None:
-            disp = globdat[gn.STATE0]
-        else:
-            disp = solution
+        for ielem in self._ielems:
+            strain = func(ielem, globdat, **fargs)
+            xtable.set_row_values(ielem, jcols, strain)
 
-        # Add the columns of all strain components to the table
+        table = xtable.to_table()
+        return table
+
+    def _fill_by_node(self, table, tbwts, comps, func, globdat, **fargs):
+        xtable = to_xtable(table)
+        jcols = xtable.add_columns(comps)
+
+        for ielem in self._ielems:
+            inodes = self._elems.get_elem_nodes(ielem)
+            field, weights = func(ielem, inodes, globdat, **fargs)
+
+            tbwts[inodes] += weights
+            xtable.add_block(inodes, jcols, field)
+
+        table = xtable.to_table()
+        return table, tbwts
+
+    def _get_elem_strain(self, ielem, globdat, disp=None):
+        inodes = self._elems.get_elem_nodes(ielem)
+        idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
+        coords = self._nodes.get_some_coords(inodes)
+        grads, _ = self._shape.get_shape_gradients(coords)
+
+        eldisp = disp[idofs]
+        strain = self._get_ip_strain(0, grads, eldisp)
+        return strain
+
+    def _get_elem_stress(self, ielem, globdat, disp=None):
+        inodes = self._elems.get_elem_nodes(ielem)
+        idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
+        coords = self._nodes.get_some_coords(inodes)
+        grads, _ = self._shape.get_shape_gradients(coords)
+        ipcoords = self._shape.get_global_integration_points(coords)
+
+        eldisp = disp[idofs]
+        stress = self._get_ip_stress(0, ipcoords, grads, eldisp)
+        return stress
+
+    def _get_elem_stiffness(self, ielem, globdat):
+        inodes = self._elems.get_elem_nodes(ielem)
+        coords = self._nodes.get_some_coords(inodes)
+        grads, _ = self._shape.get_shape_gradients(coords)
+        ipcoords = self._shape.get_global_integration_points(coords)
+
+        stiffness = self._mat._get_E(ipcoords[:, 0])
+        return stiffness
+
+    def _get_elem_size(self, ielem, globdat):
+        inodes = self._elems.get_elem_nodes(ielem)
+        coords = self._nodes.get_some_coords(inodes)
+
+        max_edge = 0.0
+        for i, inode in enumerate(inodes):
+            for j, jnode in enumerate(inodes):
+                icoords = coords[:, i]
+                jcoords = coords[:, j]
+                edge = np.sqrt(np.sum((icoords - jcoords) ** 2))
+                if edge > max_edge:
+                    max_edge = edge
+
+        return max_edge
+
+    def _get_node_strain(self, ielem, inodes, globdat, disp=None):
+        idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
+        coords = self._nodes.get_some_coords(inodes)
+        sfuncs = self._shape.get_shape_functions()
+        grads, weights = self._shape.get_shape_gradients(coords)
+
+        eldisp = disp[idofs]
+        eleps = np.zeros((self._shape.node_count(), self._strcount))
+        elwts = np.zeros(self._shape.node_count())
+
+        for ip in range(self._ipcount):
+            strain = self._get_ip_strain(ip, grads, eldisp)
+            eleps += np.outer(sfuncs[:, ip], strain)
+            elwts += sfuncs[:, ip].flatten()
+
+        return eleps, elwts
+
+    def _get_node_stress(self, ielem, inodes, globdat, disp=None):
+        idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
+        coords = self._nodes.get_some_coords(inodes)
+        sfuncs = self._shape.get_shape_functions()
+        grads, weights = self._shape.get_shape_gradients(coords)
+        ipcoords = self._shape.get_global_integration_points(coords)
+
+        if self._rank == 2:
+            weights *= self._thickness
+
+        eldisp = disp[idofs]
+        elsig = np.zeros((self._shape.node_count(), self._strcount))
+        elwts = np.zeros(self._shape.node_count())
+
+        for ip in range(self._ipcount):
+            stress = self._get_ip_stress(ip, ipcoords, grads, eldisp)
+            elsig += np.outer(sfuncs[:, ip], stress)
+            elwts += sfuncs[:, ip].flatten()
+
+        return elsig, elwts
+
+    def _get_node_stiffness(self, ielem, inodes, globdat):
+        coords = self._nodes.get_some_coords(inodes)
+        sfuncs = self._shape.get_shape_functions()
+        ipcoords = self._shape.get_global_integration_points(coords)
+
+        elyoung = np.zeros((self._shape.node_count(), 1))
+        elwts = np.zeros(self._shape.node_count())
+
+        for ip in range(self._ipcount):
+            E = self._mat._get_E(ipcoords[:, ip])
+            elyoung[:, 0] += E * sfuncs[:, ip]
+            elwts += sfuncs[:, ip].flatten()
+
+        return elyoung, elwts
+
+    def _get_node_size(self, ielem, inodes, globdat):
+        max_edge = self._get_elem_size(ielem, globdat)
+        elsize = max_edge * np.ones((self._shape.node_count(), 1))
+        elwts = np.ones(self._shape.node_count())
+        return elsize, elwts
+
+    def _get_gradient_comps(self):
         if self._rank == 1:
-            jcols = xtable.add_columns(["xx"])
+            comps = ["xx"]
         elif self._rank == 2:
-            jcols = xtable.add_columns(["xx", "yy", "xy"])
+            comps = ["xx", "yy", "xy"]
         elif self._rank == 3:
-            jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
-
-        for ielem in self._ielems:
-            # Get the nodal coordinates of each element
-            inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Get the shape functions, gradients, weights and coordinates of each integration point
-            sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
-
-            # Get the nodal displacements
-            eldisp = disp[idofs]
-
-            # Reset the element stress matrix and weights
-            eleps = np.zeros((self._shape.node_count(), self._strcount))
-            elwts = np.zeros(self._shape.node_count())
-
-            for ip in range(self._ipcount):
-                # Get the B matrix for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
-
-                # Get the strain of the element in the integration point
-                strain = np.matmul(B, eldisp)
-
-                # Compute the element strain and weights
-                eleps += np.outer(sfuncs[:, ip], strain)
-                elwts += sfuncs[:, ip].flatten()
-
-            # Add the element weights to the global weights
-            tbwts[inodes] += elwts
-
-            # Add the element stresses to the global stresses
-            xtable.add_block(inodes, jcols, eleps)
-
-        # Convert the table back to the original class
-        table = xtable.to_table()
-
-        return table, tbwts
-
-    def _get_stresses(self, table, tbwts, globdat, solution=None):
-        if table is None:
-            nodecount = len(globdat[gn.NSET])
-            table = Table(size=nodecount)
-
-        if tbwts is None:
-            nodecount = len(globdat[gn.NSET])
-            tbwts = np.zeros(nodecount)
-
-        # Convert the table to an XTable and store the original class
-        xtable = to_xtable(table)
-
-        # Get the STATE0 vector if no custom displacement field is provided
-        if solution is None:
-            disp = globdat[gn.STATE0]
-        else:
-            disp = solution
-
-        # Add the columns of all stress components to the table
-        if self._rank == 1:
-            jcols = xtable.add_columns(["xx"])
-        elif self._rank == 2:
-            jcols = xtable.add_columns(["xx", "yy", "xy"])
-        elif self._rank == 3:
-            jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
-
-        for ielem in self._ielems:
-            # Get the nodal coordinates of each element
-            inodes = self._elems.get_elem_nodes(ielem)
-            idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Get the shape functions, gradients, weights and coordinates of each integration point
-            sfuncs = self._shape.get_shape_functions()
-            grads, weights = self._shape.get_shape_gradients(coords)
-            ipcoords = self._shape.get_global_integration_points(coords)
-
-            if self._rank == 2:
-                weights *= self._thickness
-
-            # Get the nodal displacements
-            eldisp = disp[idofs]
-
-            # Reset the element stress matrix and weights
-            elsig = np.zeros((self._shape.node_count(), self._strcount))
-            elwts = np.zeros(self._shape.node_count())
-
-            for ip in range(self._ipcount):
-                # Get the B matrix for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
-
-                # Get the strain and stress of the element in the integration point
-                strain = np.matmul(B, eldisp)
-                stress = self._mat.stress_at_point(strain, ipcoords[:, ip])
-
-                # Compute the element stress and weights
-                elsig += np.outer(sfuncs[:, ip], stress)
-                elwts += sfuncs[:, ip].flatten()
-
-            # Add the element weights to the global weights
-            tbwts[inodes] += elwts
-
-            # Add the element stresses to the global stresses
-            xtable.add_block(inodes, jcols, elsig)
-
-        # Convert the table back to the original class
-        table = xtable.to_table()
-
-        return table, tbwts
-
-    def _get_stiffness(self, table, tbwts, globdat):
-        if table is None:
-            nodecount = len(globdat[gn.NSET])
-            table = Table(size=nodecount)
-
-        if tbwts is None:
-            nodecount = len(globdat[gn.NSET])
-            tbwts = np.zeros(nodecount)
-
-        # Convert the table to an XTable and store the original class
-        xtable = to_xtable(table)
-
-        # Add the column of the Young's modulus to the table
-        jcol = xtable.add_column("")
-
-        for ielem in self._ielems:
-            # Get the nodal coordinates of each element
-            inodes = self._elems.get_elem_nodes(ielem)
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Get the shape functions, gradients, weights and coordinates of each integration point
-            sfuncs = self._shape.get_shape_functions()
-            ipcoords = self._shape.get_global_integration_points(coords)
-
-            # Reset the element stress matrix and weights
-            elyoung = np.zeros((self._shape.node_count()))
-            elwts = np.zeros(self._shape.node_count())
-
-            for ip in range(self._ipcount):
-                # Get the stiffness in the integration point
-                E = self._mat._get_E(ipcoords[:, ip])
-
-                # Compute the element stiffness and weights
-                elyoung += E * sfuncs[:, ip]
-                elwts += sfuncs[:, ip].flatten()
-
-            # Add the element weights to the global weights
-            tbwts[inodes] += elwts
-
-            # Add the element stiffness to the global stiffness
-            xtable.add_col_values(inodes, jcol, elyoung)
-
-        # Convert the table back to the original class
-        table = xtable.to_table()
-
-        return table, tbwts
-
-    def _get_elem_size(self, table, tbwts, globdat):
-        if table is None:
-            nodecount = len(globdat[gn.NSET])
-            table = Table(size=nodecount)
-
-        if tbwts is None:
-            nodecount = len(globdat[gn.NSET])
-            tbwts = np.zeros(nodecount)
-
-        # Convert the table to an XTable and store the original class
-        xtable = to_xtable(table)
-
-        # Add the columns of all stress components to the table
-        jcol = xtable.add_column("")
-
-        for ielem in self._ielems:
-            # Get the nodal coordinates of each element
-            inodes = self._elems.get_elem_nodes(ielem)
-            coords = self._nodes.get_some_coords(inodes)
-
-            # Compute the maximum edge length\
-            max_edge = 0.0
-            for i, inode in enumerate(inodes):
-                for j, jnode in enumerate(inodes):
-                    icoords = coords[:, i]
-                    jcoords = coords[:, j]
-                    edge = np.sqrt(np.sum((icoords - jcoords) ** 2))
-                    if edge > max_edge:
-                        max_edge = edge
-
-            # Reset the element size and weights
-            elsize = max_edge * np.ones(self._shape.node_count())
-            elwts = np.ones(self._shape.node_count())
-
-            # Add the element weights to the global weights
-            tbwts[inodes] += elwts
-
-            # Add the element stresses to the global stresses
-            xtable.add_col_values(inodes, jcol, elsize)
-
-        # Convert the table back to the original class
-        table = xtable.to_table()
-
-        return table, tbwts
+            comps = ["xx", "yy", "zz", "xy", "yz", "zx"]
+        return comps
 
     def _get_N_matrix(self, sfuncs):
         return get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
@@ -445,3 +430,13 @@ class SolidModel(Model):
         return get_B_matrix_jit(
             grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank
         )
+
+    def _get_ip_strain(self, ip, grads, eldisp):
+        B = self._get_B_matrix(grads[:, :, ip])
+        strain = np.matmul(B, eldisp)
+        return strain
+
+    def _get_ip_stress(self, ip, ipcoords, grads, eldisp):
+        strain = self._get_ip_strain(ip, grads, eldisp)
+        stress = self._mat.stress_at_point(strain, ipcoords[:, ip])
+        return stress

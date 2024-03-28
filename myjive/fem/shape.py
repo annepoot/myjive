@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.polynomial.legendre import leggauss
 from scipy.optimize import fsolve
 from warnings import warn
 from .jit.shape import get_shape_gradients_jit
@@ -30,16 +31,8 @@ class Shape:
 
         self._int = intscheme
 
-        if self._int == "Gauss1":
-            self._ipcount = 1
-        elif self._int == "Gauss2":
-            self._ipcount = 2
-        elif self._int == "Gauss3":
-            self._ipcount = 3
-        elif self._int == "Gauss4":
-            self._ipcount = 4
-        elif self._int == "Gauss9":
-            self._ipcount = 9
+        if self._int.lstrip("Gauss").isnumeric():
+            self._ipcount = int(self._int.lstrip("Gauss"))
         else:
             raise ValueError(self._int)
 
@@ -64,6 +57,9 @@ class Shape:
                 self._wts[0] = 5.0 / 9.0
                 self._wts[1] = 8.0 / 9.0
                 self._wts[2] = 5.0 / 9.0
+
+            elif self._int.lstrip("Gauss").isnumeric():
+                self._ips[0, :], self._wts[:] = leggauss(self._ipcount)
 
             else:
                 raise ValueError(self._int)

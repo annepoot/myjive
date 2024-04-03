@@ -7,9 +7,7 @@ __all__ = ["HeterogeneousMaterial"]
 
 
 class HeterogeneousMaterial(IsotropicMaterial):
-
     def configure(self, globdat, **props):
-
         # Get props
         self._rank = mandatory_argument(self, props, "rank")
         self._anmodel = mandatory_argument(self, props, "anmodel")

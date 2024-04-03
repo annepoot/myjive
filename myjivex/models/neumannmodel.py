@@ -28,7 +28,6 @@ class NeumannModel(Model):
         self._advance_step(globdat)
 
     def configure(self, globdat, **props):
-
         # Get props
         self._groups = mandatory_list(self, props, "groups")
         self._dofs = mandatory_list(self, props, "dofs")

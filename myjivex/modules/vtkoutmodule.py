@@ -11,7 +11,6 @@ __all__ = ["VTKOutModule"]
 
 class VTKOutModule(Module):
     def init(self, globdat, **props):
-
         # Get props
         self._fname = optional_argument(self, props, "file", default="")
         self._tnames = optional_argument(self, props, "tables", default=[])

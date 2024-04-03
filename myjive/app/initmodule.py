@@ -23,7 +23,6 @@ class InitModule(Module):
     _ctol = 1.0e-5
 
     def init(self, globdat, **props):
-
         # Get props
         modelprops = mandatory_dict(self, props, "modelprops", mandatory_keys=[MODELS])
         meshprops = mandatory_dict(self, props, "mesh", mandatory_keys=[TYPE, FILE])

@@ -14,7 +14,6 @@ __all__ = ["ViewModule"]
 
 class ViewModule(Module):
     def init(self, globdat, **props):
-
         # Get props
         self._plottype = mdtarg(self, props, "plotType")
         self._ntables = optarg(self, props, "tables", dtype=list)
@@ -36,10 +35,8 @@ class ViewModule(Module):
         return "ok"
 
     def shutdown(self, globdat):
-
         # Go through the tables and comps
         for name, comp in zip(self._ntables, self._ncomps):
-
             if self._plottype == "node":
                 self._write_node_table(name, globdat)
             elif self._plottype == "elem":
@@ -78,7 +75,6 @@ class ViewModule(Module):
             globdat[gn.ELEMTABLES][name] = table
 
     def _generate_plot(self, name, comp, globdat):
-
         # Get the necessary info from globdat
         nodes = globdat[gn.NSET]
         elems = globdat[gn.ESET]

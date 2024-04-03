@@ -51,7 +51,6 @@ class SolidModel(Model):
         return table
 
     def configure(self, globdat, **props):
-
         # Get props
         shapeprops = mandatory_dict(
             self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]

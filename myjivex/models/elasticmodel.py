@@ -35,7 +35,6 @@ class ElasticModel(Model):
         return table, tbwts
 
     def configure(self, globdat, **props):
-
         # Get props
         shapeprops = mandatory_dict(
             self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]

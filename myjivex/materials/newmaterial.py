@@ -6,7 +6,6 @@ __all__ = ["new_material"]
 
 
 def new_material(typ):
-
     if typ == "Isotropic":
         mat = IsotropicMaterial()
     elif typ == "Heterogeneous":

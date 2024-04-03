@@ -23,7 +23,6 @@ class PreconFactory:
 
 
 class Preconditioner:
-
     def configure(self, globdat, **props):
         self._precision = optional_argument(self, props, "precision", default=1e-8)
 

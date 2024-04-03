@@ -15,7 +15,6 @@ __all__ = ["LinsolveModule"]
 
 class LinsolveModule(SolverModule):
     def init(self, globdat, **props):
-
         super().init(globdat, **props)
 
         # Get props

@@ -252,8 +252,6 @@ class SolidModel(Model):
 
     def _get_strain_by_elem(self, table, globdat, solution=None):
         disp = globdat[gn.STATE0] if solution is None else solution
-        if self._ipcount != 1:
-            raise ValueError("element strain only works with a single Gauss point")
 
         comps = self._get_gradient_comps()
         func = self._get_elem_strain
@@ -262,8 +260,6 @@ class SolidModel(Model):
 
     def _get_stress_by_elem(self, table, globdat, solution=None):
         disp = globdat[gn.STATE0] if solution is None else solution
-        if self._ipcount != 1:
-            raise ValueError("element stress only works with a single Gauss point")
 
         comps = self._get_gradient_comps()
         func = self._get_elem_stress
@@ -317,8 +313,13 @@ class SolidModel(Model):
         grads, _ = self._shape.get_shape_gradients(coords)
 
         eldisp = disp[idofs]
-        strain = self._get_ip_strain(0, grads, eldisp)
-        return strain
+        strains = np.zeros(self._ipcount)
+        for ip in range(self._ipcount):
+            strains[ip] = self._get_ip_strain(ip, grads, eldisp)
+        if not np.allclose(strains, strains[0]):
+            raise RuntimeError("Non-constant strain over element")
+
+        return strains[0]
 
     def _get_elem_stress(self, ielem, globdat, disp=None):
         inodes = self._elems.get_elem_nodes(ielem)
@@ -328,8 +329,13 @@ class SolidModel(Model):
         ipcoords = self._shape.get_global_integration_points(coords)
 
         eldisp = disp[idofs]
-        stress = self._get_ip_stress(0, ipcoords, grads, eldisp)
-        return stress
+        stresses = np.zeros(self._ipcount)
+        for ip in range(self._ipcount):
+            stresses[ip] = self._get_ip_stress(ip, ipcoords, grads, eldisp)
+        if not np.allclose(stresses, stresses[0]):
+            raise RuntimeError("Non-constant stresses over element")
+
+        return stresses[0]
 
     def _get_elem_stiffness(self, ielem, globdat):
         inodes = self._elems.get_elem_nodes(ielem)

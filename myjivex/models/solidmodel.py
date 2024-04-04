@@ -29,6 +29,8 @@ class SolidModel(Model):
         return B, wts
 
     def GETTABLE(self, name, table, tbwts, globdat, **kwargs):
+        if "displacement" in name or "solution" in name:
+            table, tbwts = self._get_solution_by_node(table, tbwts, globdat, **kwargs)
         if "strain" in name:
             table, tbwts = self._get_strain_by_node(table, tbwts, globdat, **kwargs)
         elif "stress" in name:
@@ -220,6 +222,24 @@ class SolidModel(Model):
             wts[node_idx] += elwts
 
         return B, wts
+
+    def _get_solution_by_node(self, table, tbwts, globdat, solution=None):
+        disp = globdat[gn.STATE0] if solution is None else solution
+
+        comps = self._get_solution_comps()
+        # table, tbwts = self._fill_by_node(table, tbwts, comps, func, globdat, disp=disp)
+
+        xtable = to_xtable(table)
+        jcols = xtable.add_columns(comps)
+
+        for inode, node in enumerate(self._nodes):
+            idofs = globdat[gn.DOFSPACE].get_dofs([inode], DOFTYPES[0 : self._rank])
+            sol = disp[idofs]
+            tbwts[inode] += 1
+            xtable.add_row_values(inode, jcols, sol)
+
+        table = xtable.to_table()
+        return table, tbwts
 
     def _get_strain_by_node(self, table, tbwts, globdat, solution=None):
         disp = globdat[gn.STATE0] if solution is None else solution
@@ -418,6 +438,15 @@ class SolidModel(Model):
         elsize = max_edge * np.ones((self._shape.node_count(), 1))
         elwts = np.ones(self._shape.node_count())
         return elsize, elwts
+
+    def _get_solution_comps(self):
+        if self._rank == 1:
+            comps = ["dx"]
+        elif self._rank == 2:
+            comps = ["dx", "dy"]
+        elif self._rank == 3:
+            comps = ["dx", "dy", "dz"]
+        return comps
 
     def _get_gradient_comps(self):
         if self._rank == 1:

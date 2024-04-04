@@ -8,4 +8,5 @@ from .node import *
 from .nodegroup import *
 from .nodeset import *
 from .paramshapes import *
+from .pointset import *
 from .shape import *

@@ -224,6 +224,7 @@ class InitModule(Module):
                 elif parse_elems and len(sp) > 0:
                     inodes = nodes.find_nodes(sp)
                     elems.add_element(inodes)
+                    globdat[gn.MESHSHAPE] = "Line{}".format(len(inodes))
 
         # Convert the XNodeSet and XElementSet to a normal NodeSet and ElementSet
         globdat[gn.NSET] = nodes.to_nodeset()

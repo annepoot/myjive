@@ -193,6 +193,10 @@ class Shape:
     def eval_shape_functions(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
+    def eval_global_shape_functions(self, glob_point, glob_coords):
+        loc_point = self.get_local_point(glob_point, glob_coords)
+        return self.eval_shape_functions(loc_point)
+
     def get_global_point(self, loc_point, glob_coords):
         sfuncs = self.eval_shape_functions(loc_point)
         return np.matmul(glob_coords, sfuncs)
@@ -228,3 +232,9 @@ class Shape:
 
     def eval_shape_gradients(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
+
+    def eval_global_shape_gradients(self, glob_point, glob_coords):
+        loc_point = self.get_local_point(glob_point, glob_coords)
+        J = glob_coords @ self.eval_shape_gradients(loc_point)
+        J_inv = np.linalg.inv(J)
+        return self.eval_shape_gradients(loc_point) @ J_inv

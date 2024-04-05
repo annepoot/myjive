@@ -16,14 +16,16 @@ class XTable(Table):
 
     def reserve(self, rowcount):
         if self.row_count() < rowcount:
-            self._data.resize((rowcount, self.column_count()), refcheck=False)
+            new_data = np.zeros(rowcount, self.column_count())
+            new_data[: self.row_count(), :] = self._data
+            self._data = new_data
 
     def add_column(self, name):
         if self.find_column(name) < 0:
             self._header = np.append(self._header, name)
-            self._data.resize(
-                (self.row_count(), self.column_count() + 1), refcheck=False
-            )
+            new_data = np.zeros((self.row_count(), self.column_count() + 1))
+            new_data[:, :-1] = self._data
+            self._data = new_data
         return self.find_column(name)
 
     def add_columns(self, names):

@@ -14,8 +14,6 @@ __all__ = [
 
 class Tri3Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Tri3Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 3
         self._rank = 2
@@ -100,8 +98,6 @@ class Tri3Shape(Shape):
 
 class Tri6Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Tri6Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 6
         self._rank = 2
@@ -181,8 +177,6 @@ class Tri6Shape(Shape):
 
 class Quad4Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Quad4Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 4
         self._rank = 2
@@ -254,8 +248,6 @@ class Quad4Shape(Shape):
 
 class Quad9Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Quad9Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 9
         self._rank = 2
@@ -356,8 +348,6 @@ class Quad9Shape(Shape):
 
 class Line2Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Line2Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 2
         self._rank = 1
@@ -417,8 +407,6 @@ class Line2Shape(Shape):
 
 class Line3Shape(Shape):
     def __init__(self, intscheme):
-        print("Creating Line2Shape...")
-
         # Set the nodecount and rank of the elements
         self._ncount = 3
         self._rank = 1

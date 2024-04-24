@@ -177,6 +177,7 @@ def get_core_eval_dict():
         "cos": np.cos,
         "tan": np.tan,
         "pi": np.pi,
+        "sqrt": np.sqrt,
     }
 
     return core_eval_dict

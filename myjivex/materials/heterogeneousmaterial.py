@@ -15,6 +15,10 @@ class HeterogeneousMaterial(IsotropicMaterial):
         self._nu = optional_argument(self, props, "nu", default=0.0)
         self._rho = optional_argument(self, props, "rho", default=0.0)
         self._area = optional_argument(self, props, "area", default=1.0)
+        eval_params = optional_argument(self, props, "params", dtype=dict)
+
+        self._eval_dict = pu.get_core_eval_dict()
+        self._eval_dict.update(eval_params)
 
         self._strcount = self._rank * (self._rank + 1) // 2
         assert self._is_valid_anmodel(self._anmodel), (
@@ -28,13 +32,13 @@ class HeterogeneousMaterial(IsotropicMaterial):
         return self._compute_mass_matrix(ipoint)
 
     def _get_E(self, ipoint=None):
-        return pu.evaluate(self._E, ipoint, self._rank)
+        return pu.evaluate(self._E, ipoint, self._rank, extra_dict=self._eval_dict)
 
     def _get_nu(self, ipoint=None):
-        return pu.evaluate(self._nu, ipoint, self._rank)
+        return pu.evaluate(self._nu, ipoint, self._rank, extra_dict=self._eval_dict)
 
     def _get_rho(self, ipoint=None):
-        return pu.evaluate(self._rho, ipoint, self._rank)
+        return pu.evaluate(self._rho, ipoint, self._rank, extra_dict=self._eval_dict)
 
     def _get_area(self, ipoint=None):
-        return pu.evaluate(self._area, ipoint, self._rank)
+        return pu.evaluate(self._area, ipoint, self._rank, extra_dict=self._eval_dict)

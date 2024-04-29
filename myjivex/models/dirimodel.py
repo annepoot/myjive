@@ -16,6 +16,7 @@ class DirichletModel(Model):
     def ADVANCE(self, globdat):
         self._advance_step_constraints(globdat)
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         self._groups = mandatory_list(self, props, "groups")

@@ -52,6 +52,7 @@ class SolidModel(Model):
             table = self._get_elem_size_by_elem(table, globdat, **kwargs)
         return table
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         shapeprops = mandatory_dict(
@@ -63,8 +64,9 @@ class SolidModel(Model):
 
         # Configure the material
         mattype = matprops[TYPE]
-        self._mat = new_material(mattype)
+        self._mat = new_material(mattype, "material")
         self._mat.configure(globdat, **matprops)
+        self._config["material"] = self._mat.get_config()
 
         # Get shape and element info
         self._shape = globdat[gn.SHAPEFACTORY].get_shape(

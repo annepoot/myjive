@@ -6,8 +6,8 @@ __all__ = ["ICholPrecon"]
 
 
 class ICholPrecon(Preconditioner):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name)
 
         self._sourcematrix = None
         self._L = None

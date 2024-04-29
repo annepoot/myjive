@@ -4,8 +4,8 @@ __all__ = ["CGSolver"]
 
 
 class CGSolver(IterativeSolver):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name)
 
         self._p = None
 

@@ -1,4 +1,5 @@
 from myjive.util.proputils import optional_argument
+from ..util import saveconfig as sg
 import numpy as np
 
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
@@ -13,18 +14,20 @@ class SolverFactory:
     def declare_solver(self, typ, solver):
         self._solvers[typ] = solver
 
-    def get_solver(self, typ):
+    def get_solver(self, typ, name):
         solver = self._solvers.get(typ)
         if not solver:
             raise ValueError(typ)
-        return solver()
+        return solver(name)
 
     def is_solver(self, typ):
         return typ in self._solvers
 
 
 class Solver:
-    def __init__(self):
+    def __init__(self, name):
+        self._name = name
+        self._config = {}
         self.precon_mode = False
 
     @classmethod
@@ -34,6 +37,7 @@ class Solver:
             name = name[:-6]
         factory.declare_solver(name, cls)
 
+    @sg.save_config
     def configure(self, globdat, **props):
         self._precision = optional_argument(self, props, "precision", default=1e-8)
 
@@ -71,3 +75,16 @@ class Solver:
 
     def get_constraints(self):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
+
+    def get_config(self):
+        if len(self._config) == 0:
+            raise NotImplementedError("Empty solver get_config")
+        else:
+            return self._config
+
+    def get_name(self):
+        return self._name
+
+    @staticmethod
+    def save_config(configure):
+        return sg.save_config(configure)

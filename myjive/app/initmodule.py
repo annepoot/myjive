@@ -22,12 +22,17 @@ class InitModule(Module):
     # Predefine some parameters
     _ctol = 1.0e-5
 
+    @Module.save_config
+    def configure(self, globdat, **props):
+        self._mesh_props = mandatory_dict(
+            self, props, "mesh", mandatory_keys=[TYPE, FILE]
+        )
+        self._node_groups = optional_argument(self, props, "nodeGroups", default=[])
+        self._elem_groups = optional_argument(self, props, "elemGroups", default=[])
+
     def init(self, globdat, **props):
         # Get props
         modelprops = mandatory_dict(self, props, "modelprops", mandatory_keys=[MODELS])
-        meshprops = mandatory_dict(self, props, "mesh", mandatory_keys=[TYPE, FILE])
-        nodeGroups = optional_argument(self, props, "nodeGroups", default=[])
-        elemGroups = optional_argument(self, props, "elemGroups", default=[])
 
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
@@ -39,26 +44,26 @@ class InitModule(Module):
         print("InitModule: Creating DofSpace...")
         globdat[gn.DOFSPACE] = DofSpace()
 
-        if "gmsh" in meshprops[TYPE]:
-            self._read_gmsh(meshprops[FILE], globdat)
-        elif "manual" in meshprops[TYPE]:
-            self._read_mesh(meshprops[FILE], globdat)
-        elif "meshio" in meshprops[TYPE]:
-            self._read_meshio(meshprops[FILE], globdat)
-        elif "geo" in meshprops[TYPE]:
-            self._read_geo(meshprops[FILE], globdat)
+        if "gmsh" in self._mesh_props[TYPE]:
+            self._read_gmsh(self._mesh_props[FILE], globdat)
+        elif "manual" in self._mesh_props[TYPE]:
+            self._read_mesh(self._mesh_props[FILE], globdat)
+        elif "meshio" in self._mesh_props[TYPE]:
+            self._read_meshio(self._mesh_props[FILE], globdat)
+        elif "geo" in self._mesh_props[TYPE]:
+            self._read_geo(self._mesh_props[FILE], globdat)
         else:
             raise KeyError("InitModule: Mesh input type unknown")
 
         # Create node groups
-        if nodeGroups is not None:
+        if self._node_groups is not None:
             print("InitModule: Creating node groups...")
-            self._create_ngroups(nodeGroups, globdat, **props)
+            self._create_ngroups(self._node_groups, globdat, **props)
 
         # Create element groups
-        if elemGroups is not None:
+        if self._elem_groups is not None:
             print("InitModule: Creating element groups...")
-            self._create_egroups(elemGroups, globdat)
+            self._create_egroups(self._elem_groups, globdat)
 
         # Initialize model
         print("InitModule: Creating models...")

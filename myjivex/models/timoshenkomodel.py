@@ -16,6 +16,7 @@ class TimoshenkoModel(Model):
         K = self._get_matrix(K, globdat, **kwargs)
         return K
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         shapeprops = mandatory_dict(

@@ -1,3 +1,5 @@
+from ..util import saveconfig as sg
+
 __all__ = ["Module", "ModuleFactory"]
 
 
@@ -21,6 +23,7 @@ class ModuleFactory:
 class Module:
     def __init__(self, name):
         self._name = name
+        self._config = {}
 
     @classmethod
     def declare(cls, factory):
@@ -36,12 +39,27 @@ class Module:
                 model_list.append(model)
         return model_list
 
+    def configure(self, globdat, **props):
+        raise NotImplementedError("Empty module configure")
+
+    def get_config(self):
+        if len(self._config) == 0:
+            raise NotImplementedError("Empty module get_config")
+        else:
+            return self._config
+
     def init(self, globdat, **props):
-        print("Empty module init")
+        raise NotImplementedError("Empty module init")
 
     def run(self, globdat):
-        print("Empty module run")
-        return "exit"
+        raise NotImplementedError("Empty module run")
 
     def shutdown(self, globdat):
-        print("Empty module shutdown")
+        raise NotImplementedError("Empty module shutdown")
+
+    def get_name(self):
+        return self._name
+
+    @staticmethod
+    def save_config(configure):
+        return sg.save_config(configure)

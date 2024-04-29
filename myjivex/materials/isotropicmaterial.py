@@ -11,6 +11,7 @@ __all__ = ["IsotropicMaterial"]
 
 
 class IsotropicMaterial(Material):
+    @Material.save_config
     def configure(self, globdat, **props):
         # Get props
         self._rank = mandatory_argument(self, props, "rank")

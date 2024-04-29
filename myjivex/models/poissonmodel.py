@@ -20,6 +20,7 @@ class PoissonModel(Model):
         M = self._get_mass_matrix(M, globdat, **kwargs)
         return M
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         shapeprops = mandatory_dict(

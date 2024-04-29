@@ -1,12 +1,12 @@
 from .isotropicmaterial import IsotropicMaterial
 from myjive.util.proputils import mandatory_argument, optional_argument
 import myjive.util.proputils as pu
-import numpy as np
 
 __all__ = ["HeterogeneousMaterial"]
 
 
 class HeterogeneousMaterial(IsotropicMaterial):
+    @IsotropicMaterial.save_config
     def configure(self, globdat, **props):
         # Get props
         self._rank = mandatory_argument(self, props, "rank")

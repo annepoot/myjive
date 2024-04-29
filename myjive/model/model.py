@@ -1,3 +1,5 @@
+from ..util import saveconfig as sg
+
 __all__ = ["Model", "ModelFactory"]
 
 
@@ -21,6 +23,7 @@ class ModelFactory:
 class Model:
     def __init__(self, name):
         self._name = name
+        self._config = {}
 
     @classmethod
     def declare(cls, factory):
@@ -41,4 +44,17 @@ class Model:
         raise (NotImplementedError, "take_action has been deprecated!")
 
     def configure(self, globdat, **props):
-        print("Empty model configure")
+        raise NotImplementedError("Empty model configure")
+
+    def get_config(self):
+        if len(self._config) == 0:
+            raise NotImplementedError("Empty model get_config")
+        else:
+            return self._config
+
+    def get_name(self):
+        return self._name
+
+    @staticmethod
+    def save_config(configure):
+        return sg.save_config(configure)

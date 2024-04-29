@@ -34,6 +34,7 @@ class ElasticModel(Model):
             table, tbwts = self._get_strains(table, tbwts, globdat, **kwargs)
         return table, tbwts
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         shapeprops = mandatory_dict(

@@ -21,6 +21,7 @@ class LoadModel(Model):
         f_ext = self._get_body_force(f_ext, globdat, **kwargs)
         return f_ext
 
+    @Model.save_config
     def configure(self, globdat, **props):
         # Get props
         shapeprops = mandatory_dict(

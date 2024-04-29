@@ -13,7 +13,8 @@ __all__ = ["ViewModule"]
 
 
 class ViewModule(Module):
-    def init(self, globdat, **props):
+    @Module.save_config
+    def configure(self, globdat, **props):
         # Get props
         self._plottype = mdtarg(self, props, "plotType")
         self._ntables = optarg(self, props, "tables", dtype=list)
@@ -30,6 +31,9 @@ class ViewModule(Module):
 
         if self._plottype not in ["node", "elem"]:
             raise ValueError("ViewModule plotType property must be node or elem")
+
+    def init(self, globdat, **props):
+        pass
 
     def run(self, globdat):
         return "ok"

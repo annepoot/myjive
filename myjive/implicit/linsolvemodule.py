@@ -14,9 +14,8 @@ __all__ = ["LinsolveModule"]
 
 
 class LinsolveModule(SolverModule):
-    def init(self, globdat, **props):
-        super().init(globdat, **props)
-
+    @SolverModule.save_config
+    def configure(self, globdat, **props):
         # Get props
         solverprops = optional_argument(
             self, props, "solver", default={TYPE: "Cholmod"}
@@ -32,15 +31,22 @@ class LinsolveModule(SolverModule):
         self._etnames = optional_argument(self, props, "elemTables", default=[])
 
         solvertype = solverprops[TYPE]
-        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype)
+        self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype, "solver")
         self._solver.configure(globdat, **solverprops)
+        self._config["solver"] = self._solver.get_config()
 
         self._precon = None
 
         if len(preconprops) > 0:
             precontype = preconprops[TYPE]
-            self._precon = globdat[gn.PRECONFACTORY].get_precon(precontype)
+            self._precon = globdat[gn.PRECONFACTORY].get_precon(
+                precontype, "preconditioner"
+            )
             self._precon.configure(globdat, **preconprops)
+            self._config["preconditioner"] = self._precon.get_config()
+
+    def init(self, globdat, **props):
+        pass
 
     def solve(self, globdat):
         print("Running LinsolverModule")
@@ -114,6 +120,9 @@ class LinsolveModule(SolverModule):
             globdat[gn.ELEMTABLES][name] = table
 
         return "ok"
+
+    def shutdown(self, globdat):
+        pass
 
     def get_ext_vector(self, globdat):
         f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())

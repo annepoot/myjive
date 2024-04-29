@@ -10,6 +10,7 @@ __all__ = ["DeterioratedMaterial"]
 
 
 class DeterioratedMaterial(HeterogeneousMaterial):
+    @HeterogeneousMaterial.save_config
     def configure(self, globdat, **props):
         super().configure(globdat, **props)
 

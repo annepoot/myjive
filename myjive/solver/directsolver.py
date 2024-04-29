@@ -7,8 +7,8 @@ __all__ = ["DirectSolver"]
 
 
 class DirectSolver(Solver):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name):
+        super().__init__(name)
 
         self._matrix = None
         self._cons = None

@@ -8,7 +8,7 @@ class Material:
         self._name = name
         self._config = {}
 
-    def configure(self, globdat, **props):
+    def configure(self, globdat):
         raise NotImplementedError("Empty material configure")
 
     def get_config(self):

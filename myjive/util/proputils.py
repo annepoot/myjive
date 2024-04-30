@@ -1,6 +1,7 @@
 import numpy as np
 import re
 from ast import literal_eval
+from copy import deepcopy
 
 
 def parse_file(fname):
@@ -183,91 +184,30 @@ def get_core_eval_dict():
     return core_eval_dict
 
 
-def get_empty_val(dtype):
-    if dtype is str:
-        return ""
-    elif dtype is list:
-        return []
-    elif dtype is tuple:
-        return tuple()
-    elif dtype is dict:
-        return {}
-    else:
-        return dtype(0)
-
-
-def convert_type(val, dtype=None):
-    if dtype is None:
-        return val
-    else:
-        if val is None:
-            return get_empty_val(dtype)
-        else:
-            return dtype(val)
-
-
-def optional_argument(obj, props, arg, default=None, dtype=None):
-    val = props.get(arg, default)
-    val = convert_type(val, dtype)
-    return val
-
-
-def optarg(*args, **kwargs):
-    return optional_argument(*args, **kwargs)
-
-
-def mandatory_argument(obj, props, arg, dtype=None):
+def check_dict(obj, dic, keys=[]):
     name = obj.__class__.__name__
-    val = props.get(arg)
-    if val is None:
-        raise ValueError("Unspecified argument in {}".format(name))
-    val = convert_type(val, dtype)
-    return val
-
-
-def mdtarg(*args, **kwargs):
-    return mandatory_argument(*args, **kwargs)
-
-
-def mandatory_list(obj, props, arg, min_length=0):
-    name = obj.__class__.__name__
-    val = props.get(arg)
-
-    if val is None:
-        raise ValueError("Unspecified argument in {}".format(name))
-    elif type(val) is not list:
-        raise ValueError("Argument in {} must be a list".format(name))
-    elif len(val) < min_length:
-        raise ValueError(
-            "Argument in {} must be a list containing at least {} values".format(
-                name, min_length
-            )
-        )
-
-    return val
-
-
-def mdtlist(*args, **kwargs):
-    return mandatory_list(*args, **kwargs)
-
-
-def mandatory_dict(obj, props, arg, mandatory_keys=[]):
-    name = obj.__class__.__name__
-    val = props.get(arg)
-
-    if val is None:
-        raise ValueError("Unspecified argument in {}".format(name))
-    elif type(val) is not dict:
+    if not isinstance(dic, dict):
         raise ValueError("Argument in {} must be a dict".format(name))
-    else:
-        for key in mandatory_keys:
-            if key not in val.keys():
-                raise ValueError(
-                    "Argument in {} must contain '{}' key".format(name, key)
-                )
-
-    return val
+    for key in keys:
+        if key not in dic.keys():
+            raise ValueError("Argument in () must contain '{}' key").format(name, key)
 
 
-def mdtdict(*args, **kwargs):
-    return mandatory_dict(*args, **kwargs)
+def check_list(obj, lst):
+    name = obj.__class__.__name__
+    if not isinstance(lst, list):
+        raise ValueError("Argument in {} must be a list".format(name))
+
+
+def check_value(obj, val, options=[]):
+    name = obj.__class__.__name__
+    if val is None:
+        raise ValueError("Argument in {} cannot be 'None'".format(name))
+    if len(options) > 0 and val not in options:
+        raise ValueError("Argument in {} must be one of {}".format(name, options))
+
+
+def split_off_type(props):
+    cprops = deepcopy(props)
+    typ = cprops.pop("type")
+    return typ, cprops

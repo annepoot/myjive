@@ -3,12 +3,7 @@ import numpy as np
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
 import myjive.util.proputils as pu
-from myjive.util.proputils import (
-    mandatory_argument,
-    mandatory_dict,
-    mandatory_list,
-    optional_argument,
-)
+from myjive.util.proputils import check_dict, check_list
 
 TYPE = "type"
 INTSCHEME = "intScheme"
@@ -22,20 +17,17 @@ class LoadModel(Model):
         return f_ext
 
     @Model.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        shapeprops = mandatory_dict(
-            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
-        )
-        elements = mandatory_argument(self, props, "elements")
-        self._doftypes = mandatory_list(self, props, "dofs")
-        self._loads = mandatory_list(self, props, "values")
-        eval_params = optional_argument(self, props, "params", dtype=dict)
+    def configure(self, globdat, *, shape, elements, dofs, values, params={}):
+        # Validate input arguments
+        check_dict(self, shape, [TYPE, INTSCHEME])
+        check_list(self, dofs)
+        check_list(self, values)
+        check_dict(self, params)
+        self._doftypes = dofs
+        self._loads = values
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            shapeprops[TYPE], shapeprops[INTSCHEME]
-        )
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(shape[TYPE], shape[INTSCHEME])
         egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()
@@ -63,7 +55,7 @@ class LoadModel(Model):
 
         # Get the dictionary for load evaluation
         self._eval_dict = pu.get_core_eval_dict()
-        self._eval_dict.update(eval_params)
+        self._eval_dict.update(params)
 
     def _get_body_force(self, f_ext, globdat):
         if f_ext is None:

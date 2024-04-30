@@ -43,7 +43,7 @@ class Model:
     def take_action(self, action, params, globdat):
         raise (NotImplementedError, "take_action has been deprecated!")
 
-    def configure(self, globdat, **props):
+    def configure(self, globdat):
         raise NotImplementedError("Empty model configure")
 
     def get_config(self):

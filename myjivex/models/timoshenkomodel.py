@@ -2,7 +2,7 @@ import numpy as np
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
-from myjive.util.proputils import mandatory_argument, mandatory_dict
+from myjive.util.proputils import check_dict
 
 TYPE = "type"
 INTSCHEME = "intScheme"
@@ -17,20 +17,14 @@ class TimoshenkoModel(Model):
         return K
 
     @Model.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        shapeprops = mandatory_dict(
-            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
-        )
-        elements = mandatory_argument(self, props, "elements")
-        self._EI = mandatory_argument(self, props, "EI")
-        self._GAs = mandatory_argument(self, props, "GAs")
+    def configure(self, globdat, *, shape, elements, EI, GAs):
+        # Validate input arguments
+        check_dict(self, shape, [TYPE, INTSCHEME])
+        self._EI = EI
+        self._GAs = GAs
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            shapeprops[TYPE], shapeprops[INTSCHEME]
-        )
-
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(shape[TYPE], shape[INTSCHEME])
         egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()

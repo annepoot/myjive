@@ -24,6 +24,7 @@ class Module:
     def __init__(self, name):
         self._name = name
         self._config = {}
+        self._needs_modelprops = False
 
     @classmethod
     def declare(cls, factory):
@@ -39,7 +40,7 @@ class Module:
                 model_list.append(model)
         return model_list
 
-    def configure(self, globdat, **props):
+    def configure(self, globdat):
         raise NotImplementedError("Empty module configure")
 
     def get_config(self):
@@ -48,7 +49,7 @@ class Module:
         else:
             return self._config
 
-    def init(self, globdat, **props):
+    def init(self, globdat):
         raise NotImplementedError("Empty module init")
 
     def run(self, globdat):

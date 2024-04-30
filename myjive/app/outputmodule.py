@@ -5,10 +5,10 @@ __all__ = ["OutputModule"]
 
 
 class OutputModule(Module):
-    def configure(self, globdat, **props):
+    def configure(self, globdat):
         pass
 
-    def init(self, globdat, **props):
+    def init(self, globdat):
         pass
 
     def run(self, globdat):

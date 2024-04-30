@@ -2,8 +2,7 @@ import numpy as np
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
-
-from myjive.util.proputils import mandatory_list, optional_argument
+from myjive.util.proputils import check_list
 
 __all__ = ["DirichletModel"]
 
@@ -17,12 +16,14 @@ class DirichletModel(Model):
         self._advance_step_constraints(globdat)
 
     @Model.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        self._groups = mandatory_list(self, props, "groups")
-        self._dofs = mandatory_list(self, props, "dofs")
-        self._vals = mandatory_list(self, props, "values")
-        dispIncr = optional_argument(self, props, "dispIncr")
+    def configure(self, globdat, *, groups, dofs, values, dispIncr=None):
+        # Validate input arguments
+        check_list(self, groups)
+        check_list(self, dofs)
+        check_list(self, values)
+        self._groups = groups
+        self._dofs = dofs
+        self._vals = values
 
         self._initDisp = self._vals
         if dispIncr is None:

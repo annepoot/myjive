@@ -3,7 +3,7 @@ import numpy as np
 from myjive.app import Module
 from myjive.names import GlobNames as gn
 from myjive.util import Table, to_xtable
-from myjive.util.proputils import optional_argument
+from myjive.util.proputils import check_list
 
 
 __all__ = ["VTKOutModule"]
@@ -11,12 +11,13 @@ __all__ = ["VTKOutModule"]
 
 class VTKOutModule(Module):
     @Module.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        self._fname = optional_argument(self, props, "file", default="")
-        self._tnames = optional_argument(self, props, "tables", default=[])
+    def configure(self, globdat, *, file="", tables=[]):
+        # Validate input arguments
+        check_list(self, tables)
+        self._fname = file
+        self._tnames = tables
 
-    def init(self, globdat, **props):
+    def init(self, globdat):
         pass
 
     def run(self, globdat):

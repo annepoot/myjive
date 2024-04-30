@@ -1,7 +1,6 @@
 import numpy as np
 import warnings
 
-from myjive.util.proputils import optional_argument
 from .solver import Solver
 from .constrainer import Constrainer
 
@@ -21,13 +20,11 @@ class IterativeSolver(Solver):
 
         self._init_guess = None
 
-    def configure(self, globdat, **props):
-        super().configure(globdat, **props)
+    def configure(self, globdat, maxIter=2000, allowMaxIter=False):
+        super().configure(globdat)
 
-        self._maxiter = optional_argument(self, props, "maxIter", default=2000)
-        self._allow_max_iter = optional_argument(
-            self, props, "allowMaxIter", default=False
-        )
+        self._maxiter = maxIter
+        self._allow_max_iter = allowMaxIter
 
     def update(self, matrix, constraints, preconditioner=None):
         self._cons = constraints

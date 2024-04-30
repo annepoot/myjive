@@ -6,7 +6,7 @@ from matplotlib.tri import Triangulation
 from myjive.app import Module
 from myjive.names import GlobNames as gn
 from myjive.util import Table, to_xtable
-from myjive.util.proputils import mdtarg, optarg
+from myjive.util.proputils import check_value
 
 
 __all__ = ["ViewModule"]
@@ -14,25 +14,39 @@ __all__ = ["ViewModule"]
 
 class ViewModule(Module):
     @Module.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        self._plottype = mdtarg(self, props, "plotType")
-        self._ntables = optarg(self, props, "tables", dtype=list)
-        self._etables = optarg(self, props, "elemTables", dtype=list)
-        self._ncomps = optarg(self, props, "comps", dtype=list)
-        self._ecomps = optarg(self, props, "elemComps", dtype=list)
-        self._scale = optarg(self, props, "scale", default=0.0, dtype=float)
-        self._lineprops = optarg(self, props, "line", dtype=dict)
-        self._fillprops = optarg(self, props, "fill", dtype=dict)
-        self._cbarprops = optarg(self, props, "colorbar", dtype=dict)
-        self._saveprops = optarg(self, props, "save", dtype=dict)
-        self._figprops = optarg(self, props, "figure", dtype=dict)
-        self._axprops = optarg(self, props, "axes", dtype=dict)
+    def configure(
+        self,
+        globdat,
+        *,
+        plotType,
+        tables=[],
+        elemTables=[],
+        comps=[],
+        elemComps=[],
+        scale=0.0,
+        line={},
+        fill={},
+        colorbar={},
+        save={},
+        figure={},
+        axes={}
+    ):
+        # Validate input arguments
+        check_value(self, plotType, ["node", "elem"])
+        self._plottype = plotType
+        self._ntables = tables
+        self._etables = elemTables
+        self._ncomps = comps
+        self._ecomps = elemComps
+        self._scale = scale
+        self._lineprops = line
+        self._fillprops = fill
+        self._cbarprops = colorbar
+        self._saveprops = save
+        self._figprops = figure
+        self._axprops = axes
 
-        if self._plottype not in ["node", "elem"]:
-            raise ValueError("ViewModule plotType property must be node or elem")
-
-    def init(self, globdat, **props):
+    def init(self, globdat):
         pass
 
     def run(self, globdat):

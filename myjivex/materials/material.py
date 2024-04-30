@@ -20,6 +20,13 @@ class Material:
     def get_name(self):
         return self._name
 
+    @classmethod
+    def get_type(cls):
+        typ = cls.__name__
+        if typ[-8:] == "Material":
+            typ = typ[:-8]
+        return typ
+
     @staticmethod
     def save_config(configure):
         return sg.save_config(configure)

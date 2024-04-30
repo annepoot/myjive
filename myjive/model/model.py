@@ -26,11 +26,16 @@ class Model:
         self._config = {}
 
     @classmethod
+    def get_type(cls):
+        typ = cls.__name__
+        if typ[-5:] == "Model":
+            typ = typ[:-5]
+        return typ
+
+    @classmethod
     def declare(cls, factory):
-        name = cls.__name__
-        if len(name) > 5 and name[-5:] == "Model":
-            name = name[:-5]
-        factory.declare_model(name, cls)
+        typ = cls.get_type()
+        factory.declare_model(typ, cls)
 
     def list_actions(self):
         action_list = []

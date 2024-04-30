@@ -14,7 +14,7 @@ def parse_file(fname):
     sp = filestr.split(";")
 
     while i < len(sp):
-        line = re.sub("=\s*{", "={", sp[i])
+        line = re.sub(r"=\s*{", "={", sp[i])
 
         if "={" in line:
             key = line.split("={")[0]
@@ -68,7 +68,7 @@ def read_level(line, i, sp):
                 "EOF reached while parsing an input block. Did you forget to close a bracket?"
             )
 
-        line = re.sub("=\s*{", "={", sp[i])
+        line = re.sub(r"=\s*{", "={", sp[i])
 
 
 def uncomment_file(fileraw):

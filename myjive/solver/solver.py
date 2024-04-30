@@ -30,11 +30,16 @@ class Solver:
         self.precon_mode = False
 
     @classmethod
+    def get_type(cls):
+        typ = cls.__name__
+        if typ[-6:] == "Solver":
+            typ = typ[:-6]
+        return typ
+
+    @classmethod
     def declare(cls, factory):
-        name = cls.__name__
-        if len(name) > 6 and name[-6:] == "Solver":
-            name = name[:-6]
-        factory.declare_solver(name, cls)
+        typ = cls.get_type()
+        factory.declare_solver(typ, cls)
 
     @sg.save_config
     def configure(self, globdat, *, precision=1e-8):

@@ -24,6 +24,8 @@ def save_config(configure):
 
         config.pop("globdat")
         self = config.pop("self")
+        config["type"] = self.get_type()
+
         self._config.update(config)
 
         configure(*args, **kwargs)

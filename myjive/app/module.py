@@ -27,11 +27,16 @@ class Module:
         self._needs_modelprops = False
 
     @classmethod
+    def get_type(cls):
+        typ = cls.__name__
+        if typ[-6:] == "Module":
+            typ = typ[:-6]
+        return typ
+
+    @classmethod
     def declare(cls, factory):
-        name = cls.__name__
-        if len(name) > 6 and name[-6:] == "Module":
-            name = name[:-6]
-        factory.declare_module(name, cls)
+        typ = cls.get_type()
+        factory.declare_module(typ, cls)
 
     def get_relevant_models(self, action, models):
         model_list = []

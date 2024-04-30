@@ -1,4 +1,4 @@
-from jive.util import saveconfig as sg
+from myjive.util import saveconfig as sg
 
 __all__ = ["Material"]
 

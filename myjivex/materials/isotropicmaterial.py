@@ -1,5 +1,4 @@
 from .material import Material
-from myjive.util.proputils import mandatory_argument, optional_argument
 import numpy as np
 
 BAR = "bar"
@@ -12,14 +11,14 @@ __all__ = ["IsotropicMaterial"]
 
 class IsotropicMaterial(Material):
     @Material.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        self._rank = mandatory_argument(self, props, "rank")
-        self._anmodel = mandatory_argument(self, props, "anmodel")
-        self._E = optional_argument(self, props, "E", default=1.0)
-        self._nu = optional_argument(self, props, "nu", default=0.0)
-        self._rho = optional_argument(self, props, "rho", default=0.0)
-        self._area = optional_argument(self, props, "area", default=1.0)
+    def configure(self, globdat, *, rank, anmodel, E=1.0, nu=1.0, rho=0.0, area=1.0):
+        # Validate input arguments
+        self._rank = rank
+        self._anmodel = anmodel
+        self._E = E
+        self._nu = nu
+        self._rho = rho
+        self._area = area
 
         self._strcount = self._rank * (self._rank + 1) // 2
         assert self._is_valid_anmodel(self._anmodel), (

@@ -2,7 +2,6 @@ from .heterogeneousmaterial import HeterogeneousMaterial
 from myjive.names import GlobNames as gn
 from scipy.stats import norm
 import numpy as np
-from myjive.util.proputils import mandatory_argument, optional_argument
 import myjive.util.proputils as pu
 
 
@@ -11,17 +10,27 @@ __all__ = ["DeterioratedMaterial"]
 
 class DeterioratedMaterial(HeterogeneousMaterial):
     @HeterogeneousMaterial.save_config
-    def configure(self, globdat, **props):
-        super().configure(globdat, **props)
+    def configure(
+        self,
+        globdat,
+        *,
+        deteriorations,
+        scale=1.0,
+        locX="x",
+        locY="y",
+        stdX=1.0,
+        stdY=1.0,
+        seed=None,
+        **otherprops
+    ):
+        super().configure(globdat, **otherprops)
 
         # Get props
-        self._ndet = mandatory_argument(self, props, "deteriorations")
-        self._detscale = optional_argument(self, props, "scale", default=1.0)
-        self._locx = optional_argument(self, props, "locX", default="x")
-        self._locy = optional_argument(self, props, "locY", default="y")
-        self._stdx = optional_argument(self, props, "stdX", default=1.0)
-        self._stdy = optional_argument(self, props, "stdY", default=1.0)
-        self._seed = optional_argument(self, props, "seed", default=None)
+        self._ndet = deteriorations
+        self._detscale = scale
+        self._locx, self._locy = locX, locY
+        self._stdx, self._stdy = stdX, stdY
+        self._seed = seed
 
         self._detlocs = np.zeros((self._rank, self._ndet))
         self._detrads = np.zeros((self._rank, self._ndet))

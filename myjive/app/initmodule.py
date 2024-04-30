@@ -6,10 +6,8 @@ from ..fem import NodeGroup
 from ..fem import XElementSet
 from ..fem import ElementGroup
 from ..fem import DofSpace
-
 from ..names import GlobNames as gn
-
-from ..util.proputils import optional_argument, mandatory_dict
+from ..util.proputils import check_dict, split_off_type
 
 TYPE = "type"
 FILE = "file"
@@ -22,17 +20,22 @@ class InitModule(Module):
     # Predefine some parameters
     _ctol = 1.0e-5
 
-    @Module.save_config
-    def configure(self, globdat, **props):
-        self._mesh_props = mandatory_dict(
-            self, props, "mesh", mandatory_keys=[TYPE, FILE]
-        )
-        self._node_groups = optional_argument(self, props, "nodeGroups", default=[])
-        self._elem_groups = optional_argument(self, props, "elemGroups", default=[])
+    def __init__(self, name):
+        super().__init__(name)
+        self._needs_modelprops = True
 
-    def init(self, globdat, **props):
-        # Get props
-        modelprops = mandatory_dict(self, props, "modelprops", mandatory_keys=[MODELS])
+    @Module.save_config
+    def configure(self, globdat, *, mesh, nodeGroups=[], elemGroups=[], **groupprops):
+        # Validate input arguments
+        check_dict(self, mesh, [TYPE, FILE])
+        self._meshprops = mesh
+        self._node_groups = nodeGroups
+        self._elem_groups = elemGroups
+        self._groupprops = groupprops
+
+    def init(self, globdat, *, modelprops):
+        # Validate input arguments
+        check_dict(self, modelprops, ["models"])
 
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
@@ -44,21 +47,21 @@ class InitModule(Module):
         print("InitModule: Creating DofSpace...")
         globdat[gn.DOFSPACE] = DofSpace()
 
-        if "gmsh" in self._mesh_props[TYPE]:
-            self._read_gmsh(self._mesh_props[FILE], globdat)
-        elif "manual" in self._mesh_props[TYPE]:
-            self._read_mesh(self._mesh_props[FILE], globdat)
-        elif "meshio" in self._mesh_props[TYPE]:
-            self._read_meshio(self._mesh_props[FILE], globdat)
-        elif "geo" in self._mesh_props[TYPE]:
-            self._read_geo(self._mesh_props[FILE], globdat)
+        if "gmsh" in self._meshprops[TYPE]:
+            self._read_gmsh(self._meshprops[FILE], globdat)
+        elif "manual" in self._meshprops[TYPE]:
+            self._read_mesh(self._meshprops[FILE], globdat)
+        elif "meshio" in self._meshprops[TYPE]:
+            self._read_meshio(self._meshprops[FILE], globdat)
+        elif "geo" in self._meshprops[TYPE]:
+            self._read_geo(self._meshprops[FILE], globdat)
         else:
             raise KeyError("InitModule: Mesh input type unknown")
 
         # Create node groups
         if self._node_groups is not None:
             print("InitModule: Creating node groups...")
-            self._create_ngroups(self._node_groups, globdat, **props)
+            self._create_ngroups(self._node_groups, globdat, **self._groupprops)
 
         # Create element groups
         if self._elem_groups is not None:
@@ -70,8 +73,9 @@ class InitModule(Module):
         name_list = modelprops[MODELS]
         model_list = []
         for name in name_list:
-            m = modelfac.get_model(modelprops[name][TYPE], name)
-            m.configure(globdat, **(modelprops[name]))
+            typ, mprops = split_off_type(modelprops[name])
+            m = modelfac.get_model(typ, name)
+            m.configure(globdat, **mprops)
             model_list.append(m)
         globdat[gn.MODELS] = model_list
 
@@ -347,14 +351,14 @@ class InitModule(Module):
         globdat[gn.NGROUPS]["all"] = NodeGroup(nodes, [*range(nodes.size())])
         globdat[gn.EGROUPS]["all"] = ElementGroup(elems, [*range(elems.size())])
 
-    def _create_ngroups(self, groups, globdat, **props):
+    def _create_ngroups(self, groups, globdat, **groupprops):
         coords = globdat[gn.NSET].get_coords()
         cmax = np.max(coords, axis=1)
         cmin = np.min(coords, axis=1)
         cmid = 0.5 * (cmax + cmin)
         for g in groups:
             group = globdat[gn.NGROUPS]["all"].get_indices()
-            gprops = props[g]
+            gprops = groupprops[g]
             if isinstance(gprops, dict):
                 for i, axis in enumerate(["xtype", "ytype", "ztype"]):
                     if axis in gprops:

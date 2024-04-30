@@ -6,7 +6,7 @@ from ..names import GlobNames as gn
 from .solvermodule import SolverModule
 from ..solver import Constraints
 from ..util import Table, to_xtable
-from ..util.proputils import optional_argument
+from ..util.proputils import check_dict, split_off_type
 
 TYPE = "type"
 
@@ -15,37 +15,40 @@ __all__ = ["LinsolveModule"]
 
 class LinsolveModule(SolverModule):
     @SolverModule.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        solverprops = optional_argument(
-            self, props, "solver", default={TYPE: "Cholmod"}
-        )
-        preconprops = optional_argument(self, props, "preconditioner", default={})
-        self._get_mass_matrix = optional_argument(
-            self, props, "getMassMatrix", default=False
-        )
-        self._get_strain_matrix = optional_argument(
-            self, props, "getStrainMatrix", default=False
-        )
-        self._tnames = optional_argument(self, props, "tables", default=[])
-        self._etnames = optional_argument(self, props, "elemTables", default=[])
+    def configure(
+        self,
+        globdat,
+        *,
+        solver={TYPE: "Cholmod"},
+        preconditioner={},
+        getMassMatrix=False,
+        getStrainMatrix=False,
+        tables=[],
+        elemTables=[]
+    ):
+        # Validate input arguments
+        check_dict(self, solver, [TYPE])
+        self._get_mass_matrix = getMassMatrix
+        self._get_strain_matrix = getStrainMatrix
+        self._tnames = tables
+        self._etnames = elemTables
 
-        solvertype = solverprops[TYPE]
+        solvertype, solverprops = split_off_type(solver)
         self._solver = globdat[gn.SOLVERFACTORY].get_solver(solvertype, "solver")
         self._solver.configure(globdat, **solverprops)
         self._config["solver"] = self._solver.get_config()
 
         self._precon = None
 
-        if len(preconprops) > 0:
-            precontype = preconprops[TYPE]
+        if len(preconditioner) > 0:
+            precontype, preconprops = split_off_type(preconditioner)
             self._precon = globdat[gn.PRECONFACTORY].get_precon(
                 precontype, "preconditioner"
             )
             self._precon.configure(globdat, **preconprops)
             self._config["preconditioner"] = self._precon.get_config()
 
-    def init(self, globdat, **props):
+    def init(self, globdat):
         pass
 
     def solve(self, globdat):

@@ -1,5 +1,4 @@
 from .isotropicmaterial import IsotropicMaterial
-from myjive.util.proputils import mandatory_argument, optional_argument
 import myjive.util.proputils as pu
 
 __all__ = ["HeterogeneousMaterial"]
@@ -7,18 +6,19 @@ __all__ = ["HeterogeneousMaterial"]
 
 class HeterogeneousMaterial(IsotropicMaterial):
     @IsotropicMaterial.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        self._rank = mandatory_argument(self, props, "rank")
-        self._anmodel = mandatory_argument(self, props, "anmodel")
-        self._E = optional_argument(self, props, "E", default=1.0)
-        self._nu = optional_argument(self, props, "nu", default=0.0)
-        self._rho = optional_argument(self, props, "rho", default=0.0)
-        self._area = optional_argument(self, props, "area", default=1.0)
-        eval_params = optional_argument(self, props, "params", dtype=dict)
+    def configure(
+        self, globdat, *, rank, anmodel, E=1.0, nu=1.0, rho=0.0, area=1.0, params={}
+    ):
+        # Validate input arguments
+        self._rank = rank
+        self._anmodel = anmodel
+        self._E = E
+        self._nu = nu
+        self._rho = rho
+        self._area = area
 
         self._eval_dict = pu.get_core_eval_dict()
-        self._eval_dict.update(eval_params)
+        self._eval_dict.update(params)
 
         self._strcount = self._rank * (self._rank + 1) // 2
         assert self._is_valid_anmodel(self._anmodel), (

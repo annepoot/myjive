@@ -1,4 +1,3 @@
-from myjive.util.proputils import optional_argument
 from ..util import saveconfig as sg
 import numpy as np
 
@@ -38,8 +37,8 @@ class Solver:
         factory.declare_solver(name, cls)
 
     @sg.save_config
-    def configure(self, globdat, **props):
-        self._precision = optional_argument(self, props, "precision", default=1e-8)
+    def configure(self, globdat, *, precision=1e-8):
+        self._precision = precision
 
     def start(self):
         pass

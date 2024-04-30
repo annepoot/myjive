@@ -1,7 +1,5 @@
 from ..util import saveconfig as sg
 
-from myjive.util.proputils import optional_argument
-
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
 __all__ = ["Preconditioner", "PreconFactory"]
@@ -37,8 +35,8 @@ class Preconditioner:
         factory.declare_precon(name, cls)
 
     @sg.save_config
-    def configure(self, globdat, **props):
-        self._precision = optional_argument(self, props, "precision", default=1e-8)
+    def configure(self, globdat, *, precision=1e-8):
+        self._precision = precision
 
     def update(self, sourcematrix):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)

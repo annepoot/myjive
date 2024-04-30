@@ -1,5 +1,6 @@
 from ..declare import declare_all
 from ..names import GlobNames as gn
+from ..util.proputils import split_off_type
 
 __all__ = ["jive"]
 
@@ -23,6 +24,7 @@ def jive(props, extra_declares=[]):
             typ = props[name]["type"]
         else:
             typ = name.title()
+            props[name]["type"] = typ
 
         # If it refers to a module (and not to a model), add it to the chain
         if modulefac.is_module(typ):
@@ -30,10 +32,13 @@ def jive(props, extra_declares=[]):
 
     # Initialize chain
     for module in chain:
-        modelprops = props[gn.MODELS]
-        moduleprops = props[module._name]
+        moduleprops = props[module.get_name()]
+        typ, moduleprops = split_off_type(moduleprops)
         module.configure(globdat, **moduleprops)
-        module.init(globdat, modelprops=modelprops, **moduleprops)
+        if module._needs_modelprops:
+            module.init(globdat, modelprops=props[gn.MODELS])
+        else:
+            module.init(globdat)
 
     # Run chain until one of the modules ends the computation
     print("Running chain...")

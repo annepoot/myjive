@@ -5,7 +5,7 @@ from myjive.model.model import Model
 from ..materials import new_material
 import myjive.util.proputils as pu
 from myjive.util import to_xtable
-from myjive.util.proputils import mandatory_argument, mandatory_dict, optional_argument
+from myjive.util.proputils import check_dict, split_off_type
 from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
 TYPE = "type"
@@ -53,26 +53,20 @@ class SolidModel(Model):
         return table
 
     @Model.save_config
-    def configure(self, globdat, **props):
-        # Get props
-        shapeprops = mandatory_dict(
-            self, props, "shape", mandatory_keys=[TYPE, INTSCHEME]
-        )
-        elements = mandatory_argument(self, props, "elements")
-        matprops = mandatory_dict(self, props, "material", mandatory_keys=[TYPE])
-        self._thickness = optional_argument(self, props, "thickness", default=1.0)
+    def configure(self, globdat, *, shape, elements, material, thickness=1.0):
+        # Validate input arguments
+        check_dict(self, shape, [TYPE, INTSCHEME])
+        check_dict(self, material, [TYPE])
+        self._thickness = thickness
 
         # Configure the material
-        mattype = matprops[TYPE]
+        mattype, matprops = split_off_type(material)
         self._mat = new_material(mattype, "material")
         self._mat.configure(globdat, **matprops)
         self._config["material"] = self._mat.get_config()
 
         # Get shape and element info
-        self._shape = globdat[gn.SHAPEFACTORY].get_shape(
-            shapeprops[TYPE], shapeprops[INTSCHEME]
-        )
-
+        self._shape = globdat[gn.SHAPEFACTORY].get_shape(shape[TYPE], shape[INTSCHEME])
         egroup = globdat[gn.EGROUPS][elements]
         self._elems = egroup.get_elements()
         self._ielems = egroup.get_indices()

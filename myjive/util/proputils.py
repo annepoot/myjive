@@ -190,7 +190,7 @@ def check_dict(obj, dic, keys=[]):
         raise ValueError("Argument in {} must be a dict".format(name))
     for key in keys:
         if key not in dic.keys():
-            raise ValueError("Argument in () must contain '{}' key").format(name, key)
+            raise ValueError("Argument in {} must contain '{}' key".format(name, key))
 
 
 def check_list(obj, lst):

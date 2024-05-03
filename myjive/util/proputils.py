@@ -211,3 +211,19 @@ def split_off_type(props):
     cprops = deepcopy(props)
     typ = cprops.pop("type")
     return typ, cprops
+
+
+def get_recursive(dic, keys):
+    sub = dic
+    for key in keys:
+        sub = sub[key]
+    return sub
+
+
+def set_recursive(dic, keys, value):
+    sub = dic
+    for i, key in enumerate(keys):
+        if i == len(keys) - 1:
+            sub[key] = value
+        else:
+            sub = sub[key]

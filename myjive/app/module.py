@@ -50,13 +50,19 @@ class Module:
             model = self.get_unique_relevant_model(action[0], models)
             for act in action[1:]:
                 if model is not self.get_unique_relevant_model(act, models):
-                    raise RuntimeError("Multiple relevant models found for '{}' actions".format(action))
+                    raise RuntimeError(
+                        "Multiple relevant models found for '{}' actions".format(action)
+                    )
         else:
             model_list = self.get_relevant_models(action, models)
             if len(model_list) < 1:
-                raise RuntimeError("No relevant models found for '{}' action".format(action))
+                raise RuntimeError(
+                    "No relevant models found for '{}' action".format(action)
+                )
             elif len(model_list) > 1:
-                raise RuntimeError("Multiple relevant models found for '{}' action".format(action))
+                raise RuntimeError(
+                    "Multiple relevant models found for '{}' action".format(action)
+                )
             else:
                 model = model_list[0]
         return model

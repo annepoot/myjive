@@ -47,13 +47,7 @@ def read_level(line, i, sp):
             value = value.strip()
 
             if value.startswith("[") and value.endswith("]"):
-                valuelist = value.strip("[").strip("]").split(",")
-                parsedlist = []
-                for value in valuelist:
-                    val = value.strip()
-                    val = try_literal_eval(val)
-                    parsedlist.append(val)
-                subdata[key] = parsedlist
+                subdata[key] = parse_list(value)
             else:
                 subdata[key] = try_literal_eval(value)
         elif "}" in line:
@@ -128,6 +122,34 @@ def uncomment_line(line):
             break
 
     return clean_line
+
+
+def parse_list(value):
+    if not value.startswith("[") or not value.endswith("]"):
+        raise ValueError("Not a valid list")
+
+    lst = []
+    val = ""
+    depth = 0
+    for s in value:
+        if s == "[":
+            depth += 1
+
+        if s not in [",", "[", "]"] or depth > 1:
+            val += s
+        elif depth == 1 and s in [",", "]"]:
+            val = val.strip()
+            if val.startswith("[") and val.endswith("]"):
+                val = parse_list(val)
+            else:
+                val = try_literal_eval(val)
+            lst.append(val)
+            val = ""
+
+        if s == "]":
+            depth -= 1
+
+    return lst
 
 
 def try_literal_eval(val):

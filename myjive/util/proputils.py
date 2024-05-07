@@ -248,4 +248,6 @@ def set_recursive(dic, keys, value):
         if i == len(keys) - 1:
             sub[key] = value
         else:
+            if key not in sub:
+                sub[key] = {}
             sub = sub[key]

@@ -100,14 +100,18 @@ class OutputModule(Module):
             if len(lines) != len(value) + 1:
                 raise ValueError("Incompatible column sizes")
 
-            lines[0] = lines[0].removesuffix("\n") + ", " + header + "\n"
+            lines[0] = lines[0].removesuffix("\n") + "," + header + "\n"
             for i, val in enumerate(value, 1):
-                lines[i] = lines[i].removesuffix("\n") + ", " + str(val) + "\n"
+                lines[i] = lines[i].removesuffix("\n") + "," + str(val) + "\n"
 
         else:
             lines = [header + "\n"]
             for val in value:
                 lines.append(str(val) + "\n")
+
+        path = os.path.split(fname)[0]
+        if len(path) > 0 and not os.path.isdir(path):
+            os.makedirs(path)
 
         with open(fname, "w") as f:
             f.writelines(lines)

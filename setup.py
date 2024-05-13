@@ -3,14 +3,15 @@ from setuptools import setup, find_packages
 setup(
     name="myjive",
     packages=find_packages(include=["myjive*", "myjivex*"]),
-    version="<X.X.X>",
+    version="0.1.8",
     license="MIT",
     description="Personal implementation of jive C++ library in Python",
     author="Anne Poot",
     author_email="a.poot-1@tudelft.nl",
     url="https://gitlab.tudelft.nl/apoot1/myjive",
-    download_url="https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v<X.X.X>/myjive-v<X.X.X>.tar.gz",
+    download_url="https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.8/myjive-v0.1.8.tar.gz",
     keywords=[],
+    python_requires="==3.10.*",
     install_requires=[
         "matplotlib==3.5.2",
         "numba==0.56.4",

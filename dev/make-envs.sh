@@ -19,7 +19,7 @@ message(){
 
 build_myjive(){
 	message "CREATING myjive ENVIRONMENT"
-	conda env create -f ENVIRONMENT.yml
+	conda env create -f ../ENVIRONMENT.yml
 }
 
 build_myjive_dev(){

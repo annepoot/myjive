@@ -7,6 +7,7 @@ Run the following anaconda commands to take care of all dependencies:
 ```
 conda env create -f ENVIRONMENT.yml
 conda activate myjive
+conda develop /path/to/myjive
 ```
 
 ## Differences with PyJive

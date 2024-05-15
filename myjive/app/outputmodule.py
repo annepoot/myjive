@@ -44,14 +44,14 @@ class OutputModule(Module):
                 for k in key:
                     header = k.removeprefix("tables.")
                     if "." in k:
-                        value = get_recursive(globdat, k.split("."))
+                        value = get_recursive(globdat, self._split_key(k))
                     else:
                         value = globdat[k]
                     self._recursive_output(fname, value, header)
             else:
                 header = key.removeprefix("tables.")
                 if "." in key:
-                    value = get_recursive(globdat, key.split("."))
+                    value = get_recursive(globdat, self._split_key(key))
                 else:
                     value = globdat[key]
                 self._recursive_output(fname, value, header)
@@ -121,3 +121,10 @@ class OutputModule(Module):
         new_header = new_header.replace("..", ".")
         new_header = new_header.removesuffix(".")
         return new_header
+
+    def _split_key(self, key):
+        keys = key.split(".")
+        for i, k in enumerate(keys):
+            if k.isdigit():
+                keys[i] = int(k)
+        return keys

@@ -251,3 +251,11 @@ def set_recursive(dic, keys, value):
             if key not in sub:
                 sub[key] = {}
             sub = sub[key]
+
+
+def split_key(key):
+    keys = key.split(".")
+    for i, k in enumerate(keys):
+        if k.lstrip("+-").isdigit():
+            keys[i] = int(k)
+    return keys

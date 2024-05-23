@@ -16,6 +16,7 @@ setup(
         "matplotlib==3.5.2",
         "numba==0.56.4",
         "numpy==1.23.5",
+        "pandas==2.2.2",
         "scikit-sparse==0.4.12",
         "scipy==1.8.1",
     ],

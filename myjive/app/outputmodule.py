@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 
 from .module import Module
 from ..names import GlobNames as gn
@@ -31,15 +32,7 @@ class OutputModule(Module):
         pass
 
     def run(self, globdat):
-        if self._overwrite:
-            for file in self._files:
-                fname = file.format(t=globdat[gn.TIMESTEP])
-                if os.path.isfile(fname):
-                    os.remove(fname)
-
         for file, key in zip(self._files, self._keys):
-            fname = file.format(t=globdat[gn.TIMESTEP])
-
             if isinstance(key, list):
                 for k in key:
                     header = k.removeprefix("tables.")
@@ -47,74 +40,74 @@ class OutputModule(Module):
                         value = get_recursive(globdat, split_key(k))
                     else:
                         value = globdat[k]
-                    self._recursive_output(fname, value, header)
+                    lst = self._recursive_output([], value, header)
             else:
                 header = key.removeprefix("tables.")
                 if "." in key:
                     value = get_recursive(globdat, split_key(key))
                 else:
                     value = globdat[key]
-                self._recursive_output(fname, value, header)
+                lst = self._recursive_output([], value, header)
+
+            fname = file.format(t=globdat[gn.TIMESTEP])
+            if os.path.isfile(fname):
+                if self._overwrite:
+                    os.remove(fname)
+                else:
+                    raise RuntimeError("'{}' already exists!".format(fname))
+
+            self._write_to_file(lst, fname)
 
         return "ok"
 
     def shutdown(self, globdat):
         pass
 
-    def _recursive_output(self, fname, value, header):
+    def _recursive_output(self, lst, value, header):
         if isinstance(value, dict):
             for key, val in value.items():
                 new_header = self._extend_header(header, key)
-                self._recursive_output(fname, val, new_header)
+                lst = self._recursive_output(lst, val, new_header)
         elif isinstance(value, Table):
             for key in value.get_column_names():
                 val = value[key]
                 new_header = self._extend_header(header, key)
-                self._recursive_output(fname, val, new_header)
+                lst = self._recursive_output(lst, val, new_header)
         elif isinstance(value, list):
             if hasattr(value, "__len__"):
                 for i, val in enumerate(value, 1):
                     new_header = self._extend_header(header, i)
-                    self._recursive_output(fname, val, new_header)
+                    lst = self._recursive_output(lst, val, new_header)
             else:
-                self._append_single_column(fname, value, header)
+                lst = self._append_single_column(lst, value, header)
 
         elif isinstance(value, np.ndarray):
             ndim = len(value.shape)
             if ndim == 1:
-                self._append_single_column(fname, value, header)
+                lst = self._append_single_column(lst, value, header)
             elif ndim == 2:
-                for i, val in enumerate(value, 1):
+                for i, val in enumerate(value):
                     new_header = self._extend_header(header, i)
-                    self._recursive_output(fname, val, new_header)
+                    lst = self._recursive_output(lst, val, new_header)
             else:
                 raise ValueError("Cannot handle >2D arrays")
         else:
             raise ValueError("Unknown data type")
 
-    def _append_single_column(self, fname, value, header):
-        if os.path.isfile(fname):
-            with open(fname, "r") as f:
-                lines = f.readlines()
+        return lst
 
-            if len(lines) != len(value) + 1:
-                raise ValueError("Incompatible column sizes")
+    def _append_single_column(self, lst, value, header):
+        lst.append(pd.Series(data=value, name=header))
+        return lst
 
-            lines[0] = lines[0].removesuffix("\n") + "," + header + "\n"
-            for i, val in enumerate(value, 1):
-                lines[i] = lines[i].removesuffix("\n") + "," + str(val) + "\n"
-
-        else:
-            lines = [header + "\n"]
-            for val in value:
-                lines.append(str(val) + "\n")
+    def _write_to_file(self, lst, fname):
+        df = pd.concat(lst, axis=1)
 
         path = os.path.split(fname)[0]
         if len(path) > 0 and not os.path.isdir(path):
             os.makedirs(path)
 
-        with open(fname, "w") as f:
-            f.writelines(lines)
+        df.to_csv(fname, index=False)
 
     def _extend_header(self, header, extension):
         new_header = ".".join([header, str(extension)])

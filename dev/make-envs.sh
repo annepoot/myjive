@@ -20,6 +20,11 @@ message(){
 build_myjive(){
 	message "CREATING myjive ENVIRONMENT"
 	conda env create -f ../ENVIRONMENT.yml
+
+	message "ADDING LOCAL PATHS"
+	conda activate myjive
+	conda develop ~/Storage/git/myjive
+	conda deactivate
 }
 
 build_myjive_dev(){

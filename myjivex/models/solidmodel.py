@@ -36,9 +36,9 @@ class SolidModel(Model):
         elif "stress" in name:
             table, tbwts = self._get_stress_by_node(table, tbwts, globdat, **kwargs)
         elif "stiffness" in name:
-            table, tbwts = self._get_stiffness_by_node(table, tbwts, globdat, **kwargs)
+            table, tbwts = self._get_stiffness_by_node(table, tbwts, globdat)
         elif "size" in name:
-            table, tbwts = self._get_elem_size_by_node(table, tbwts, globdat, **kwargs)
+            table, tbwts = self._get_elem_size_by_node(table, tbwts, globdat)
         return table, tbwts
 
     def GETELEMTABLE(self, name, table, globdat, **kwargs):
@@ -328,7 +328,7 @@ class SolidModel(Model):
         grads, _ = self._shape.get_shape_gradients(coords)
 
         eldisp = disp[idofs]
-        strains = np.zeros(self._ipcount)
+        strains = np.zeros((self._ipcount, self._strcount))
         for ip in range(self._ipcount):
             strains[ip] = self._get_ip_strain(ip, grads, eldisp)
         if not np.allclose(strains, strains[0]):
@@ -344,7 +344,7 @@ class SolidModel(Model):
         ipcoords = self._shape.get_global_integration_points(coords)
 
         eldisp = disp[idofs]
-        stresses = np.zeros(self._ipcount)
+        stresses = np.zeros((self._ipcount, self._strcount))
         for ip in range(self._ipcount):
             stresses[ip] = self._get_ip_stress(ip, ipcoords, grads, eldisp)
         if not np.allclose(stresses, stresses[0]):

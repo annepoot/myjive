@@ -11,7 +11,7 @@ __all__ = ["IsotropicMaterial"]
 
 class IsotropicMaterial(Material):
     @Material.save_config
-    def configure(self, globdat, *, rank, anmodel, E=1.0, nu=1.0, rho=0.0, area=1.0):
+    def configure(self, globdat, *, rank, anmodel, E=1.0, nu=0.0, rho=0.0, area=1.0):
         # Validate input arguments
         self._rank = rank
         self._anmodel = anmodel

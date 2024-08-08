@@ -227,6 +227,9 @@ class Shape:
     def contains_local_point(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
+    def contains_global_point(self, glob_point, glob_coords, tol=0.0):
+        raise NotImplementedError(NOTIMPLEMENTEDMSG)
+
     def get_shape_gradients(self, glob_coords):
         return get_shape_gradients_jit(glob_coords, self._dN, self._wts, self._ipcount)
 

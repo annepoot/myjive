@@ -95,6 +95,20 @@ class Tri3Shape(Shape):
         else:
             return True
 
+    def contains_global_point(self, glob_point, glob_coords, tol=0.0):
+        # Return whether or not the global point falls inside or on the element boundaries
+        for i in range(self._ncount):
+            ax, ay = glob_coords[:, i % self._ncount]
+            bx, by = glob_coords[:, (i + 1) % self._ncount]
+            px, py = glob_point
+
+            cross = (px - bx) * (ay - by) - (py - by) * (ax - bx)
+
+            if cross <= tol:
+                return False
+        else:
+            return True
+
 
 class Tri6Shape(Shape):
     def __init__(self, intscheme):
@@ -242,6 +256,20 @@ class Quad4Shape(Shape):
             return False
         elif loc_point[1] > 1 + tol:
             return False
+        else:
+            return True
+
+    def contains_global_point(self, glob_point, glob_coords, tol=0.0):
+        # Return whether or not the global point falls inside or on the element boundaries
+        for i in range(self._ncount):
+            ax, ay = glob_coords[:, i % self._ncount]
+            bx, by = glob_coords[:, (i + 1) % self._ncount]
+            px, py = glob_point
+
+            cross = (px - bx) * (ay - by) - (py - by) * (ax - bx)
+
+            if cross < tol:
+                return False
         else:
             return True
 
@@ -404,6 +432,13 @@ class Line2Shape(Shape):
         else:
             return True
 
+    def contains_global_point(self, glob_point, glob_coords, tol=0.0):
+        # Return whether or not the global point falls inside or on the element boundaries
+        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[0, 1] + tol:
+            return True
+        else:
+            return False
+
 
 class Line3Shape(Shape):
     def __init__(self, intscheme):
@@ -453,3 +488,10 @@ class Line3Shape(Shape):
             return False
         else:
             return True
+
+    def contains_global_point(self, glob_point, glob_coords, tol=0.0):
+        # Return whether or not the global point falls inside or on the element boundaries
+        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[0, 2] + tol:
+            return True
+        else:
+            return False

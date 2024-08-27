@@ -20,13 +20,13 @@ class PointSet(ItemSet):
         coords = []
         for ipoint in range(self.size()):
             coords.append(self.get_point_coords(ipoint))
-        return np.array(coords).T
+        return np.array(coords)
 
     def get_some_coords(self, ipoints):
         coords = []
         for ipoint in ipoints:
             coords.append(self.get_point_coords(ipoint))
-        return np.array(coords).T
+        return np.array(coords)
 
 
 class XPointSet(PointSet, XItemSet):

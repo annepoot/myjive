@@ -27,14 +27,14 @@ class Tri3Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = 0.0
-        loc_coords[0, 1] = 1.0
-        loc_coords[0, 2] = 0.0
-        loc_coords[1, 0] = 0.0
+        loc_coords[1, 0] = 1.0
+        loc_coords[2, 0] = 0.0
+        loc_coords[0, 1] = 0.0
         loc_coords[1, 1] = 0.0
-        loc_coords[1, 2] = 1.0
+        loc_coords[2, 1] = 1.0
 
         return loc_coords
 
@@ -51,25 +51,25 @@ class Tri3Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         sgrads[0, 0] = -1.0
-        sgrads[0, 1] = -1.0
-        sgrads[1, 0] = 1.0
+        sgrads[1, 0] = -1.0
+        sgrads[0, 1] = 1.0
         sgrads[1, 1] = 0.0
-        sgrads[2, 0] = 0.0
-        sgrads[2, 1] = 1.0
+        sgrads[0, 2] = 0.0
+        sgrads[1, 2] = 1.0
 
         return sgrads
 
     def get_local_point(self, glob_point, glob_coords):
         # Return the local coordinates corresponding to the given global point
         Ax = glob_coords[0, 0]
-        Ay = glob_coords[1, 0]
-        Bx = glob_coords[0, 1]
+        Ay = glob_coords[0, 1]
+        Bx = glob_coords[1, 0]
         By = glob_coords[1, 1]
-        Cx = glob_coords[0, 2]
-        Cy = glob_coords[1, 2]
+        Cx = glob_coords[2, 0]
+        Cy = glob_coords[2, 1]
 
         mat = np.zeros((self._rank, self._rank))
         rhs = np.zeros(self._rank)
@@ -98,8 +98,8 @@ class Tri3Shape(Shape):
     def contains_global_point(self, glob_point, glob_coords, tol=0.0):
         # Return whether or not the global point falls inside or on the element boundaries
         for i in range(self._ncount):
-            ax, ay = glob_coords[:, i % self._ncount]
-            bx, by = glob_coords[:, (i + 1) % self._ncount]
+            ax, ay = glob_coords[i % self._ncount]
+            bx, by = glob_coords[(i + 1) % self._ncount]
             px, py = glob_point
 
             cross = (px - bx) * (ay - by) - (py - by) * (ax - bx)
@@ -125,20 +125,20 @@ class Tri6Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = 0.0
-        loc_coords[0, 1] = 1.0
-        loc_coords[0, 2] = 0.0
-        loc_coords[0, 3] = 0.5
-        loc_coords[0, 4] = 0.5
-        loc_coords[0, 5] = 0.0
-        loc_coords[1, 0] = 0.0
+        loc_coords[1, 0] = 1.0
+        loc_coords[2, 0] = 0.0
+        loc_coords[3, 0] = 0.5
+        loc_coords[4, 0] = 0.5
+        loc_coords[5, 0] = 0.0
+        loc_coords[0, 1] = 0.0
         loc_coords[1, 1] = 0.0
-        loc_coords[1, 2] = 1.0
-        loc_coords[1, 3] = 0.0
-        loc_coords[1, 4] = 0.5
-        loc_coords[1, 5] = 0.5
+        loc_coords[2, 1] = 1.0
+        loc_coords[3, 1] = 0.0
+        loc_coords[4, 1] = 0.5
+        loc_coords[5, 1] = 0.5
 
         return loc_coords
 
@@ -160,20 +160,20 @@ class Tri6Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         sgrads[0, 0] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
-        sgrads[0, 1] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
-        sgrads[1, 0] = -1 + 4 * loc_point[0]
+        sgrads[1, 0] = -3 + 4 * loc_point[0] + 4 * loc_point[1]
+        sgrads[0, 1] = -1 + 4 * loc_point[0]
         sgrads[1, 1] = 0.0
-        sgrads[2, 0] = 0.0
-        sgrads[2, 1] = -1 + 4 * loc_point[1]
-        sgrads[3, 0] = 4 - 8 * loc_point[0] - 4 * loc_point[1]
-        sgrads[3, 1] = -4 * loc_point[0]
-        sgrads[4, 0] = 4 * loc_point[1]
-        sgrads[4, 1] = 4 * loc_point[0]
-        sgrads[5, 0] = -4 * loc_point[1]
-        sgrads[5, 1] = 4 - 4 * loc_point[0] - 8 * loc_point[1]
+        sgrads[0, 2] = 0.0
+        sgrads[1, 2] = -1 + 4 * loc_point[1]
+        sgrads[0, 3] = 4 - 8 * loc_point[0] - 4 * loc_point[1]
+        sgrads[1, 3] = -4 * loc_point[0]
+        sgrads[0, 4] = 4 * loc_point[1]
+        sgrads[1, 4] = 4 * loc_point[0]
+        sgrads[0, 5] = -4 * loc_point[1]
+        sgrads[1, 5] = 4 - 4 * loc_point[0] - 8 * loc_point[1]
 
         return sgrads
 
@@ -200,16 +200,16 @@ class Quad4Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = -1.0
-        loc_coords[0, 1] = 1.0
-        loc_coords[0, 2] = 1.0
-        loc_coords[0, 3] = -1.0
-        loc_coords[1, 0] = -1.0
+        loc_coords[1, 0] = 1.0
+        loc_coords[2, 0] = 1.0
+        loc_coords[3, 0] = -1.0
+        loc_coords[0, 1] = -1.0
         loc_coords[1, 1] = -1.0
-        loc_coords[1, 2] = 1.0
-        loc_coords[1, 3] = 1.0
+        loc_coords[2, 1] = 1.0
+        loc_coords[3, 1] = 1.0
 
         return loc_coords
 
@@ -230,19 +230,19 @@ class Quad4Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         x = loc_point[0]
         y = loc_point[1]
 
         sgrads[0, 0] = -0.25 * (1 - y)
-        sgrads[0, 1] = -0.25 * (1 - x)
-        sgrads[1, 0] = 0.25 * (1 - y)
+        sgrads[1, 0] = -0.25 * (1 - x)
+        sgrads[0, 1] = 0.25 * (1 - y)
         sgrads[1, 1] = -0.25 * (1 + x)
-        sgrads[2, 0] = 0.25 * (1 + y)
-        sgrads[2, 1] = 0.25 * (1 + x)
-        sgrads[3, 0] = -0.25 * (1 + y)
-        sgrads[3, 1] = 0.25 * (1 - x)
+        sgrads[0, 2] = 0.25 * (1 + y)
+        sgrads[1, 2] = 0.25 * (1 + x)
+        sgrads[0, 3] = -0.25 * (1 + y)
+        sgrads[1, 3] = 0.25 * (1 - x)
 
         return sgrads
 
@@ -262,8 +262,8 @@ class Quad4Shape(Shape):
     def contains_global_point(self, glob_point, glob_coords, tol=0.0):
         # Return whether or not the global point falls inside or on the element boundaries
         for i in range(self._ncount):
-            ax, ay = glob_coords[:, i % self._ncount]
-            bx, by = glob_coords[:, (i + 1) % self._ncount]
+            ax, ay = glob_coords[i % self._ncount]
+            bx, by = glob_coords[(i + 1) % self._ncount]
             px, py = glob_point
 
             cross = (px - bx) * (ay - by) - (py - by) * (ax - bx)
@@ -285,26 +285,26 @@ class Quad9Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard triangle with nodes at (0,0), (1,0) and (0,1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = -1.0
-        loc_coords[0, 1] = 1.0
-        loc_coords[0, 2] = 1.0
-        loc_coords[0, 3] = -1.0
-        loc_coords[0, 4] = 0.0
-        loc_coords[0, 5] = 1.0
-        loc_coords[0, 6] = 0.0
-        loc_coords[0, 7] = -1.0
-        loc_coords[0, 8] = 0.0
-        loc_coords[1, 0] = -1.0
+        loc_coords[1, 0] = 1.0
+        loc_coords[2, 0] = 1.0
+        loc_coords[3, 0] = -1.0
+        loc_coords[4, 0] = 0.0
+        loc_coords[5, 0] = 1.0
+        loc_coords[6, 0] = 0.0
+        loc_coords[7, 0] = -1.0
+        loc_coords[8, 0] = 0.0
+        loc_coords[0, 1] = -1.0
         loc_coords[1, 1] = -1.0
-        loc_coords[1, 2] = 1.0
-        loc_coords[1, 3] = 1.0
-        loc_coords[1, 4] = -1.0
-        loc_coords[1, 5] = 0.0
-        loc_coords[1, 6] = 1.0
-        loc_coords[1, 7] = 0.0
-        loc_coords[1, 8] = 0.0
+        loc_coords[2, 1] = 1.0
+        loc_coords[3, 1] = 1.0
+        loc_coords[4, 1] = -1.0
+        loc_coords[5, 1] = 0.0
+        loc_coords[6, 1] = 1.0
+        loc_coords[7, 1] = 0.0
+        loc_coords[8, 1] = 0.0
 
         return loc_coords
 
@@ -332,31 +332,31 @@ class Quad9Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         x = loc_point[0]
         y = loc_point[1]
 
         sgrads[0, 0] = 0.5 * (x - 0.5) * y * (y - 1)
-        sgrads[0, 1] = 0.5 * x * (x - 1) * (y - 0.5)
-        sgrads[1, 0] = 0.5 * (x + 0.5) * y * (y - 1)
+        sgrads[1, 0] = 0.5 * x * (x - 1) * (y - 0.5)
+        sgrads[0, 1] = 0.5 * (x + 0.5) * y * (y - 1)
         sgrads[1, 1] = 0.5 * x * (x + 1) * (y - 0.5)
-        sgrads[2, 0] = 0.5 * (x + 0.5) * y * (y + 1)
-        sgrads[2, 1] = 0.5 * x * (x + 1) * (y + 0.5)
-        sgrads[3, 0] = 0.5 * (x - 0.5) * y * (y + 1)
-        sgrads[3, 1] = 0.5 * x * (x - 1) * (y + 0.5)
+        sgrads[0, 2] = 0.5 * (x + 0.5) * y * (y + 1)
+        sgrads[1, 2] = 0.5 * x * (x + 1) * (y + 0.5)
+        sgrads[0, 3] = 0.5 * (x - 0.5) * y * (y + 1)
+        sgrads[1, 3] = 0.5 * x * (x - 1) * (y + 0.5)
 
-        sgrads[4, 0] = -x * y * (y - 1)
-        sgrads[4, 1] = (1 - x**2) * (y - 0.5)
-        sgrads[5, 0] = (x + 0.5) * (1 - y**2)
-        sgrads[5, 1] = x * (x + 1) * -y
-        sgrads[6, 0] = -x * y * (y + 1)
-        sgrads[6, 1] = (1 - x**2) * (y + 0.5)
-        sgrads[7, 0] = (x - 0.5) * (1 - y**2)
-        sgrads[7, 1] = x * (x - 1) * -y
+        sgrads[0, 4] = -x * y * (y - 1)
+        sgrads[1, 4] = (1 - x**2) * (y - 0.5)
+        sgrads[0, 5] = (x + 0.5) * (1 - y**2)
+        sgrads[1, 5] = x * (x + 1) * -y
+        sgrads[0, 6] = -x * y * (y + 1)
+        sgrads[1, 6] = (1 - x**2) * (y + 0.5)
+        sgrads[0, 7] = (x - 0.5) * (1 - y**2)
+        sgrads[1, 7] = x * (x - 1) * -y
 
-        sgrads[8, 0] = (-2 * x) * (1 - y**2)
-        sgrads[8, 1] = (1 - x**2) * (-2 * y)
+        sgrads[0, 8] = (-2 * x) * (1 - y**2)
+        sgrads[1, 8] = (1 - x**2) * (-2 * y)
 
         return sgrads
 
@@ -385,10 +385,10 @@ class Line2Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard line with nodes at (-1) and (1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = -1.0
-        loc_coords[0, 1] = 1.0
+        loc_coords[1, 0] = 1.0
 
         return loc_coords
 
@@ -404,10 +404,10 @@ class Line2Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         sgrads[0, 0] = -0.5
-        sgrads[1, 0] = 0.5
+        sgrads[0, 1] = 0.5
 
         return sgrads
 
@@ -416,7 +416,7 @@ class Line2Shape(Shape):
         loc_point = np.zeros(self._rank)
 
         A = glob_coords[0, 0]
-        B = glob_coords[0, 1]
+        B = glob_coords[1, 0]
         X = glob_point[0]
 
         loc_point[0] = (A + B - 2 * X) / (A - B)
@@ -434,7 +434,7 @@ class Line2Shape(Shape):
 
     def contains_global_point(self, glob_point, glob_coords, tol=0.0):
         # Return whether or not the global point falls inside or on the element boundaries
-        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[0, 1] + tol:
+        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[1, 0] + tol:
             return True
         else:
             return False
@@ -451,11 +451,11 @@ class Line3Shape(Shape):
 
     def get_local_node_coords(self):
         # Return the standard line with nodes at (-1) and (1)
-        loc_coords = np.zeros((self._rank, self._ncount))
+        loc_coords = np.zeros((self._ncount, self._rank))
 
         loc_coords[0, 0] = -1.0
-        loc_coords[0, 1] = 0.0
-        loc_coords[0, 2] = 1.0
+        loc_coords[1, 0] = 0.0
+        loc_coords[2, 0] = 1.0
 
         return loc_coords
 
@@ -472,11 +472,11 @@ class Line3Shape(Shape):
     def eval_shape_gradients(self, loc_point):
         # Evaluate the shape gradients in the local coordinate system
         # Note that no weights are applied!
-        sgrads = np.zeros((self._ncount, self._rank))
+        sgrads = np.zeros((self._rank, self._ncount))
 
         sgrads[0, 0] = loc_point[0] - 0.5
-        sgrads[1, 0] = -2 * loc_point[0]
-        sgrads[2, 0] = loc_point[0] + 0.5
+        sgrads[0, 1] = -2 * loc_point[0]
+        sgrads[0, 2] = loc_point[0] + 0.5
 
         return sgrads
 
@@ -491,7 +491,7 @@ class Line3Shape(Shape):
 
     def contains_global_point(self, glob_point, glob_coords, tol=0.0):
         # Return whether or not the global point falls inside or on the element boundaries
-        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[0, 2] + tol:
+        if glob_coords[0, 0] - tol <= glob_point[0] <= glob_coords[2, 0] + tol:
             return True
         else:
             return False

@@ -76,13 +76,11 @@ class PoissonModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B_elem = self._get_B_matrix(grads[:, :, ip])
-                D_elem = self._get_D_matrix(ipcoords[:, ip])
+                B_elem = self._get_B_matrix(grads[ip])
+                D_elem = self._get_D_matrix(ipcoords[ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
-                )
+                elmat += weights[ip] * B_elem.T @ D_elem @ B_elem
 
             # Add the element stiffness matrix to the global stiffness matrix
             K[np.ix_(idofs, idofs)] += elmat
@@ -113,15 +111,13 @@ class PoissonModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N_elem = self._get_N_matrix(sfuncs[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[ip])
 
                 if not unit_matrix:
-                    M_elem = self._get_M_matrix(ipcoords[:, ip])
+                    M_elem = self._get_M_matrix(ipcoords[ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
-                )
+                elmat += weights[ip] * N_elem.T @ M_elem @ N_elem
 
             # Add the element mass matrix to the global mass matrix
             M[np.ix_(idofs, idofs)] += elmat
@@ -130,12 +126,12 @@ class PoissonModel(Model):
 
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((1, self._dofcount))
-        N[0, :] = sfuncs.transpose()
+        N[0, :] = sfuncs
         return N
 
     def _get_B_matrix(self, grads):
         B = np.zeros((self._rank, self._dofcount))
-        B[:, :] = grads.transpose()
+        B[:, :] = grads
         return B
 
     def _get_D_matrix(self, ipcoords):

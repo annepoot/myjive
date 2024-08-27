@@ -33,13 +33,13 @@ class NodeSet(ItemSet):
         coords = []
         for inode in range(self.size()):
             coords.append(self.get_node_coords(inode))
-        return np.array(coords).T
+        return np.array(coords)
 
     def get_some_coords(self, inodes):
         coords = []
         for inode in inodes:
             coords.append(self.get_node_coords(inode))
-        return np.array(coords).T
+        return np.array(coords)
 
 
 class XNodeSet(NodeSet, XItemSet):

@@ -117,15 +117,13 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B_elem = self._get_B_matrix(grads[:, :, ip])
+                B_elem = self._get_B_matrix(grads[ip])
 
                 if not unit_matrix:
-                    D_elem = self._mat.stiff_at_point(ipcoords[:, ip])
+                    D_elem = self._mat.stiff_at_point(ipcoords[ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
-                )
+                elmat += weights[ip] * B_elem.T @ D_elem @ B_elem
 
             # Add the element stiffness matrix to the global stiffness matrix
             K[np.ix_(idofs, idofs)] += elmat
@@ -159,15 +157,13 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N_elem = self._get_N_matrix(sfuncs[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[ip])
 
                 if not unit_matrix:
-                    M_elem = self._mat.mass_at_point(ipcoords[:, ip])
+                    M_elem = self._mat.mass_at_point(ipcoords[ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
-                )
+                elmat += weights[ip] * N_elem.T @ M_elem @ N_elem
 
             # Add the element mass matrix to the global mass matrix
             M[np.ix_(idofs, idofs)] += elmat
@@ -195,16 +191,14 @@ class SolidModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B_elem = self._get_B_matrix(grads[:, :, ip])
+                B_elem = self._get_B_matrix(grads[ip])
 
                 # Compute the element strain and weights
                 for i in range(self._strcount):
                     elbmat[i * node_count : (i + 1) * node_count, :] += np.outer(
-                        sfuncs[:, ip], B_elem[i, :]
+                        sfuncs[ip], B_elem[i, :]
                     )
-                    elwts[i * node_count : (i + 1) * node_count] += sfuncs[
-                        :, ip
-                    ].flatten()
+                    elwts[i * node_count : (i + 1) * node_count] += sfuncs[ip].flatten()
 
             # Get the node index vector
             node_idx = np.zeros(node_count * self._strcount, dtype=int)
@@ -358,7 +352,7 @@ class SolidModel(Model):
         grads, _ = self._shape.get_shape_gradients(coords)
         ipcoords = self._shape.get_global_integration_points(coords)
 
-        stiffness = self._mat._get_E(ipcoords[:, 0])
+        stiffness = self._mat._get_E(ipcoords[0])
         return stiffness
 
     def _get_elem_size(self, ielem, globdat):
@@ -388,8 +382,8 @@ class SolidModel(Model):
 
         for ip in range(self._ipcount):
             strain = self._get_ip_strain(ip, grads, eldisp)
-            eleps += np.outer(sfuncs[:, ip], strain)
-            elwts += sfuncs[:, ip].flatten()
+            eleps += np.outer(sfuncs[ip], strain)
+            elwts += sfuncs[ip].flatten()
 
         return eleps, elwts
 
@@ -409,8 +403,8 @@ class SolidModel(Model):
 
         for ip in range(self._ipcount):
             stress = self._get_ip_stress(ip, ipcoords, grads, eldisp)
-            elsig += np.outer(sfuncs[:, ip], stress)
-            elwts += sfuncs[:, ip].flatten()
+            elsig += np.outer(sfuncs[ip], stress)
+            elwts += sfuncs[ip].flatten()
 
         return elsig, elwts
 
@@ -423,9 +417,9 @@ class SolidModel(Model):
         elwts = np.zeros(self._shape.node_count())
 
         for ip in range(self._ipcount):
-            E = self._mat._get_E(ipcoords[:, ip])
-            elyoung[:, 0] += E * sfuncs[:, ip]
-            elwts += sfuncs[:, ip].flatten()
+            E = self._mat._get_E(ipcoords[ip])
+            elyoung[:, 0] += E * sfuncs[ip]
+            elwts += sfuncs[ip].flatten()
 
         return elyoung, elwts
 
@@ -462,11 +456,11 @@ class SolidModel(Model):
         )
 
     def _get_ip_strain(self, ip, grads, eldisp):
-        B = self._get_B_matrix(grads[:, :, ip])
+        B = self._get_B_matrix(grads[ip])
         strain = np.matmul(B, eldisp)
         return strain
 
     def _get_ip_stress(self, ip, ipcoords, grads, eldisp):
         strain = self._get_ip_strain(ip, grads, eldisp)
-        stress = self._mat.stress_at_point(strain, ipcoords[:, ip])
+        stress = self._mat.stress_at_point(strain, ipcoords[ip])
         return stress

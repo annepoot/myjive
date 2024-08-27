@@ -77,11 +77,11 @@ class LoadModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N matrix and b vector for each integration point
-                N = self._get_N_matrix(sfuncs[:, ip])
-                b = self._get_b_vector(ipcoords[:, ip])
+                N = self._get_N_matrix(sfuncs[ip])
+                b = self._get_b_vector(ipcoords[ip])
 
                 # Compute the element force vector
-                elfor += weights[ip] * np.matmul(np.transpose(N), b)
+                elfor += weights[ip] * N.T @ b
 
             # Add the element force vector to the global force vector
             f_ext[idofs] += elfor
@@ -91,7 +91,7 @@ class LoadModel(Model):
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._loadcount, self._dofcount))
         for i in range(self._loadcount):
-            N[i, i :: self._loadcount] = sfuncs.transpose()
+            N[i, i :: self._loadcount] = sfuncs
         return N
 
     def _get_b_vector(self, ipcoords):

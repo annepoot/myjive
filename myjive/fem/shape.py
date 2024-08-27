@@ -36,7 +36,7 @@ class Shape:
         else:
             raise ValueError(self._int)
 
-        self._ips = np.zeros((self._rank, self._ipcount))
+        self._ips = np.zeros((self._ipcount, self._rank))
         self._wts = np.zeros(self._ipcount)
 
         if self._rank == 1:
@@ -46,14 +46,14 @@ class Shape:
 
             elif self._int == "Gauss2":
                 self._ips[0, 0] = -1 / np.sqrt(3)
-                self._ips[0, 1] = 1 / np.sqrt(3)
+                self._ips[1, 0] = 1 / np.sqrt(3)
                 self._wts[0] = 1
                 self._wts[1] = 1
 
             elif self._int == "Gauss3":
                 self._ips[0, 0] = -np.sqrt(3.0 / 5.0)
-                self._ips[0, 1] = 0
-                self._ips[0, 2] = np.sqrt(3.0 / 5.0)
+                self._ips[1, 0] = 0
+                self._ips[2, 0] = np.sqrt(3.0 / 5.0)
                 self._wts[0] = 5.0 / 9.0
                 self._wts[1] = 8.0 / 9.0
                 self._wts[2] = 5.0 / 9.0
@@ -68,15 +68,15 @@ class Shape:
             if self._ncount == 3 or self._ncount == 6:
                 if self._int == "Gauss1":
                     self._ips[0, 0] = 1.0 / 3.0
-                    self._ips[1, 0] = 1.0 / 3.0
+                    self._ips[0, 1] = 1.0 / 3.0
                     self._wts[0] = 0.5
                 elif self._int == "Gauss3":
                     self._ips[0, 0] = 1.0 / 6.0
-                    self._ips[1, 0] = 1.0 / 6.0
-                    self._ips[0, 1] = 2.0 / 3.0
+                    self._ips[0, 1] = 1.0 / 6.0
+                    self._ips[1, 0] = 2.0 / 3.0
                     self._ips[1, 1] = 1.0 / 6.0
-                    self._ips[0, 2] = 1.0 / 6.0
-                    self._ips[1, 2] = 2.0 / 3.0
+                    self._ips[2, 0] = 1.0 / 6.0
+                    self._ips[2, 1] = 2.0 / 3.0
                     self._wts[0] = 1.0 / 6.0
                     self._wts[1] = 1.0 / 6.0
                     self._wts[2] = 1.0 / 6.0
@@ -92,13 +92,13 @@ class Shape:
                 elif self._int == "Gauss4":
                     invsqrt3 = 1 / np.sqrt(3)
                     self._ips[0, 0] = -invsqrt3
-                    self._ips[1, 0] = -invsqrt3
-                    self._ips[0, 1] = invsqrt3
+                    self._ips[0, 1] = -invsqrt3
+                    self._ips[1, 0] = invsqrt3
                     self._ips[1, 1] = -invsqrt3
-                    self._ips[0, 2] = invsqrt3
-                    self._ips[1, 2] = invsqrt3
-                    self._ips[0, 3] = -invsqrt3
-                    self._ips[1, 3] = invsqrt3
+                    self._ips[2, 0] = invsqrt3
+                    self._ips[2, 1] = invsqrt3
+                    self._ips[3, 0] = -invsqrt3
+                    self._ips[3, 1] = invsqrt3
 
                     self._wts[0] = 1.0
                     self._wts[1] = 1.0
@@ -107,23 +107,23 @@ class Shape:
                 elif self._int == "Gauss9":
                     invsqrt35 = 1 / np.sqrt(3.0 / 5.0)
                     self._ips[0, 0] = -invsqrt35
-                    self._ips[1, 0] = -invsqrt35
-                    self._ips[0, 1] = 0
+                    self._ips[0, 1] = -invsqrt35
+                    self._ips[1, 0] = 0
                     self._ips[1, 1] = -invsqrt35
-                    self._ips[0, 2] = invsqrt35
-                    self._ips[1, 2] = -invsqrt35
-                    self._ips[0, 3] = -invsqrt35
-                    self._ips[1, 3] = 0
-                    self._ips[0, 4] = 0
-                    self._ips[1, 4] = 0
-                    self._ips[0, 5] = invsqrt35
-                    self._ips[1, 5] = 0
-                    self._ips[0, 6] = -invsqrt35
-                    self._ips[1, 6] = invsqrt35
-                    self._ips[0, 7] = 0
-                    self._ips[1, 7] = invsqrt35
-                    self._ips[0, 8] = invsqrt35
-                    self._ips[1, 8] = invsqrt35
+                    self._ips[2, 0] = invsqrt35
+                    self._ips[2, 1] = -invsqrt35
+                    self._ips[3, 0] = -invsqrt35
+                    self._ips[3, 1] = 0
+                    self._ips[4, 0] = 0
+                    self._ips[4, 1] = 0
+                    self._ips[5, 0] = invsqrt35
+                    self._ips[5, 1] = 0
+                    self._ips[6, 0] = -invsqrt35
+                    self._ips[6, 1] = invsqrt35
+                    self._ips[7, 0] = 0
+                    self._ips[7, 1] = invsqrt35
+                    self._ips[8, 0] = invsqrt35
+                    self._ips[8, 1] = invsqrt35
 
                     self._wts[0] = 25.0 / 81.0
                     self._wts[1] = 40.0 / 81.0
@@ -141,12 +141,12 @@ class Shape:
             else:
                 raise ValueError(self._ncount)
 
-        self._N = np.zeros((self._ncount, self._ipcount))
-        self._dN = np.zeros((self._ncount, self._rank, self._ipcount))
+        self._N = np.zeros((self._ipcount, self._ncount))
+        self._dN = np.zeros((self._ipcount, self._rank, self._ncount))
 
         for ip in range(self._ipcount):
-            self._N[:, ip] = self.eval_shape_functions(self._ips[:, ip])
-            self._dN[:, :, ip] = self.eval_shape_gradients(self._ips[:, ip])
+            self._N[ip] = self.eval_shape_functions(self._ips[ip])
+            self._dN[ip] = self.eval_shape_gradients(self._ips[ip])
 
     @classmethod
     def declare(cls, factory):
@@ -171,10 +171,10 @@ class Shape:
         return self._ips
 
     def get_global_integration_points(self, glob_coords):
-        glob_ips = np.zeros((self._rank, self._ipcount))
+        glob_ips = np.zeros((self._ipcount, self._rank))
 
         for ip in range(self._ipcount):
-            glob_ips[:, ip] = self.get_global_point(self._ips[:, ip], glob_coords)
+            glob_ips[ip] = self.get_global_point(self._ips[ip], glob_coords)
 
         return glob_ips
 
@@ -182,7 +182,7 @@ class Shape:
         wts = np.copy(self._wts)
 
         for ip in range(self._ipcount):
-            J = np.matmul(glob_coords, self._dN[:, :, ip])
+            J = self._dN[ip] @ glob_coords
             wts[ip] *= np.linalg.det(J)
 
         return wts
@@ -199,7 +199,7 @@ class Shape:
 
     def get_global_point(self, loc_point, glob_coords):
         sfuncs = self.eval_shape_functions(loc_point)
-        return np.matmul(glob_coords, sfuncs)
+        return sfuncs @ glob_coords
 
     def get_local_point(self, glob_point, glob_coords):
         # Note: since this is (in general) a non-linear problem, a non-linear solver must be called.
@@ -238,6 +238,7 @@ class Shape:
 
     def eval_global_shape_gradients(self, glob_point, glob_coords):
         loc_point = self.get_local_point(glob_point, glob_coords)
-        J = glob_coords @ self.eval_shape_gradients(loc_point)
+        loc_grads = self.eval_shape_gradients(loc_point)
+        J = loc_grads @ glob_coords
         J_inv = np.linalg.inv(J)
-        return self.eval_shape_gradients(loc_point) @ J_inv
+        return J_inv @ loc_grads

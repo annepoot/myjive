@@ -110,13 +110,11 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B_elem = self._get_B_matrix(grads[:, :, ip])
-                D_elem = self._get_D_matrix(ipcoords[:, ip])
+                B_elem = self._get_B_matrix(grads[ip])
+                D_elem = self._get_D_matrix(ipcoords[ip])
 
                 # Compute the element stiffness matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(B_elem), np.matmul(D_elem, B_elem)
-                )
+                elmat += weights[ip] * B_elem.T @ D_elem @ B_elem
 
             # Add the element stiffness matrix to the global stiffness matrix
             K[np.ix_(idofs, idofs)] += elmat
@@ -144,13 +142,11 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the N and M matrices for each integration point
-                N_elem = self._get_N_matrix(sfuncs[:, ip])
-                M_elem = self._get_M_matrix(ipcoords[:, ip])
+                N_elem = self._get_N_matrix(sfuncs[ip])
+                M_elem = self._get_M_matrix(ipcoords[ip])
 
                 # Compute the element mass matrix
-                elmat += weights[ip] * np.matmul(
-                    np.transpose(N_elem), np.matmul(M_elem, N_elem)
-                )
+                elmat += weights[ip] * N_elem.T @ M_elem @ N_elem
 
             # Add the element mass matrix to the global mass matrix
             M[np.ix_(idofs, idofs)] += elmat
@@ -178,11 +174,11 @@ class ElasticModel(Model):
 
                 for ip in range(self._ipcount):
                     # Get the N matrix and b vector for each integration point
-                    N = self._get_N_matrix(sfuncs[:, ip])
-                    b = self._get_b_vector(ipcoords[:, ip])
+                    N = self._get_N_matrix(sfuncs[ip])
+                    b = self._get_b_vector(ipcoords[ip])
 
                     # Compute the element force vector
-                    elfor += weights[ip] * np.matmul(np.transpose(N), b)
+                    elfor += weights[ip] * N.T @ b
 
                 # Add the element force vector to the global force vector
                 f_ext[idofs] += elfor
@@ -235,14 +231,14 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B matrix for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
+                B = self._get_B_matrix(grads[ip])
 
                 # Get the strain of the element in the integration point
                 strain = np.matmul(B, eldisp)
 
                 # Compute the element strain and weights
-                eleps += np.outer(sfuncs[:, ip], strain)
-                elwts += sfuncs[:, ip].flatten()
+                eleps += np.outer(sfuncs[ip], strain)
+                elwts += sfuncs[ip].flatten()
 
             # Add the element weights to the global weights
             tbwts[inodes] += elwts
@@ -301,8 +297,8 @@ class ElasticModel(Model):
 
             for ip in range(self._ipcount):
                 # Get the B and D matrices for each integration point
-                B = self._get_B_matrix(grads[:, :, ip])
-                D = self._get_D_matrix(ipcoords[:, ip])
+                B = self._get_B_matrix(grads[ip])
+                D = self._get_D_matrix(ipcoords[ip])
 
                 if self._rank == 2:
                     D /= self._thickness
@@ -312,8 +308,8 @@ class ElasticModel(Model):
                 stress = np.matmul(D, strain)
 
                 # Compute the element stress and weights
-                elsig += np.outer(sfuncs[:, ip], stress)
-                elwts += sfuncs[:, ip].flatten()
+                elsig += np.outer(sfuncs[ip], stress)
+                elwts += sfuncs[ip].flatten()
 
             # Add the element weights to the global weights
             tbwts[inodes] += elwts
@@ -329,23 +325,23 @@ class ElasticModel(Model):
     def _get_N_matrix(self, sfuncs):
         N = np.zeros((self._rank, self._dofcount))
         for i in range(self._rank):
-            N[i, i :: self._rank] = sfuncs.transpose()
+            N[i, i :: self._rank] = sfuncs
         return N
 
     def _get_B_matrix(self, grads):
         B = np.zeros((self._strcount, self._dofcount))
         if self._rank == 1:
-            B = grads.transpose()
+            B = grads
         elif self._rank == 2:
             for inode in range(self._shape.node_count()):
                 i = 2 * inode
-                gi = grads[inode, :]
+                gi = grads[:, inode]
                 B[0:3, i : (i + 2)] = [[gi[0], 0.0], [0.0, gi[1]], [gi[1], gi[0]]]
         elif self._rank == 3:
             B = np.zeros((6, self._dofcount))
             for inode in range(self._shape.node_count()):
                 i = 3 * inode
-                gi = grads[inode, :]
+                gi = grads[:, inode]
                 B[0:6, i : (i + 3)] = [
                     [gi[0], 0.0, 0.0],
                     [0.0, gi[1], 0.0],

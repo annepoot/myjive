@@ -353,8 +353,8 @@ class InitModule(Module):
 
     def _create_ngroups(self, groups, globdat, **groupprops):
         coords = globdat[gn.NSET].get_coords()
-        cmax = np.max(coords, axis=1)
-        cmin = np.min(coords, axis=1)
+        cmax = np.max(coords, axis=0)
+        cmin = np.min(coords, axis=0)
         cmid = 0.5 * (cmax + cmin)
         for g in groups:
             group = globdat[gn.NGROUPS]["all"].get_indices()
@@ -366,19 +366,19 @@ class InitModule(Module):
                         if loc.replace(".", "").isnumeric():
                             lbnd = float(loc) - self._ctol
                             ubnd = float(loc) + self._ctol
-                            group = group[coords[i, group] > lbnd]
-                            group = group[coords[i, group] < ubnd]
+                            group = group[coords[group, i] > lbnd]
+                            group = group[coords[group, i] < ubnd]
                         elif gprops[axis] == "min":
                             ubnd = cmin[i] + self._ctol
-                            group = group[coords[i, group] < ubnd]
+                            group = group[coords[group, i] < ubnd]
                         elif gprops[axis] == "max":
                             lbnd = cmax[i] - self._ctol
-                            group = group[coords[i, group] > lbnd]
+                            group = group[coords[group, i] > lbnd]
                         elif gprops[axis] == "mid":
                             lbnd = cmid[i] - self._ctol
                             ubnd = cmid[i] + self._ctol
-                            group = group[coords[i, group] > lbnd]
-                            group = group[coords[i, group] < ubnd]
+                            group = group[coords[group, i] > lbnd]
+                            group = group[coords[group, i] < ubnd]
                         else:
                             pass
             else:

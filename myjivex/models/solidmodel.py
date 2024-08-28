@@ -1,4 +1,5 @@
 import numpy as np
+from numba import njit
 
 from myjive.names import GlobNames as gn
 from myjive.model.model import Model
@@ -6,7 +7,6 @@ from ..materials import new_material
 import myjive.util.proputils as pu
 from myjive.util import to_xtable
 from myjive.util.proputils import check_dict, split_off_type
-from .jit.solidmodel import get_N_matrix_jit, get_B_matrix_jit
 
 TYPE = "type"
 INTSCHEME = "intScheme"
@@ -448,12 +448,49 @@ class SolidModel(Model):
         return comps
 
     def _get_N_matrix(self, sfuncs):
-        return get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
+        return self._get_N_matrix_jit(sfuncs, self._dofcount, self._rank)
+
+    @staticmethod
+    @njit
+    def _get_N_matrix_jit(sfuncs, _dofcount, _rank):
+        N = np.zeros((_rank, _dofcount))
+        for i in range(_rank):
+            N[i, i::_rank] = sfuncs
+        return N
 
     def _get_B_matrix(self, grads):
-        return get_B_matrix_jit(
+        return self._get_B_matrix_jit(
             grads, self._strcount, self._dofcount, self._shape.node_count(), self._rank
         )
+
+    @staticmethod
+    @njit
+    def _get_B_matrix_jit(grads, _strcount, _dofcount, _nodecount, _rank):
+        B = np.zeros((_strcount, _dofcount))
+        if _rank == 1:
+            B = grads
+        elif _rank == 2:
+            for inode in range(_nodecount):
+                i = 2 * inode
+                gi = grads[:, inode]
+                B[0, i + 0] = gi[0]
+                B[1, i + 1] = gi[1]
+                B[2, i + 0] = gi[1]
+                B[2, i + 1] = gi[0]
+        elif _rank == 3:
+            for inode in range(_nodecount):
+                i = 3 * inode
+                gi = grads[:, inode]
+                B[0, i + 0] = gi[0]
+                B[1, i + 1] = gi[1]
+                B[2, i + 2] = gi[2]
+                B[3, i + 0] = gi[1]
+                B[3, i + 1] = gi[0]
+                B[4, i + 1] = gi[2]
+                B[4, i + 2] = gi[1]
+                B[5, i + 0] = gi[2]
+                B[5, i + 2] = gi[0]
+        return B
 
     def _get_ip_strain(self, ip, grads, eldisp):
         B = self._get_B_matrix(grads[ip])

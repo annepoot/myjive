@@ -2,7 +2,7 @@ import numpy as np
 from numpy.polynomial.legendre import leggauss
 from scipy.optimize import fsolve
 from warnings import warn
-from .jit.shape import get_shape_gradients_jit
+from numba import njit
 
 NOTIMPLEMENTEDMSG = "this function needs to be implemented in an derived class"
 
@@ -231,7 +231,24 @@ class Shape:
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
 
     def get_shape_gradients(self, glob_coords):
-        return get_shape_gradients_jit(glob_coords, self._dN, self._wts, self._ipcount)
+        return self._get_shape_gradients_jit(
+            glob_coords, self._dN, self._wts, self._ipcount
+        )
+
+    @staticmethod
+    @njit
+    def _get_shape_gradients_jit(glob_coords, _dN, _wts, _ipcount):
+        wts = np.copy(_wts)
+        dN = np.copy(_dN)
+
+        for ip in range(_ipcount):
+            dNip = dN[ip]
+            J = dNip @ glob_coords
+            invJ, detJ = invdet(J)
+            wts[ip] *= detJ
+            dN[ip] = invJ @ dNip
+
+        return dN, wts
 
     def eval_shape_gradients(self, loc_point):
         raise NotImplementedError(NOTIMPLEMENTEDMSG)
@@ -242,3 +259,87 @@ class Shape:
         J = loc_grads @ glob_coords
         J_inv = np.linalg.inv(J)
         return J_inv @ loc_grads
+
+
+##########################
+# numba helper functions #
+##########################
+@njit
+def det(A):
+    if len(A) == 2:
+        return det2x2(A)
+    elif len(A) == 3:
+        return det3x3(A)
+    else:
+        return np.linalg.det(A)
+
+
+@njit
+def det2x2(A):
+    return det2x2i(A[0, 0], A[0, 1], A[1, 0], A[1, 1])
+
+
+@njit
+def det2x2i(a, b, c, d):
+    return a * d - b * c
+
+
+@njit
+def det3x3(A):
+    return (
+        A[0, 0] * A[1, 1] * A[2, 2]
+        + A[0, 1] * A[1, 2] * A[2, 0]
+        + A[0, 2] * A[1, 0] * A[2, 1]
+        - A[0, 0] * A[1, 2] * A[2, 1]
+        - A[0, 1] * A[1, 0] * A[2, 2]
+        - A[0, 2] * A[1, 1] * A[2, 0]
+    )
+
+
+@njit
+def invdet(A):
+    if len(A) == 1:
+        return invdet1x1(A)
+    elif len(A) == 2:
+        return invdet2x2(A)
+    elif len(A) == 3:
+        return invdet3x3(A)
+    else:
+        raise ValueError("array is too big for invdet function")
+
+
+@njit
+def invdet1x1(A):
+    a = A[0, 0]
+    return np.array([[1.0 / a]]), a
+
+
+@njit
+def invdet2x2(A):
+    a, b, c, d = A[0, 0], A[0, 1], A[1, 0], A[1, 1]
+    det = det2x2i(a, b, c, d)
+    adj = np.array([[d, -b], [-c, a]])
+    return adj / det, det
+
+
+@njit
+def cof3x3(A, r, c):
+    return det2x2i(
+        A[(r - 1) % 3, (c - 1) % 3],
+        A[(r - 1) % 3, (c + 1) % 3],
+        A[(r + 1) % 3, (c - 1) % 3],
+        A[(r + 1) % 3, (c + 1) % 3],
+    )
+
+
+@njit
+def invdet3x3(A):
+    det = det3x3(A)
+    adj = np.array(
+        [
+            [cof3x3(A, 0, 0), cof3x3(A, 1, 0), cof3x3(A, 2, 0)],
+            [cof3x3(A, 0, 1), cof3x3(A, 1, 1), cof3x3(A, 2, 1)],
+            [cof3x3(A, 0, 2), cof3x3(A, 1, 2), cof3x3(A, 2, 2)],
+        ]
+    )
+    return adj / det, det

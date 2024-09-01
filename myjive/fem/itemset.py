@@ -7,7 +7,7 @@ class ItemSet:
     def __init__(self, items=None):
         if items is None:
             self._data = []
-            self._map = {}
+            self._map = ItemMap()
         else:
             self._data = items._data
             self._map = items._map
@@ -26,6 +26,43 @@ class ItemSet:
 
     def size(self):
         return len(self._data)
+
+    def get_item_map(self):
+        return self._map
+
+    def find_item(self, item_id):
+        return self._map.find_item(item_id)
+
+    def find_items(self, item_ids):
+        return self._map.find_items(item_ids)
+
+    def get_item_id(self, iitem):
+        return self._map.get_item_id(iitem)
+
+    def get_item_ids(self, iitems):
+        return self._map.get_item_ids(iitems)
+
+
+class XItemSet(ItemSet):
+    def clear(self):
+        self._data = []
+        self._map = ItemMap()
+
+    def add_item(self, item, item_id=None):
+        self._data.append(item)
+        self._map.add_item(item_id)
+
+    def erase_item(self, iitem):
+        self._data.pop(iitem)
+        self._map.erase_item(iitem)
+
+
+class ItemMap:
+    def __init__(self, imap=None):
+        if imap is None:
+            self._map = {}
+        else:
+            self._map = imap
 
     def get_item_map(self):
         return self._map
@@ -52,23 +89,18 @@ class ItemSet:
             item_ids[i] = self.get_item_id(iitem)
         return np.array(item_ids, dtype=int)
 
-
-class XItemSet(ItemSet):
     def clear(self):
-        self._data = []
         self._map = {}
 
-    def add_item(self, item, item_id=None):
-        size = self.size()
+    def add_item(self, item_id=None):
+        size = len(self._map)
         if item_id is None:
             item_id = size + 1
         if item_id in self._map.keys():
             raise ValueError("item ID already exists in itemset")
-        self._data.append(item)
         self._map[item_id] = size
 
     def erase_item(self, iitem):
-        self._data.pop(iitem)
         for item_id, idx in self._map.items():
             if idx > iitem:
                 self._map[item_id] = idx - 1

@@ -70,8 +70,7 @@ class DeterioratedMaterial(HeterogeneousMaterial):
         for i in range(self._ndet):
             # randomly select an element
             ielem = np.random.randint(0, len(elems) - 1)
-            elem = elems[ielem]
-            inodes = elem.get_nodes()
+            inodes = elems[ielem]
             coords = globdat[gn.NSET].get_some_coords(inodes)
 
             center_coords = np.mean(coords, axis=1)

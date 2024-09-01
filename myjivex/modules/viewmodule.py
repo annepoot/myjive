@@ -117,11 +117,9 @@ class ViewModule(Module):
 
         el = self._triangulate_elements(elems, shape)
 
-        for n, node in enumerate(nodes):
-            coords = node.get_coords()
-
-            x[n] = coords[0]
-            y[n] = coords[1]
+        for inode, coords in enumerate(nodes):
+            x[inode] = coords[0]
+            y[inode] = coords[1]
 
         dx = np.copy(x)
         dy = np.copy(y)
@@ -181,9 +179,7 @@ class ViewModule(Module):
 
         el = np.zeros((nelem, 3), dtype=int)
 
-        for e, elem in enumerate(elems):
-            inodes = elem.get_nodes()
-
+        for e, inodes in enumerate(elems):
             if shape == "Triangle3":
                 el[e, :] = inodes
             elif shape == "Triangle6":

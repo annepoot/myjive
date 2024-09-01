@@ -33,10 +33,9 @@ class TimoshenkoModel(Model):
         self._ipcount = self._shape.ipoint_count()
         self._dofcount = 2 * self._shape.node_count()
 
-        nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
         for doftype in DOFTYPES:
             globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
+            for node in self._elems.get_unique_nodes_of(self._ielems):
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def _get_matrix(self, K, globdat):

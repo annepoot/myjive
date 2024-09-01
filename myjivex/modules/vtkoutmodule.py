@@ -50,7 +50,7 @@ class VTKOutModule(Module):
                 )
                 for node in nodes:
                     coords3d = np.zeros(3)
-                    coords3d[: node.rank()] = node.get_coords()
+                    coords3d[: nodes.rank()] = node
                     out.write(" ".join(map(str, coords3d)) + "\n")
                 out.write("</DataArray>\n")
                 out.write("</Points>\n")
@@ -58,20 +58,18 @@ class VTKOutModule(Module):
                 out.write(
                     '<DataArray type="Int32" Name="connectivity" format="ascii">\n'
                 )
-                for elem in elems:
-                    out.write(" ".join(map(str, elem.get_nodes())) + "\n")
+                for inodes in elems:
+                    out.write(" ".join(map(str, inodes)) + "\n")
                 out.write("</DataArray>\n")
                 out.write('<DataArray type="Int32" Name="offsets" format="ascii">\n')
                 i = 0
-                for elem in elems:
-                    i += len(elem.get_nodes())
+                for inodes in elems:
+                    i += len(inodes)
                     out.write(str(i) + "\n")
                 out.write("</DataArray>\n")
                 out.write('<DataArray type="UInt8" Name="types" format="ascii">\n')
-                for elem in elems:
-                    assert (
-                        len(elem.get_nodes()) == 3
-                    )  # only writing type=5 (triangle) for now
+                for inodes in elems:
+                    assert len(inodes) == 3  # only writing type=5 (triangle) for now
                     out.write("5\n")
                 out.write("</DataArray>\n")
                 out.write("</Cells>\n")

@@ -1,19 +1,9 @@
-import numpy as np
-
-from .itemset import ItemSet, XItemSet
-from .node import Node
+from .pointset import PointSet, XPointSet
 
 __all__ = ["NodeSet", "XNodeSet", "to_xnodeset"]
 
 
-class NodeSet(ItemSet):
-    def __init__(self, nodes=None):
-        super().__init__(nodes)
-        self._rank = 0
-
-    def rank(self):
-        return self._rank
-
+class NodeSet(PointSet):
     def find_node(self, node_id):
         return self.find_item(node_id)
 
@@ -27,51 +17,24 @@ class NodeSet(ItemSet):
         return self.get_item_ids(inodes)
 
     def get_node_coords(self, inode):
-        return self._data[inode].get_coords()
-
-    def get_coords(self):
-        coords = []
-        for inode in range(self.size()):
-            coords.append(self.get_node_coords(inode))
-        return np.array(coords)
-
-    def get_some_coords(self, inodes):
-        coords = []
-        for inode in inodes:
-            coords.append(self.get_node_coords(inode))
-        return np.array(coords)
+        return self.get_point_coords(inode)
 
 
-class XNodeSet(NodeSet, XItemSet):
+class XNodeSet(NodeSet, XPointSet):
     def add_node(self, coords, node_id=None):
-        node = Node(coords)
-        if self.size() == 0:
-            self._rank = node.rank()
-        else:
-            assert self._rank == node.rank()
-        self.add_item(node, node_id)
+        self.add_point(coords, node_id)
 
     def erase_node(self, inode):
-        self.erase_item(inode)
+        self.erase_point(inode)
 
     def set_node_coords(self, inode, coords):
-        self._data[inode].set_coords(coords)
+        self.set_point_coords(inode, coords)
 
     def set_coords(self, coords):
-        if coords.shape[0] != self.size():
-            raise ValueError(
-                "first dimension of coords does not match the number of nodes"
-            )
-        for inode in range(self.size()):
-            self.set_node_coords(inode, coords[inode])
+        self.set_points(coords)
 
     def set_some_coords(self, inodes, coords):
-        if coords.shape[0] != self.size():
-            raise ValueError(
-                "first dimension of coords does not match the size of inodes"
-            )
-        for i, inode in enumerate(inodes):
-            self.set_node_coords(inode, coords[i])
+        self.set_some_points(inodes, coords)
 
     def to_nodeset(self):
         self.__class__ = NodeSet

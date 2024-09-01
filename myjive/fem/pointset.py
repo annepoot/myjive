@@ -1,14 +1,37 @@
 import numpy as np
 
-from .itemset import ItemSet, XItemSet
+from .itemset import ItemSet, XItemSet, ItemMap
 
 __all__ = ["PointSet", "XPointSet", "to_xpointset"]
 
 
 class PointSet(ItemSet):
     def __init__(self, points=None):
-        super().__init__(points)
-        self._rank = 0
+        if points is None:
+            self._data = np.zeros((0, 0))
+            self._map = ItemMap()
+            self._size = 0
+            self._rank = 0
+        else:
+            self._data = points._data
+            self._map = points._map
+            self._size = points._size
+            self._rank = points._rank
+
+    def __len__(self):
+        return self._size
+
+    def __iter__(self):
+        return iter(self._data[: self._size])
+
+    def __next__(self):
+        return next(self._data[: self._size])
+
+    def __getitem__(self, ipoint):
+        return self.get_point_coords(ipoint)
+
+    def size(self):
+        return self._size
 
     def rank(self):
         return self._rank
@@ -17,33 +40,38 @@ class PointSet(ItemSet):
         return self._data[ipoint]
 
     def get_coords(self):
-        coords = []
-        for ipoint in range(self.size()):
-            coords.append(self.get_point_coords(ipoint))
-        return np.array(coords)
+        return self._data[:self._size]
 
     def get_some_coords(self, ipoints):
-        coords = []
-        for ipoint in ipoints:
-            coords.append(self.get_point_coords(ipoint))
-        return np.array(coords)
+        return self._data[ipoints]
 
 
 class XPointSet(PointSet, XItemSet):
-    def add_point(self, coords):
-        if self.size() == 0:
-            self._rank = len(coords)
-        else:
-            assert self._rank == len(coords)
-        self.add_item(coords)
+    def add_point(self, coords, point_id=None):
+        if self._size == len(self._data):
+            if self._size == 0:
+                self._rank = len(coords)
+                self._data = np.zeros((1, self._rank))
+            else:
+                # self._data = self._data.resize((2 * self._size, self._rank))
+                self._data = np.pad(self._data, ((0, self._size), (0, 0)))
+
+        self._data[self._size] = coords
+        self._size = self._size + 1
+
+        self._map.add_item(point_id)
 
     def erase_point(self, ipoint):
-        self.erase_item(ipoint)
+        raise NotImplementedError("has not been tested yet")
+        self._data = np.delete(self._data, ipoint, axis=0)
+        self._map.erase_item(ipoint)
 
     def set_point_coords(self, ipoint, coords):
+        raise NotImplementedError("has not been tested yet")
         self._data[ipoint] = coords
 
     def set_points(self, coords):
+        raise NotImplementedError("has not been tested yet")
         if coords.shape[0] != self.size():
             raise ValueError(
                 "first dimension of coords does not match the number of points"
@@ -52,6 +80,7 @@ class XPointSet(PointSet, XItemSet):
             self.set_point_coords(ipoint, coords[ipoint])
 
     def set_some_coords(self, ipoints, coords):
+        raise NotImplementedError("has not been tested yet")
         if coords.shape[0] != self.size():
             raise ValueError(
                 "first dimension of coords does not match the size of ipoints"

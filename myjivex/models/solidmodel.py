@@ -383,7 +383,7 @@ class SolidModel(Model):
         for ip in range(self._ipcount):
             strain = self._get_ip_strain(ip, grads, eldisp)
             eleps += np.outer(sfuncs[ip], strain)
-            elwts += sfuncs[ip].flatten()
+            elwts += sfuncs[ip]
 
         return eleps, elwts
 

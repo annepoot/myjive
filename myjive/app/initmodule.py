@@ -288,8 +288,8 @@ class InitModule(Module):
                 elems.add_element(mem)
 
             else:
-                x0 = nodes[mem[0]].get_coords()
-                x1 = nodes[mem[1]].get_coords()
+                x0 = nodes[mem[0]]
+                x1 = nodes[mem[1]]
                 dx = (x1 - x0) / nel
                 nodes.add_node(x0 + dx)
                 connectivity = np.array([mem[0], inode])

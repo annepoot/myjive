@@ -64,15 +64,11 @@ def QuickViewer(array, globdat, **kwargs):
 
     el = np.zeros((nelem, 3), dtype=int)
 
-    for n, node in enumerate(nodes):
-        coords = node.get_coords()
+    for inode, coords in enumerate(nodes):
+        x[inode] = coords[0]
+        y[inode] = coords[1]
 
-        x[n] = coords[0]
-        y[n] = coords[1]
-
-    for e, elem in enumerate(elems):
-        inodes = elem.get_nodes()
-
+    for e, inodes in enumerate(elems):
         if shape == "Triangle3":
             el[e, :] = inodes
         elif shape == "Triangle6":

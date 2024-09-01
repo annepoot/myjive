@@ -198,8 +198,7 @@ class LinsolveModule(SolverModule):
         doftypes = globdat[gn.DOFSPACE].get_types()
         dc = globdat[gn.DOFSPACE].dof_count()
 
-        for elem in globdat[gn.ESET]:
-            inodes = elem.get_nodes()
+        for inodes in globdat[gn.ESET]:
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, doftypes)
 
             for row in idofs:
@@ -225,8 +224,7 @@ class LinsolveModule(SolverModule):
         rank = globdat[gn.DOFSPACE].type_count()
         strcount = rank * (rank + 1) // 2
 
-        for elem in globdat[gn.ESET]:
-            inodes = elem.get_nodes()
+        for inodes in globdat[gn.ESET]:
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, doftypes)
             node_count = len(inodes)
 

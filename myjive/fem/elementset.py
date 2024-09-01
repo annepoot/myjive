@@ -1,16 +1,15 @@
-import numpy as np
-
-from .itemset import ItemSet, XItemSet
-from .element import Element
+from .groupset import GroupSet, XGroupSet
 
 __all__ = ["ElementSet", "XElementSet", "to_xelementset"]
 
 
-class ElementSet(ItemSet):
+class ElementSet(GroupSet):
     def __init__(self, nodes, elems=None):
         super().__init__(elems)
         self._nodes = nodes
-        self._maxNodeCount = 0
+
+    def get_nodes(self):
+        return self._nodes
 
     def find_element(self, elem_id):
         return self.find_item(elem_id)
@@ -19,61 +18,36 @@ class ElementSet(ItemSet):
         return self.get_item_id(ielem)
 
     def max_elem_node_count(self):
-        return self._maxNodeCount
+        return self.max_group_size()
 
     def max_elem_node_count_of(self, ielems):
-        maxNodeCount = 0
-        for ielem in ielems:
-            maxNodeCount = max(maxNodeCount, self.get_elem_node_count(ielem))
-        return maxNodeCount
+        return self.max_group_size_of(ielems)
 
     def get_elem_node_count(self, ielem):
-        return self._data[ielem].get_node_count()
+        return self.get_group_size(ielem)
 
     def get_elem_nodes(self, ielem):
-        return self._data[ielem].get_nodes()
+        return self.get_group_members(ielem)
 
-    def get_nodes(self):
-        return self._nodes
-
-    def get_some_elem_nodes(self, index, inode):
-        return np.array(self.get_elem_nodes(inode)[index], dtype=int)
+    def get_some_elem_nodes(self, index, ielem):
+        return self.get_some_group_members(index, ielem)
 
     def get_nodes_of(self, ielems):
-        inodes = []
-        for ielem in ielems:
-            for inode in self.get_elem_nodes(ielem):
-                inodes.append(inode)
-        return np.array(inodes, dtype=int)
+        return self.get_members_of(ielems)
 
     def get_unique_nodes_of(self, ielems):
-        return np.unique(self.get_nodes_of(ielems))
+        return self.get_unique_members_of(ielems)
 
 
-class XElementSet(ElementSet, XItemSet):
+class XElementSet(ElementSet, XGroupSet):
     def add_element(self, inodes, elem_id=None):
-        elem = Element(inodes)
-        nodeCount = elem.get_node_count()
-
-        if self._maxNodeCount < nodeCount:
-            self._maxNodeCount = nodeCount
-
-        self.add_item(elem, elem_id)
+        self.add_group(inodes, elem_id)
 
     def erase_element(self, ielem):
-        nodeCount = self.get_elem_node_count(ielem)
-
-        self.erase_item(ielem)
-
-        if nodeCount == self.max_elem_node_count():
-            for elem in self._data:
-                if elem.get_node_count() == nodeCount:
-                    break
-            else:
-                self._maxNodeCount = self.max_elem_node_count_of(range(self.size()))
+        self.erase_group(ielem)
 
     def set_elem_nodes(self, ielem, nodes):
-        self._data[ielem].set_nodes(nodes)
+        self.set_group_members(ielem, nodes)
 
     def to_elementset(self):
         self.__class__ = ElementSet

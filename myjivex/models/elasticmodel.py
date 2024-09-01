@@ -84,10 +84,9 @@ class ElasticModel(Model):
         self._strcount = self._rank * (self._rank + 1) // 2  # 1-->1, 2-->3, 3-->6
 
         # Create a new dof for every node and dof type
-        nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
         for doftype in DOFTYPES[0 : self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
+            for node in self._elems.get_unique_nodes_of(self._ielems):
                 globdat[gn.DOFSPACE].add_dof(node, doftype)
 
     def _get_matrix(self, K, globdat):
@@ -95,9 +94,8 @@ class ElasticModel(Model):
             dc = globdat[gn.DOFSPACE].dof_count()
             K = np.zeros((dc, dc))
 
-        for elem in self._elems:
+        for inodes in self._elems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -126,9 +124,8 @@ class ElasticModel(Model):
             dc = globdat[gn.DOFSPACE].dof_count()
             M = np.zeros((dc, dc))
 
-        for elem in self._elems:
+        for inodes in self._elems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -158,9 +155,8 @@ class ElasticModel(Model):
             f_ext = np.zeros(globdat[gn.DOFSPACE].dof_count())
 
         if self._rank == 2:
-            for elem in self._elems:
+            for inodes in self._elems:
                 # Get the nodal coordinates of each element
-                inodes = elem.get_nodes()
                 idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
                 coords = self._nodes.get_some_coords(inodes)
 
@@ -211,9 +207,8 @@ class ElasticModel(Model):
         elif self._rank == 3:
             jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
-        for elem in self._elems:
+        for inodes in self._elems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 
@@ -277,9 +272,8 @@ class ElasticModel(Model):
         elif self._rank == 3:
             jcols = xtable.add_columns(["xx", "yy", "zz", "xy", "yz", "zx"])
 
-        for elem in self._elems:
+        for inodes in self._elems:
             # Get the nodal coordinates of each element
-            inodes = elem.get_nodes()
             idofs = globdat[gn.DOFSPACE].get_dofs(inodes, DOFTYPES[0 : self._rank])
             coords = self._nodes.get_some_coords(inodes)
 

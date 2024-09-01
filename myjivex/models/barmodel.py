@@ -50,11 +50,10 @@ class BarModel(Model):
         self._strcount = self._rank * (self._rank + 1) // 2  # 1-->1, 2-->3, 3-->6
 
         # Create a new dof for every node and dof type
-        nodes = np.unique([node for elem in self._elems for node in elem.get_nodes()])
         for doftype in DOFTYPES[0 : self._rank]:
             globdat[gn.DOFSPACE].add_type(doftype)
-            for node in nodes:
-                globdat[gn.DOFSPACE].add_dof(node, doftype)
+            for inode in self._elems.get_unique_nodes_of(self._ielems):
+                globdat[gn.DOFSPACE].add_dof(inode, doftype)
 
     def _get_matrix(self, K, globdat):
         if K is None:

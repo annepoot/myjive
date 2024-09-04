@@ -40,7 +40,7 @@ class PointSet(ItemSet):
         return self._data[ipoint]
 
     def get_coords(self):
-        return self._data[:self._size]
+        return self._data[: self._size]
 
     def get_some_coords(self, ipoints):
         return self._data[ipoints]
@@ -67,7 +67,6 @@ class XPointSet(PointSet, XItemSet):
         self._map.erase_item(ipoint)
 
     def set_point_coords(self, ipoint, coords):
-        raise NotImplementedError("has not been tested yet")
         self._data[ipoint] = coords
 
     def set_points(self, coords):

@@ -59,7 +59,7 @@ class Shape:
                 self._wts[2] = 5.0 / 9.0
 
             elif self._int.lstrip("Gauss").isnumeric():
-                self._ips[0, :], self._wts[:] = leggauss(self._ipcount)
+                self._ips[:, 0], self._wts[:] = leggauss(self._ipcount)
 
             else:
                 raise ValueError(self._int)

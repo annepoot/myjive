@@ -362,8 +362,8 @@ class SolidModel(Model):
         max_edge = 0.0
         for i, inode in enumerate(inodes):
             for j, jnode in enumerate(inodes):
-                icoords = coords[:, i]
-                jcoords = coords[:, j]
+                icoords = coords[i]
+                jcoords = coords[j]
                 edge = np.sqrt(np.sum((icoords - jcoords) ** 2))
                 if edge > max_edge:
                     max_edge = edge

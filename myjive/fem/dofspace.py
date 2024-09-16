@@ -22,7 +22,7 @@ class DofSpace:
         return self._count
 
     def get_types(self):
-        return self._dofs.keys()
+        return list(self._dofs.keys())
 
     def find_dof(self, inode, typ):
         return self._dofs[typ].get(inode)

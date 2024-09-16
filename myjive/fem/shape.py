@@ -87,7 +87,7 @@ class Shape:
             elif self._ncount == 4 or self._ncount == 9:
                 if self._int == "Gauss1":
                     self._ips[0, 0] = 0.0
-                    self._ips[1, 0] = 0.0
+                    self._ips[0, 1] = 0.0
                     self._wts[0] = 4.0
                 elif self._int == "Gauss4":
                     invsqrt3 = 1 / np.sqrt(3)
@@ -208,7 +208,7 @@ class Shape:
             return self.get_global_point(x, glob_coords) - glob_point
 
         # The initial guess is the local coordinate in the middle of the element
-        x0 = np.mean(self.get_local_node_coords(), axis=1)
+        x0 = np.mean(self.get_local_node_coords(), axis=0)
 
         # Raise an error that scipy.optimize.fsolve is necessary
         warn(

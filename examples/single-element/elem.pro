@@ -1,3 +1,5 @@
+modules = [ init, solver ];
+
 init =
 {
   nodeGroups = [ lb, rb ];
@@ -21,8 +23,6 @@ init =
 
 model =
 {
-  type = Multi;
-
   models = [ solid, load, diri ];
 
   solid =

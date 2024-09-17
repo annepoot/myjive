@@ -1,4 +1,5 @@
 import numpy as np
+from warnings import warn
 
 from .module import Module
 from ..fem import XNodeSet
@@ -35,13 +36,11 @@ class InitModule(Module):
 
     def init(self, globdat, *, modelprops):
         # Validate input arguments
-        check_dict(self, modelprops, ["models"])
+        check_dict(self, modelprops, [gn.MODELS])
 
         # Initialize the node/elemenet group dictionaries
         globdat[gn.NGROUPS] = {}
         globdat[gn.EGROUPS] = {}
-
-        modelfac = globdat[gn.MODELFACTORY]
 
         # Initialize DofSpace
         print("InitModule: Creating DofSpace...")
@@ -70,14 +69,14 @@ class InitModule(Module):
 
         # Initialize model
         print("InitModule: Creating models...")
-        name_list = modelprops[MODELS]
-        model_list = []
-        for name in name_list:
+        modelfac = globdat[gn.MODELFACTORY]
+        globdat[gn.MODELS] = self._gather_models(modelprops, modelfac)
+        self._check_models(modelprops, globdat[gn.MODELS])
+
+        # Configure models
+        for name, model in globdat[gn.MODELS].items():
             typ, mprops = split_off_type(modelprops[name])
-            m = modelfac.get_model(typ, name)
-            m.configure(globdat, **mprops)
-            model_list.append(m)
-        globdat[gn.MODELS] = model_list
+            model.configure(globdat, **mprops)
 
     def run(self, globdat):
         return "ok"
@@ -390,3 +389,33 @@ class InitModule(Module):
 
     def _create_egroups(self, groups, globdat):
         pass
+
+    def _gather_models(self, props, model_factory):
+        if gn.MODELS in props:
+            model_names = props[gn.MODELS]
+        else:
+            raise ValueError("missing 'models = [...];' in .pro file")
+
+        models = {}
+
+        for name in model_names:
+            # Get the name of each item in the property file
+            if "type" in props[name]:
+                typ = props[name]["type"]
+            else:
+                typ = name.title()
+                props[name]["type"] = typ
+
+            # If it refers to a module (and not to a model), add it to the chain
+            if model_factory.is_model(typ):
+                models[name] = model_factory.get_model(typ, name)
+            else:
+                raise ValueError("'{}' is not declared as a model".format(typ))
+
+        return models
+
+    def _check_models(self, props, models):
+        for model_name in props.keys():
+            if model_name not in models and model_name not in [gn.MODELS]:
+                warning = "model '{}' defined in props, but not in model list"
+                warn(warning.format(model_name))

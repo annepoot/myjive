@@ -23,6 +23,15 @@ def parse_file(fname):
 
             newline = "={".join(line.split("={")[1:])
             data[key], i, sp = read_level(newline, i, sp)
+        elif "=" in line:
+            [key, value] = line.split("=")
+            key = key.strip()
+            value = value.strip()
+
+            if value.startswith("[") and value.endswith("]"):
+                data[key] = parse_list(value)
+            else:
+                data[key] = try_literal_eval(value)
         elif line != "":
             raise RuntimeError("Unable to parse: %s" % line)
 

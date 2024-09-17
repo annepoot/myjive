@@ -40,7 +40,7 @@ class Module:
 
     def get_relevant_models(self, action, models):
         model_list = []
-        for model in models:
+        for model in models.values():
             if action in model.list_actions():
                 model_list.append(model)
         return model_list

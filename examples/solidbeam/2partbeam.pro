@@ -1,3 +1,5 @@
+modules = [ init, solver ];
+
 init =
 {
   type = Init;
@@ -31,8 +33,6 @@ init =
 
 model =
 {
-  type = Multi;
-
   models = [ left, right, diri, neum ];
 
   left =

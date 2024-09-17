@@ -1,3 +1,5 @@
+modules = [ init, solver ];
+
 init =
 {
   nodeGroups = [ left, right ];
@@ -21,8 +23,6 @@ init =
 
 model =
 {
-  type = Multi;
-
   models = [ poisson, diri ];
 
   poisson =

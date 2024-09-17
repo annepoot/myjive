@@ -1,3 +1,5 @@
+modules = [ init, solver, vtkout ];
+
 init =
 {
   nodeGroups = [ lb, rb, bottom, top, left, right, rt ];
@@ -49,8 +51,6 @@ init =
 
 model =
 {
-  type = Multi;
-
   models = [ elastic, diri, neum ];
 
   elastic =

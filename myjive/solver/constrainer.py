@@ -6,12 +6,7 @@ __all__ = ["Constrainer"]
 
 class Constrainer:
     def __init__(self, constraints, inputmatrix):
-        self._cons = constraints
-        self._input = inputmatrix
-        self._output = spsp.csr_array(self._input.copy())
-        self._rhs = np.zeros(self._output.shape[0])
-
-        self.update()
+        self.update(constraints, inputmatrix)
 
     def get_lhs(self, u):
         uc = u.copy()
@@ -36,23 +31,20 @@ class Constrainer:
     def get_output_matrix(self):
         return self._output
 
-    def update(self, constraints=None, inputmatrix=None):
-        if constraints is not None:
-            self._cons = constraints
+    def update(self, constraints, inputmatrix):
+        self._cons = constraints
+        self._input = inputmatrix
+        self._output = spsp.csr_array(self._input.copy())
+        self._rhs = np.zeros(self._output.shape[0])
 
-        if inputmatrix is not None:
-            self._input = inputmatrix
+        dofs, vals = self._cons.get_constraints()
 
-        for dof, val in zip(*self._cons.get_constraints()):
-            for i in range(self._output.shape[0]):
-                if i == dof:
-                    self._rhs[i] = val
-                else:
-                    self._rhs[i] -= self._output[i, dof] * val
+        self._rhs -= self._output[:, dofs] @ vals
+        self._rhs[dofs] = vals
 
-            self._output[:, [dof]] *= 0.0
-            self._output[[dof], :] *= 0.0
-            self._output[dof, dof] = 1.0
+        self._output[:, dofs] *= 0.0
+        self._output[dofs, :] *= 0.0
+        self._output[dofs, dofs] = 1.0
 
     def constrain(self, k, f):
         return self.apply_dirichlet(k, f)

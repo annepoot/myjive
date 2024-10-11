@@ -95,7 +95,11 @@ class ItemMap:
     def add_item(self, item_id=None):
         size = len(self._map)
         if item_id is None:
-            item_id = size + 1
+            if size == 0:
+                item_id = 1
+            else:
+                maxkey = max(self._map, key=self._map.get)
+                item_id = type(maxkey)(int(maxkey) + 1)
         if item_id in self._map.keys():
             raise ValueError("item ID already exists in itemset")
         self._map[item_id] = size
@@ -105,4 +109,5 @@ class ItemMap:
             if idx > iitem:
                 self._map[item_id] = idx - 1
             elif idx == iitem:
-                self._map.pop(item_id)
+                pop_id = item_id
+        self._map.pop(pop_id)

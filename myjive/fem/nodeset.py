@@ -22,7 +22,7 @@ class NodeSet(PointSet):
 
 class XNodeSet(NodeSet, XPointSet):
     def add_node(self, coords, node_id=None):
-        self.add_point(coords, node_id)
+        return self.add_point(coords, node_id)
 
     def erase_node(self, inode):
         self.erase_point(inode)

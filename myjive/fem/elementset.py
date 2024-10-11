@@ -41,7 +41,7 @@ class ElementSet(GroupSet):
 
 class XElementSet(ElementSet, XGroupSet):
     def add_element(self, inodes, elem_id=None):
-        self.add_group(inodes, elem_id)
+        return self.add_group(inodes, elem_id)
 
     def erase_element(self, ielem):
         self.erase_group(ielem)

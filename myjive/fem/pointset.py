@@ -57,20 +57,21 @@ class XPointSet(PointSet, XItemSet):
                 self._data = np.pad(self._data, ((0, self._size), (0, 0)))
 
         self._data[self._size] = coords
-        self._size = self._size + 1
+        self._size += 1
 
         self._map.add_item(point_id)
 
+        return self._size - 1
+
     def erase_point(self, ipoint):
-        raise NotImplementedError("has not been tested yet")
         self._data = np.delete(self._data, ipoint, axis=0)
         self._map.erase_item(ipoint)
+        self._size -= 1
 
     def set_point_coords(self, ipoint, coords):
         self._data[ipoint] = coords
 
     def set_points(self, coords):
-        raise NotImplementedError("has not been tested yet")
         if coords.shape[0] != self.size():
             raise ValueError(
                 "first dimension of coords does not match the number of points"

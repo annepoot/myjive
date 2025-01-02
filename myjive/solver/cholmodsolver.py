@@ -1,3 +1,4 @@
+from scipy.sparse import csc_matrix
 from sksparse import cholmod as cm
 
 from .sparsecholeskysolver import SparseCholeskySolver
@@ -10,12 +11,10 @@ class CholmodSolver(SparseCholeskySolver):
     def update(self, matrix, constraints, preconditioner=None):
         self._cons = constraints
         self._conman = Constrainer(self._cons, matrix)
-        self._matrix = self._conman.get_output_matrix()
+        self._matrix = csc_matrix(self._conman.get_output_matrix())
 
         # Transpose to convert the matrix from csr to csc
-        self._chol = cm.cholesky(
-            self._matrix.T, mode="simplicial", ordering_method="amd"
-        )
+        self._chol = cm.cholesky(self._matrix, mode="simplicial", ordering_method="amd")
 
     def improve(self, lhs, rhs):
         if self.precon_mode:

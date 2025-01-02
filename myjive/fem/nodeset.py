@@ -27,6 +27,9 @@ class XNodeSet(NodeSet, XPointSet):
     def erase_node(self, inode):
         self.erase_point(inode)
 
+    def erase_nodes(self, inodes):
+        self.erase_points(inodes)
+
     def set_node_coords(self, inode, coords):
         self.set_point_coords(inode, coords)
 

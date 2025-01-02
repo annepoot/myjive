@@ -262,6 +262,38 @@ def set_recursive(dic, keys, value):
             sub = sub[key]
 
 
+def get_attr_recursive(obj, keys):
+    attr = obj
+    for key in keys:
+        attr = getattr(attr, key)
+    return attr
+
+
+def set_attr_recursive(obj, keys, value):
+    attr = obj
+    for key in keys[:-1]:
+        attr = getattr(attr, key)
+    setattr(attr, keys[-1], value)
+
+
+def call_attr_recursive(obj, keys, value):
+    attr = obj
+    for key in keys:
+        attr = getattr(attr, key)
+    attr(value)
+
+
+def set_or_call_attr_recursive(obj, keys, value):
+    attr = obj
+    for key in keys[:-1]:
+        attr = getattr(attr, key)
+    if callable(getattr(attr, keys[-1])):
+        attr = getattr(attr, keys[-1])
+        attr(value)
+    else:
+        setattr(attr, keys[-1], value)
+
+
 def split_key(key):
     keys = key.split(".")
     for i, k in enumerate(keys):

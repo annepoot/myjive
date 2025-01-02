@@ -76,8 +76,8 @@ class XPointSet(PointSet, XItemSet):
             raise ValueError(
                 "first dimension of coords does not match the number of points"
             )
-        for ipoint in range(self.size()):
-            self.set_point_coords(ipoint, coords[ipoint])
+        self._data = coords
+        self._rank = self._data.shape[1]
 
     def set_some_coords(self, ipoints, coords):
         raise NotImplementedError("has not been tested yet")

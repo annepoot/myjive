@@ -68,6 +68,11 @@ class XPointSet(PointSet, XItemSet):
         self._map.erase_item(ipoint)
         self._size -= 1
 
+    def erase_points(self, ipoints):
+        self._data = np.delete(self._data, ipoints, axis=0)
+        self._map.erase_item(ipoints)
+        self._size -= len(ipoints)
+
     def set_point_coords(self, ipoint, coords):
         self._data[ipoint] = coords
 

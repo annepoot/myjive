@@ -46,6 +46,9 @@ class XElementSet(ElementSet, XGroupSet):
     def erase_element(self, ielem):
         self.erase_group(ielem)
 
+    def erase_elements(self, ielems):
+        self.erase_groups(ielems)
+
     def set_elem_nodes(self, ielem, nodes):
         self.set_group_members(ielem, nodes)
 

@@ -94,6 +94,12 @@ class XGroupSet(GroupSet, XItemSet):
         self._map.erase_item(igroup)
         self._size -= 1
 
+    def erase_groups(self, igroups):
+        self._data = np.delete(self._data, igroups, axis=0)
+        self._groupsizes = np.delete(self._groupsizes, igroups, axis=0)
+        self._map.erase_item(igroups)
+        self._size -= len(igroups)
+
     def set_group_members(self, igroup, members):
         raise NotImplementedError("has not been tested yet")
         groupsize = len(members)

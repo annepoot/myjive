@@ -168,6 +168,68 @@ def try_literal_eval(val):
         return val
 
 
+def write_to_file(props, fname):
+    depth = 0
+
+    file = open(fname, "w")
+    write_dict(file, depth, props)
+    file.close()
+
+
+def write_indent(file, depth):
+    file.write(" " * 2 * depth)
+
+
+def write_dict(file, depth, dic):
+    if depth > 0:
+        write_indent(file, depth - 1)
+        file.write("{\n")
+
+    *_, lastkey = dic.keys()
+
+    for key, value in dic.items():
+        write_indent(file, depth)
+
+        if isinstance(value, dict):
+            file.write(str(key) + " = \n")
+
+            depth += 1
+            write_dict(file, depth, value)
+            depth -= 1
+
+            if key != lastkey:
+                file.write("\n")
+
+        elif isinstance(value, list):
+            file.write(str(key) + " = ")
+            write_list(file, value)
+
+        elif isinstance(value, str):
+            file.write(str(key) + ' = "' + value + '";\n')
+
+        else:
+            file.write(str(key) + " = " + str(value) + ";\n")
+
+    if depth > 0:
+        write_indent(file, depth - 1)
+        file.write("};\n")
+
+
+def write_list(file, lst):
+    file.write("[ ")
+
+    for i, value in enumerate(lst):
+        if isinstance(value, str):
+            file.write('"' + value + '"')
+        else:
+            file.write(str(value))
+
+        if i < len(lst) - 1:
+            file.write(", ")
+
+    file.write(" ];\n")
+
+
 def soft_cast(value, typ):
     # This function attempts to convert value to typ
     # If this conversion fails, it returns the original value

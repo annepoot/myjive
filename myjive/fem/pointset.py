@@ -48,7 +48,7 @@ class PointSet(ItemSet):
 
 class XPointSet(PointSet, XItemSet):
     def add_point(self, coords, point_id=None):
-        if self._size == len(self._data):
+        if self._size + 1 > len(self._data):
             if self._size == 0:
                 self._rank = len(coords)
                 self._data = np.zeros((1, self._rank))
@@ -62,6 +62,25 @@ class XPointSet(PointSet, XItemSet):
         self._map.add_item(point_id)
 
         return self._size - 1
+
+    def add_points(self, coords, point_ids=None):
+        assert len(coords.shape) == 2
+        add_node_count = coords.shape[0]
+
+        if self._size + add_node_count > len(self._data):
+            if self._size == 0:
+                self._rank = coords.shape[1]
+                self._data = np.zeros((add_node_count, self._rank))
+            else:
+                padding = max(self._size, add_node_count)
+                self._data = np.pad(self._data, ((0, padding), (0, 0)))
+
+        self._data[self._size : self._size + add_node_count] = coords
+        self._size += add_node_count
+
+        self._map.add_items(add_node_count, point_ids)
+
+        return np.arange(self._size - add_node_count, self._size)
 
     def erase_point(self, ipoint):
         self._data = np.delete(self._data, ipoint, axis=0)

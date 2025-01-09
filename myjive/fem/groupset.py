@@ -65,7 +65,7 @@ class GroupSet(ItemSet):
 
 class XGroupSet(GroupSet, XItemSet):
     def add_group(self, members, group_id=None):
-        if self._size == len(self._data):
+        if self._size + 1 > len(self._data):
             if self._size == 0:
                 self._data = np.zeros((1, 0), dtype=int)
                 self._groupsizes = np.zeros(1, dtype=int)
@@ -87,6 +87,35 @@ class XGroupSet(GroupSet, XItemSet):
         self._map.add_item(group_id)
 
         return self._size - 1
+
+    def add_groups(self, members, sizes, group_ids=None):
+        assert len(members.shape) == 2
+        assert len(sizes.shape) == 1
+        add_group_count = members.shape[0]
+
+        if self._size + add_group_count > len(self._data):
+            if self._size == 0:
+                self._data = np.zeros((add_group_count, 0), dtype=int)
+                self._groupsizes = np.zeros(add_group_count, dtype=int)
+            else:
+                padding = max(self._size, add_group_count)
+                self._data = np.pad(self._data, ((0, padding), (0, 0)))
+                self._groupsizes = np.pad(self._groupsizes, (0, padding))
+
+        groupsize = np.max(sizes)
+        if groupsize > self._maxgroupsize:
+            self._data = np.pad(
+                self._data, ((0, 0), (0, groupsize - self._maxgroupsize))
+            )
+            self._maxgroupsize = groupsize
+
+        self._data[self._size : self._size + add_group_count, :groupsize] = members
+        self._groupsizes[self._size : self._size + add_group_count] = groupsize
+        self._size += add_group_count
+
+        self._map.add_items(add_group_count, group_ids)
+
+        return np.arange(self._size - add_group_count, self._size)
 
     def erase_group(self, igroup):
         self._data = np.delete(self._data, igroup, axis=0)

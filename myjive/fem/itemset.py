@@ -61,6 +61,7 @@ class ItemMap:
     def __init__(self):
         self._map = {}
         self._invmap = []
+        self._maxkey = None
 
     def get_item_maps(self):
         return self._map, self._invmap
@@ -86,16 +87,47 @@ class ItemMap:
 
     def add_item(self, item_id=None):
         size = len(self._map)
+
         if item_id is None:
             if size == 0:
                 item_id = 1
             else:
-                maxkey = max(self._map, key=self._map.get)
-                item_id = type(maxkey)(int(maxkey) + 1)
+                if self._maxkey is None:
+                    self._maxkey = max(
+                        [i for i in self._map.keys() if isinstance(i, int)]
+                    )
+                item_id = self._maxkey + 1
+            self._maxkey = item_id
+        else:
+            self._maxkey = None
+
         if item_id in self._map.keys():
             raise ValueError("item ID already exists in itemset")
+
         self._map[item_id] = size
         self._invmap.append(item_id)
+
+    def add_items(self, n_item, item_ids=None):
+        size = len(self._map)
+
+        if item_ids is None:
+            if size == 0:
+                item_ids = np.arange(1, n_item + 1)
+            else:
+                if self._maxkey is None:
+                    self._maxkey = max(
+                        [i for i in self._map.keys() if isinstance(i, int)]
+                    )
+                item_ids = np.arange(self._maxkey + 1, self._maxkey + n_item + 1)
+            self._maxkey = item_ids[-1]
+
+        newdict = dict(zip(item_ids, np.arange(size, size + n_item)))
+
+        if len(newdict.keys() & self._map.keys()) > 0:
+            raise ValueError("item ID already exists in itemset")
+
+        self._map.update(newdict)
+        self._invmap.extend(item_ids)
 
     def erase_item(self, iitem):
         for item_id, idx in self._map.items():

@@ -58,14 +58,12 @@ class XItemSet(ItemSet):
 
 
 class ItemMap:
-    def __init__(self, imap=None):
-        if imap is None:
-            self._map = {}
-        else:
-            self._map = imap
+    def __init__(self):
+        self._map = {}
+        self._invmap = []
 
-    def get_item_map(self):
-        return self._map
+    def get_item_maps(self):
+        return self._map, self._invmap
 
     def find_item(self, item_id):
         return self._map.get(item_id, -1)
@@ -74,23 +72,17 @@ class ItemMap:
         iitems = np.empty_like(item_ids, dtype=int)
         for i, item_id in enumerate(item_ids):
             iitems[i] = self.find_item(item_id)
-        return np.array(iitems, dtype=int)
+        return iitems
 
     def get_item_id(self, iitem):
-        for item_id, idx in self._map.items():
-            if idx == iitem:
-                return item_id
-        else:
-            return -1
+        return self._invmap[iitem]
 
     def get_item_ids(self, iitems):
-        item_ids = np.empty_like(iitems, dtype=int)
-        for i, iitem in enumerate(iitems):
-            item_ids[i] = self.get_item_id(iitem)
-        return np.array(item_ids, dtype=int)
+        return list(map(self._invmap.__getitem__, list(iitems)))
 
     def clear(self):
         self._map = {}
+        self._invmap = []
 
     def add_item(self, item_id=None):
         size = len(self._map)
@@ -103,6 +95,7 @@ class ItemMap:
         if item_id in self._map.keys():
             raise ValueError("item ID already exists in itemset")
         self._map[item_id] = size
+        self._invmap.append(item_id)
 
     def erase_item(self, iitem):
         for item_id, idx in self._map.items():
@@ -111,3 +104,4 @@ class ItemMap:
             elif idx == iitem:
                 pop_id = item_id
         self._map.pop(pop_id)
+        self._invmap.pop(iitem)

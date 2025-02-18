@@ -168,66 +168,72 @@ def try_literal_eval(val):
         return val
 
 
-def write_to_file(props, fname):
-    depth = 0
+def props_to_file(props, fname):
+    string = props_to_string(props)
 
     file = open(fname, "w")
-    write_dict(file, depth, props)
+    file.write(string)
     file.close()
 
 
-def write_indent(file, depth):
-    file.write(" " * 2 * depth)
+def indent_to_string(depth):
+    return " " * (2 * depth)
 
 
-def write_dict(file, depth, dic):
+def props_to_string(dic, depth=0):
+    string = ""
+
     if depth > 0:
-        write_indent(file, depth - 1)
-        file.write("{\n")
+        string += indent_to_string(depth - 1)
+        string += "{\n"
 
     *_, lastkey = dic.keys()
 
     for key, value in dic.items():
-        write_indent(file, depth)
+        string += indent_to_string(depth)
 
         if isinstance(value, dict):
-            file.write(str(key) + " = \n")
+            string += str(key) + " =\n"
 
             depth += 1
-            write_dict(file, depth, value)
+            string += props_to_string(value, depth)
             depth -= 1
 
             if key != lastkey:
-                file.write("\n")
+                string += "\n"
 
         elif isinstance(value, list):
-            file.write(str(key) + " = ")
-            write_list(file, value)
+            string += str(key) + " = "
+            string += list_to_string(value)
 
         elif isinstance(value, str):
-            file.write(str(key) + ' = "' + value + '";\n')
+            string += str(key) + ' = "' + value + '";\n'
 
         else:
-            file.write(str(key) + " = " + str(value) + ";\n")
+            string += str(key) + " = " + str(value) + ";\n"
 
     if depth > 0:
-        write_indent(file, depth - 1)
-        file.write("};\n")
+        string += indent_to_string(depth - 1)
+        string += "};\n"
+
+    return string
 
 
-def write_list(file, lst):
-    file.write("[ ")
+def list_to_string(lst):
+    string = "[ "
 
     for i, value in enumerate(lst):
         if isinstance(value, str):
-            file.write('"' + value + '"')
+            string += '"' + value + '"'
         else:
-            file.write(str(value))
+            string += str(value)
 
         if i < len(lst) - 1:
-            file.write(", ")
+            string += ", "
+        else:
+            string += " ];\n"
 
-    file.write(" ];\n")
+    return string
 
 
 def soft_cast(value, typ):

@@ -19,7 +19,7 @@ message(){
 
 build_myjive(){
 	message "CREATING myjive ENVIRONMENT"
-	conda env create -f ../ENVIRONMENT.yml
+	conda env create -f ../ENVIRONMENT.yml -y
 
 	message "ADDING LOCAL PATHS"
 	conda activate myjive
@@ -42,6 +42,7 @@ if conda env list | grep -q "^myjive "; then
 	while true; do
 		read -p "myjive environment already exists
 Do you want to rebuild it? [Y/n] " yn
+    yn="${yn:-y}"  # If no input is provided, default to 'y'
 		case $yn in
 			[Yy]* )
 				message "REMOVING myjive ENVIRONMENT"
@@ -68,6 +69,7 @@ if conda env list | grep -q "^myjive-dev "; then
 	while true; do
 		read -p "myjive-dev environment already exists.
 Do you want to rebuild it? [Y/n] " yn
+    yn="${yn:-y}"  # If no input is provided, default to 'y'
 		case $yn in
 			[Yy]* )
 				message "REMOVING myjive-dev ENVIRONMENT"

@@ -209,6 +209,9 @@ def props_to_string(dic, depth=0):
         elif isinstance(value, str):
             string += str(key) + ' = "' + value + '";\n'
 
+        elif isinstance(value, bool):
+            string += str(key) + " = " + str(value).lower() + ";\n"
+
         else:
             string += str(key) + " = " + str(value) + ";\n"
 

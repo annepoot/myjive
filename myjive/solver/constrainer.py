@@ -39,12 +39,29 @@ class Constrainer:
 
         dofs, vals = self._cons.get_constraints()
 
-        self._rhs -= self._output[:, dofs] @ vals
-        self._rhs[dofs] = vals
+        # more efficient than explicit array slicing, due to symmetry of the matrix
+        data = self._output.data
+        indices = self._output.indices
+        indptr = self._output.indptr
 
-        self._output[:, dofs] *= 0.0
-        self._output[dofs, :] *= 0.0
-        self._output[dofs, dofs] = 1.0
+        for dof, val in zip(dofs, vals):
+            start_1, stop_1 = indptr[dof], indptr[dof + 1]
+            col_idx = indices[start_1:stop_1]
+            data[start_1:stop_1] = 0.0
+
+            for row in col_idx:
+                start_2, stop_2 = indptr[row], indptr[row + 1]
+                for i in range(start_2, stop_2):
+                    col = indices[i]
+                    if col == dof:
+                        if col == row:
+                            data[i] = 1.0
+                            self._rhs[row] = val
+                        else:
+                            self._rhs[row] -= data[i] * val
+                            data[i] = 0.0
+
+        self._output.eliminate_zeros()
 
     def constrain(self, k, f):
         return self.apply_dirichlet(k, f)

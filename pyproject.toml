@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myjive"
+version = "0.1.9"
+description = "Personal implementation of jive C++ library in Python"
+readme = "README.md"
+requires-python = "==3.10.*"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [{name = "Anne Poot", email="a.poot-1@tudelft.nl"}]
+keywords = ["jive", "mathematics", "finite-element-method", "engineering"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Programming Language :: Python :: 3.10",
+]
+urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.9/myjive-v0.1.9.tar.gz"}
+dependencies = [
+    "matplotlib",
+    "numba",
+    "numpy",
+    "pandas",
+    "scikit-sparse>=0.4.12",
+    "scipy>=1.12"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools]
+packages = ["myjive", "myjivex"]
+include-package-data = true

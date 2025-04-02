@@ -29,7 +29,13 @@ class Shape:
         # self._ncount = None
         # self._rank = None
 
-        self._int = intscheme
+        if "*" in intscheme:
+            ipcount = 1
+            for ip in intscheme.split("*"):
+                ipcount *= int(ip.lstrip("Gauss"))
+            self._int = "Gauss" + str(ipcount)
+        else:
+            self._int = intscheme
 
         if self._int.lstrip("Gauss").isnumeric():
             self._ipcount = int(self._int.lstrip("Gauss"))
@@ -40,30 +46,7 @@ class Shape:
         self._wts = np.zeros(self._ipcount)
 
         if self._rank == 1:
-            if self._int == "Gauss1":
-                self._ips[0, 0] = 0
-                self._wts[0] = 2
-
-            elif self._int == "Gauss2":
-                self._ips[0, 0] = -1 / np.sqrt(3)
-                self._ips[1, 0] = 1 / np.sqrt(3)
-                self._wts[0] = 1
-                self._wts[1] = 1
-
-            elif self._int == "Gauss3":
-                self._ips[0, 0] = -np.sqrt(3.0 / 5.0)
-                self._ips[1, 0] = 0
-                self._ips[2, 0] = np.sqrt(3.0 / 5.0)
-                self._wts[0] = 5.0 / 9.0
-                self._wts[1] = 8.0 / 9.0
-                self._wts[2] = 5.0 / 9.0
-
-            elif self._int.lstrip("Gauss").isnumeric():
-                self._ips[:, 0], self._wts[:] = leggauss(self._ipcount)
-
-            else:
-                raise ValueError(self._int)
-
+            self._ips[:, 0], self._wts[:] = leggauss(self._ipcount)
         elif self._rank == 2:
             if self._ncount == 3 or self._ncount == 6:
                 if self._int == "Gauss1":
@@ -80,63 +63,27 @@ class Shape:
                     self._wts[0] = 1.0 / 6.0
                     self._wts[1] = 1.0 / 6.0
                     self._wts[2] = 1.0 / 6.0
-
                 else:
                     raise ValueError(self._int)
 
             elif self._ncount == 4 or self._ncount == 9:
-                if self._int == "Gauss1":
-                    self._ips[0, 0] = 0.0
-                    self._ips[0, 1] = 0.0
-                    self._wts[0] = 4.0
-                elif self._int == "Gauss4":
-                    invsqrt3 = 1 / np.sqrt(3)
-                    self._ips[0, 0] = -invsqrt3
-                    self._ips[0, 1] = -invsqrt3
-                    self._ips[1, 0] = invsqrt3
-                    self._ips[1, 1] = -invsqrt3
-                    self._ips[2, 0] = invsqrt3
-                    self._ips[2, 1] = invsqrt3
-                    self._ips[3, 0] = -invsqrt3
-                    self._ips[3, 1] = invsqrt3
-
-                    self._wts[0] = 1.0
-                    self._wts[1] = 1.0
-                    self._wts[2] = 1.0
-                    self._wts[3] = 1.0
-                elif self._int == "Gauss9":
-                    invsqrt35 = 1 / np.sqrt(3.0 / 5.0)
-                    self._ips[0, 0] = -invsqrt35
-                    self._ips[0, 1] = -invsqrt35
-                    self._ips[1, 0] = 0
-                    self._ips[1, 1] = -invsqrt35
-                    self._ips[2, 0] = invsqrt35
-                    self._ips[2, 1] = -invsqrt35
-                    self._ips[3, 0] = -invsqrt35
-                    self._ips[3, 1] = 0
-                    self._ips[4, 0] = 0
-                    self._ips[4, 1] = 0
-                    self._ips[5, 0] = invsqrt35
-                    self._ips[5, 1] = 0
-                    self._ips[6, 0] = -invsqrt35
-                    self._ips[6, 1] = invsqrt35
-                    self._ips[7, 0] = 0
-                    self._ips[7, 1] = invsqrt35
-                    self._ips[8, 0] = invsqrt35
-                    self._ips[8, 1] = invsqrt35
-
-                    self._wts[0] = 25.0 / 81.0
-                    self._wts[1] = 40.0 / 81.0
-                    self._wts[2] = 25.0 / 81.0
-                    self._wts[3] = 40.0 / 81.0
-                    self._wts[4] = 64.0 / 81.0
-                    self._wts[5] = 40.0 / 81.0
-                    self._wts[6] = 25.0 / 81.0
-                    self._wts[7] = 40.0 / 81.0
-                    self._wts[8] = 25.0 / 81.0
-
+                sqrtipcount = np.sqrt(self._ipcount)
+                if sqrtipcount.is_integer():
+                    xipcount = int(sqrtipcount)
+                    yipcount = int(sqrtipcount)
                 else:
-                    raise ValueError(self._int)
+                    raise ValueError(self._ipcount)
+
+                ip = 0
+
+                for yip, ywt in zip(*leggauss(yipcount)):
+                    for xip, xwt in zip(*leggauss(xipcount)):
+                        self._ips[ip, 0] = xip
+                        self._ips[ip, 1] = yip
+                        self._wts[ip] = xwt * ywt
+                        ip = ip + 1
+
+                assert ip == self._ipcount
 
             else:
                 raise ValueError(self._ncount)

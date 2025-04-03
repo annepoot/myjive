@@ -1,29 +1,13 @@
 from .names import GlobNames as gn
 
-from .app import ModuleFactory, InitModule, OutputModule
-from .implicit import LinsolveModule, SolverModule
-from .model import ModelFactory
-from .solver import (
-    SolverFactory,
-    CGSolver,
-    CholmodSolver,
-    DirectSolver,
-    IterativeSolver,
-    SparseCholeskySolver,
-    PreconFactory,
-    DiagPrecon,
-    ICholPrecon,
-    IdPrecon,
-)
-from .fem import (
-    ShapeFactory,
-    Tri3Shape,
-    Tri6Shape,
-    Quad4Shape,
-    Quad9Shape,
-    Line2Shape,
-    Line3Shape,
-)
+__all__ = [
+    "declare_all",
+    "declare_models",
+    "declare_modules",
+    "declare_solvers",
+    "declare_precons",
+    "declare_shapes",
+]
 
 
 def declare_all(globdat, extra_declares=[]):
@@ -40,12 +24,17 @@ def declare_all(globdat, extra_declares=[]):
 
 
 def declare_models(globdat):
+    from .model import ModelFactory
+
     factory = globdat.get(gn.MODELFACTORY, ModelFactory())
 
     globdat[gn.MODELFACTORY] = factory
 
 
 def declare_modules(globdat):
+    from .app import ModuleFactory, InitModule, OutputModule
+    from .implicit import LinsolveModule, SolverModule
+
     factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
     InitModule.declare(factory)
@@ -58,6 +47,15 @@ def declare_modules(globdat):
 
 
 def declare_solvers(globdat):
+    from .solver import (
+        SolverFactory,
+        CGSolver,
+        CholmodSolver,
+        DirectSolver,
+        IterativeSolver,
+        SparseCholeskySolver,
+    )
+
     factory = globdat.get(gn.SOLVERFACTORY, SolverFactory())
 
     CGSolver.declare(factory)
@@ -70,6 +68,8 @@ def declare_solvers(globdat):
 
 
 def declare_precons(globdat):
+    from .solver import PreconFactory, DiagPrecon, ICholPrecon, IdPrecon
+
     factory = globdat.get(gn.PRECONFACTORY, PreconFactory())
 
     DiagPrecon.declare(factory)
@@ -80,6 +80,16 @@ def declare_precons(globdat):
 
 
 def declare_shapes(globdat):
+    from .fem import (
+        ShapeFactory,
+        Tri3Shape,
+        Tri6Shape,
+        Quad4Shape,
+        Quad9Shape,
+        Line2Shape,
+        Line3Shape,
+    )
+
     factory = globdat.get(gn.SHAPEFACTORY, ShapeFactory())
 
     Tri3Shape.declare(factory)

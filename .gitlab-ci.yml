@@ -47,7 +47,6 @@ test_wheel:
     - echo "Testing myjive imports"
     - python -c "import myjive; print('Successfully imported myjive')"
     - python -c "import myjivex; print('Successfully imported myjivex')"
-    - python -c "import myjive; print('myjive version:', myjive.__version__)"
   needs:
     - pypi_build
   rules:

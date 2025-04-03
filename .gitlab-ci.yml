@@ -2,16 +2,54 @@ image: gitlab/gitlab-ce:17.9.2-ce.0
 
 stages:
   - test
+  - build
 
-# Stage 2: Run tests using pytest
-run_tests:
+test_code:
   stage: test
-  image: continuumio/miniconda3:latest  # Same Miniconda image for running tests
+  image: continuumio/miniconda3:latest
   script:
+    - echo "Installing environment"
     - conda env create -f ENVIRONMENT.yml
     - source $(conda info --base)/etc/profile.d/conda.sh
-    - conda activate myjive  # Activates the environment
+    - conda activate myjive
+    - echo "Running tests"
     - pytest
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+pypi_build:
+  stage: build
+  image: continuumio/miniconda3:latest
+  script:
+    - echo "Installing dev environment"
+    - conda env create -f dev/ENVIRONMENT-dev.yml
+    - source $(conda info --base)/etc/profile.d/conda.sh
+    - conda activate myjive-dev
+    - echo "Building wheel file"
+    - python -m build
+  rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  artifacts:
+    paths:
+      - dist/*.whl  # Save the wheel file as an artifact
+    expire_in: 1 week
+
+test_wheel:
+  stage: build
+  image: python:3.10
+  script:
+    - echo "Installing cholmod library"
+    - apt-get update && apt-get install -y libsuitesparse-dev
+    - WHEEL_FILE=$(ls dist/*.whl | head -n 1)
+    - echo "Testing installation of wheel file"
+    - echo $WHEEL_FILE
+    - pip install $WHEEL_FILE
+    - echo "Testing myjive imports"
+    - python -c "import myjive; print('Successfully imported myjive')"
+    - python -c "import myjivex; print('Successfully imported myjivex')"
+    - python -c "import myjive; print('myjive version:', myjive.__version__)"
+  needs:
+    - pypi_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+

@@ -1,0 +1,17 @@
+image: gitlab/gitlab-ce:17.9.2-ce.0
+
+stages:
+  - test
+
+# Stage 2: Run tests using pytest
+run_tests:
+  stage: test
+  image: continuumio/miniconda3:latest  # Same Miniconda image for running tests
+  script:
+    - conda env create -f ENVIRONMENT.yml
+    - source $(conda info --base)/etc/profile.d/conda.sh
+    - conda activate myjive  # Activates the environment
+    - pytest
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "myjive"
-version = "0.1.10"
+version = "0.1.11"
 description = "Personal implementation of jive C++ library in Python"
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
     "Programming Language :: Python :: 3.10",
 ]
-urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.10/myjive-v0.1.10.tar.gz"}
+urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.11/myjive-v0.1.11.tar.gz"}
 dependencies = [
     "matplotlib",
     "numba",

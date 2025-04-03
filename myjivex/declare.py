@@ -1,19 +1,4 @@
 from myjive.names import GlobNames as gn
-from myjive.app import ModuleFactory
-from myjive.model import ModelFactory
-
-from .models import (
-    BarModel,
-    DirichletModel,
-    ElasticModel,
-    LoadModel,
-    NeumannModel,
-    PoissonModel,
-    SolidModel,
-    TimoshenkoModel,
-)
-
-from .modules import VTKOutModule, ViewModule
 
 __all__ = ["declare_all", "declare_models", "declare_modules"]
 
@@ -25,6 +10,18 @@ def declare_all(globdat):
 
 
 def declare_models(globdat):
+    from myjive.model import ModelFactory
+    from .models import (
+        BarModel,
+        DirichletModel,
+        ElasticModel,
+        LoadModel,
+        NeumannModel,
+        PoissonModel,
+        SolidModel,
+        TimoshenkoModel,
+    )
+
     factory = globdat.get(gn.MODELFACTORY, ModelFactory())
 
     BarModel.declare(factory)
@@ -40,6 +37,9 @@ def declare_models(globdat):
 
 
 def declare_modules(globdat):
+    from myjive.app import ModuleFactory
+    from .modules import VTKOutModule, ViewModule
+
     factory = globdat.get(gn.MODULEFACTORY, ModuleFactory())
 
     VTKOutModule.declare(factory)

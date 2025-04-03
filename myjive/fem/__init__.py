@@ -1,6 +1,7 @@
 from .dofspace import *
 from .elementgroup import *
 from .elementset import *
+from .groupset import *
 from .itemgroup import *
 from .itemset import *
 from .nodegroup import *

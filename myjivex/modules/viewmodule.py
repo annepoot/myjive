@@ -98,8 +98,13 @@ class ViewModule(Module):
         elems = globdat[gn.ESET]
         dofs = globdat[gn.DOFSPACE]
         types = dofs.get_types()
-        shape = globdat[gn.MESHSHAPE]
         disp = globdat[gn.STATE0]
+
+        if gn.SHAPE in globdat:
+            shape = globdat[gn.SHAPE].__class__.__name__
+            shape = shape.replace("Tri", "Triangle").rstrip("Shape")
+        else:
+            shape = globdat[gn.MESHSHAPE]
 
         if self._plottype == "node":
             array = globdat[gn.TABLES][name][comp]

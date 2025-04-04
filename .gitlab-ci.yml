@@ -102,28 +102,4 @@ validate_wheel:
     - build_wheel
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
-
-release_tag:
-  stage: release
-  script:
-    - |
-      # Extract version from pyproject.toml
-      VERSION=$(grep -E "^version\s*=\s*[\"'].*[\"']" pyproject.toml | sed -E 's/version\s*=\s*[\"'"'"'](.*)[\"'"'"']/\1/')
-      echo "Project version: $VERSION"
-      
-      # Set Git user identity for the pipeline
-      git config --global user.name "Gitlab Runner"
-      git config --global user.email "a.poot-1@tudelft.nl"
-      
-      # Check if the tag already exists
-      if git tag -l "v$VERSION" | grep -q "v$VERSION"; then
-        echo "Tag v$VERSION already exists, skipping tag creation"
-        exit 0
-      else
-        echo "Creating tag v$VERSION"
-        git tag "v$VERSION"
-        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" "v$VERSION"
-        echo "✓ Tag v$VERSION created and pushed successfully"
-      fi
-  rules:
-    - if: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME == $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
+    

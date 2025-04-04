@@ -22,9 +22,27 @@ test_release_name:
   stage: test
   script:
     - |
+      # Check if MR title follows versioning pattern
       if [[ "$CI_MERGE_REQUEST_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Merge request title follows the versioning pattern v#.#.#"
-        exit 0
+        echo "✓ Merge request title follows the versioning pattern v#.#.#"
+        
+        # Extract version from MR title (remove the 'v' prefix)
+        MR_VERSION="${CI_MERGE_REQUEST_TITLE:1}"
+        echo "MR version: $MR_VERSION"
+        
+        # Extract version from pyproject.toml
+        # Using grep + sed to extract version
+        PROJECT_VERSION=$(grep -E "^version\s*=\s*[\"'].*[\"']" pyproject.toml | sed -E 's/version\s*=\s*[\"'"'"'](.*)[\"'"'"']/\1/')
+        echo "Project version: $PROJECT_VERSION"
+        
+        # Compare versions
+        if [ "$MR_VERSION" = "$PROJECT_VERSION" ]; then
+          echo "✓ Versions match between MR title and pyproject.toml"
+          exit 0
+        else
+          echo "Error: Version mismatch between MR title ($MR_VERSION) and pyproject.toml ($PROJECT_VERSION)"
+          exit 1
+        fi
       else
         echo "Error: Merge request title does not follow the required pattern v#.#.#"
         echo "Current title: $CI_MERGE_REQUEST_TITLE"

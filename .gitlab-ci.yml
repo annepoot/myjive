@@ -18,6 +18,19 @@ test_code:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
+test_merge_squash:
+  stage: test
+  script:
+    - |
+      if git log --merges -n 1 | grep -q "Merge branch 'main'"; then
+        echo "Merge commit found: Commits were NOT squashed.";
+      else
+        echo "No merge commit found: Commits may have been squashed.";
+        exit 1;
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
+
 test_release_name:
   stage: test
   script:
@@ -102,4 +115,3 @@ validate_wheel:
     - build_wheel
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
-    

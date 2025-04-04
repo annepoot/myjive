@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "myjive"
-version = "0.1.13"
+version = "0.1.14"
 description = "Personal implementation of jive C++ library in Python"
 readme = "README.md"
 requires-python = "==3.10.*"
@@ -17,7 +17,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Mathematics",
     "Programming Language :: Python :: 3.10",
 ]
-urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.13/myjive-v0.1.13.tar.gz"}
+urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v0.1.14/myjive-v0.1.14.tar.gz"}
 dependencies = [
     "matplotlib",
     "numba",
@@ -33,5 +33,22 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["myjive", "myjivex"]
+packages = [
+    "myjive",
+    "myjive.app",
+    "myjive.fem",
+    "myjive.implicit",
+    "myjive.model",
+    "myjive.names",
+    "myjive.solver",
+    "myjive.solver.jit",
+    "myjive.solver.util",
+    "myjive.util",
+    "myjive.util.jit",
+    "myjivex",
+    "myjivex.materials",
+    "myjivex.models",
+    "myjivex.modules",
+    "myjivex.util",
+]
 include-package-data = true

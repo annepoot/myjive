@@ -21,7 +21,7 @@ urls = {homepage = "https://gitlab.tudelft.nl/apoot1/myjive", download = "https:
 dependencies = [
     "matplotlib",
     "numba",
-    "numpy",
+    "numpy<2.0.0",
     "pandas",
     "scikit-sparse>=0.4.12",
     "scipy>=1.12"

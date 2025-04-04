@@ -1,12 +1,12 @@
 import numpy as np
 
-from .itemset import ItemSet
-
 __all__ = ["ItemGroup", "XItemGroup"]
 
 
 class ItemGroup:
     def __init__(self, items, data=None):
+        from .itemset import ItemSet
+
         if data is None:
             self._data = []
         else:

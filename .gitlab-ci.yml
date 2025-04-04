@@ -26,7 +26,7 @@ pypi_build:
     - echo "Building wheel file"
     - python -m build
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
   artifacts:
     paths:
       - dist/*.whl  # Save the wheel file as an artifact
@@ -48,5 +48,5 @@ test_wheel:
   needs:
     - pypi_build
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
 

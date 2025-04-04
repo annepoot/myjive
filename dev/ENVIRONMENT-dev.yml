@@ -15,6 +15,7 @@ dependencies:
   # support packages
   - black # formatting
   - build # for building a package from pyproject.toml
+  - conda-smithy # to rerender the feedstock
   - grayskull # for automatically generating conda recipes
   - pytest # for testing
   - twine # for pushing built package to pip

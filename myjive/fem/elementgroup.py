@@ -1,11 +1,12 @@
 from .itemgroup import ItemGroup
-from .elementset import ElementSet
 
 __all__ = ["ElementGroup"]
 
 
 class ElementGroup(ItemGroup):
     def __init__(self, elements, data=None):
+        from .elementset import ElementSet
+
         super().__init__(elements, data)
 
         assert isinstance(self._items, ElementSet)

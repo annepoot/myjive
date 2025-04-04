@@ -1,11 +1,12 @@
 from .itemgroup import ItemGroup
-from .nodeset import NodeSet
 
 __all__ = ["NodeGroup"]
 
 
 class NodeGroup(ItemGroup):
     def __init__(self, nodes, data=None):
+        from .nodeset import NodeSet
+
         super().__init__(nodes, data)
 
         assert isinstance(self._items, NodeSet)

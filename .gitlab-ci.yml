@@ -1,4 +1,4 @@
-image: gitlab/gitlab-ce:17.9.2-ce.0
+image: continuumio/miniconda3:latest
 
 stages:
   - test
@@ -6,7 +6,6 @@ stages:
 
 test_code:
   stage: test
-  image: continuumio/miniconda3:latest
   script:
     - echo "Installing environment"
     - conda env create -f ENVIRONMENT.yml
@@ -19,7 +18,6 @@ test_code:
 
 pypi_build:
   stage: build
-  image: continuumio/miniconda3:latest
   script:
     - echo "Installing dev environment"
     - conda env create -f dev/ENVIRONMENT-dev.yml

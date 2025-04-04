@@ -34,11 +34,29 @@ test_release_name:
         # Using grep + sed to extract version
         PROJECT_VERSION=$(grep -E "^version\s*=\s*[\"'].*[\"']" pyproject.toml | sed -E 's/version\s*=\s*[\"'"'"'](.*)[\"'"'"']/\1/')
         echo "Project version: $PROJECT_VERSION"
-        
+
         # Compare versions
         if [ "$MR_VERSION" = "$PROJECT_VERSION" ]; then
           echo "✓ Versions match between MR title and pyproject.toml"
-          exit 0
+          
+          # Extract download URL from pyproject.toml
+          DOWNLOAD_URL=$(grep -E "download\s*=\s*[\"'].*[\"']" pyproject.toml | sed -E 's/.*download\s*=\s*[\"'"'"'](.*)[\"'"'"'].*/\1/')
+          echo "Current download URL: $DOWNLOAD_URL"
+          
+          # Expected download URL format
+          EXPECTED_URL="https://gitlab.tudelft.nl/apoot1/myjive/-/archive/v$PROJECT_VERSION/myjive-v$PROJECT_VERSION.tar.gz"
+          echo "Expected download URL: $EXPECTED_URL"
+          
+          # Check if download URL matches expected format
+          if [ "$DOWNLOAD_URL" = "$EXPECTED_URL" ]; then
+            echo "✓ Download URL is correctly formatted"
+            exit 0
+          else
+            echo "Error: Download URL does not match expected format"
+            echo "Please update the download URL in pyproject.toml to:"
+            echo "$EXPECTED_URL"
+            exit 1
+          fi
         else
           echo "Error: Version mismatch between MR title ($MR_VERSION) and pyproject.toml ($PROJECT_VERSION)"
           exit 1

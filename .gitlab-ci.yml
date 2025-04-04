@@ -3,6 +3,8 @@ image: continuumio/miniconda3:latest
 stages:
   - test
   - build
+  - validation
+  - release
 
 test_code:
   stage: test
@@ -16,7 +18,22 @@ test_code:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-pypi_build:
+test_release_name:
+  stage: test
+  script:
+    - |
+      if [[ "$CI_MERGE_REQUEST_TITLE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Merge request title follows the versioning pattern v#.#.#"
+        exit 0
+      else
+        echo "Error: Merge request title does not follow the required pattern v#.#.#"
+        echo "Current title: $CI_MERGE_REQUEST_TITLE"
+        exit 1
+      fi
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
+  
+build_wheel:
   stage: build
   script:
     - echo "Installing dev environment"
@@ -32,8 +49,8 @@ pypi_build:
       - dist/*.whl  # Save the wheel file as an artifact
     expire_in: 1 week
 
-test_wheel:
-  stage: build
+validate_wheel:
+  stage: validation
   image: python:3.10
   script:
     - echo "Installing cholmod library"
@@ -46,7 +63,6 @@ test_wheel:
     - python -c "import myjive; print('Successfully imported myjive')"
     - python -c "import myjivex; print('Successfully imported myjivex')"
   needs:
-    - pypi_build
+    - build_wheel
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "release"
-

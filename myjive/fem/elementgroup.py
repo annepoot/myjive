@@ -16,3 +16,15 @@ class ElementGroup(ItemGroup):
 
     def get_node_indices(self):
         return self._items.get_unique_nodes_of(self.get_indices())
+
+    def add_element(self, ielem):
+        self.add_item(ielem)
+
+    def add_elements(self, ielems):
+        self.add_items(ielems)
+
+    def erase_element(self, ielem):
+        self.erase_item(ielem)
+
+    def erase_elements(self, ielems):
+        self.erase_items(ielems)

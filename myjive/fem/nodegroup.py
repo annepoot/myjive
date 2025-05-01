@@ -16,3 +16,15 @@ class NodeGroup(ItemGroup):
 
     def get_coords(self):
         return self._items.get_some_coords(self.get_indices())
+
+    def add_node(self, inode):
+        self.add_item(inode)
+
+    def add_nodes(self, inodes):
+        self.add_items(inodes)
+
+    def erase_node(self, inode):
+        self.erase_item(inode)
+
+    def erase_nodes(self, inodes):
+        self.erase_items(inodes)

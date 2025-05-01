@@ -1,6 +1,6 @@
 import numpy as np
 
-__all__ = ["ItemGroup", "XItemGroup"]
+__all__ = ["ItemGroup"]
 
 
 class ItemGroup:
@@ -57,8 +57,6 @@ class ItemGroup:
                 jitems.append(iitem)
         return np.array(jitems, dtype=int)
 
-
-class XItemGroup(ItemGroup):
     def clear(self):
         self._data = []
 
@@ -66,12 +64,11 @@ class XItemGroup(ItemGroup):
         self._data.append(iitem)
 
     def add_items(self, iitems):
-        for iitem in iitems:
-            self.add_item(iitem)
+        self._data.extend(iitems)
 
     def erase_item(self, iitem):
         self._data.pop(iitem)
 
     def erase_items(self, iitems):
         for iitem in iitems:
-            self.erase_items(iitem)
+            self.erase_item(iitem)

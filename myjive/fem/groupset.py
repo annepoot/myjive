@@ -130,7 +130,6 @@ class XGroupSet(GroupSet, XItemSet):
         self._size -= len(igroups)
 
     def set_group_members(self, igroup, members):
-        raise NotImplementedError("has not been tested yet")
         groupsize = len(members)
         self._data[igroup, :groupsize] = members
         self._groupsizes[igroup] = groupsize

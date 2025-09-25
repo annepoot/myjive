@@ -168,7 +168,9 @@ def ElemViewer(array, globdat, **kwargs):
         maxcolor = z.max()
 
     if not meshonly:
-        mappable = ax.tripcolor(triang, z, alpha=alpha, cmap=cmap)
+        mappable = ax.tripcolor(
+            triang, z, alpha=alpha, cmap=cmap, vmin=mincolor, vmax=maxcolor
+        )
 
     if colorbar:
         ticks = np.linspace(mincolor, maxcolor, 5, endpoint=True)

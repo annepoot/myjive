@@ -174,9 +174,8 @@ def QuickViewer(array, globdat, **kwargs):
     if maxcolor is None:
         maxcolor = z.max()
 
-    levels = np.linspace(mincolor, maxcolor, ncolors)
-
     if not meshonly:
+        levels = np.linspace(mincolor, maxcolor, ncolors)
         mappable = ax.tricontourf(triang, z, levels=levels, alpha=alpha, cmap=cmap)
 
     if colorbar:
